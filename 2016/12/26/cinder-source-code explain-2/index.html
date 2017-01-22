@@ -1,0 +1,728 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="openstack," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="目录结构：cinder 源码大致解析
+以新建 cinder volume 为例 深入 cinder 代码
+
+关于cinder不再赘述，之前文章由介绍。
+cinder 的 API 目前有三个版本，本次讨论以v2为基准。
+因为版本不同，代码也可能不同，该版本为Openstack Liberty
+
+
+cinder 源码大致解析看下cinder项目的入口文件setup.cfg：
+123456789cons">
+<meta property="og:type" content="article">
+<meta property="og:title" content="openstack系列--cinder 源码解读(二)---常见cinder操作工作流程">
+<meta property="og:url" content="http://yoursite.com/2016/12/26/cinder-source-code explain-2/index.html">
+<meta property="og:site_name" content="Solar">
+<meta property="og:description" content="目录结构：cinder 源码大致解析
+以新建 cinder volume 为例 深入 cinder 代码
+
+关于cinder不再赘述，之前文章由介绍。
+cinder 的 API 目前有三个版本，本次讨论以v2为基准。
+因为版本不同，代码也可能不同，该版本为Openstack Liberty
+
+
+cinder 源码大致解析看下cinder项目的入口文件setup.cfg：
+123456789cons">
+<meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2016-12-26-cinder-create-api.png">
+<meta property="og:updated_time" content="2017-01-22T05:55:06.666Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="openstack系列--cinder 源码解读(二)---常见cinder操作工作流程">
+<meta name="twitter:description" content="目录结构：cinder 源码大致解析
+以新建 cinder volume 为例 深入 cinder 代码
+
+关于cinder不再赘述，之前文章由介绍。
+cinder 的 API 目前有三个版本，本次讨论以v2为基准。
+因为版本不同，代码也可能不同，该版本为Openstack Liberty
+
+
+cinder 源码大致解析看下cinder项目的入口文件setup.cfg：
+123456789cons">
+<meta name="twitter:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2016-12-26-cinder-create-api.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2016/12/26/cinder-source-code explain-2/"/>
+
+
+
+
+
+  <title> openstack系列--cinder 源码解读(二)---常见cinder操作工作流程 | Solar </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Solar</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+    
+      <p class="site-subtitle"></p>
+    
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/12/26/cinder-source-code explain-2/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="pekingzcc">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/avatar.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="Solar">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="Solar" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                openstack系列--cinder 源码解读(二)---常见cinder操作工作流程
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-12-26T09:57:25+08:00">
+                2016-12-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2016/12/26/cinder-source-code explain-2/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/12/26/cinder-source-code explain-2/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="目录结构："><a href="#目录结构：" class="headerlink" title="目录结构："></a>目录结构：</h2><p><a href="#A">cinder 源码大致解析</a></p>
+<p><a href="#B">以新建 cinder volume 为例 深入 cinder 代码</a></p>
+<ul>
+<li>关于cinder不再赘述，之前文章由介绍。</li>
+<li>cinder 的 API 目前有三个版本，本次讨论以v2为基准。</li>
+<li>因为版本不同，代码也可能不同，该版本为Openstack Liberty</li>
+</ul>
+<p><a name="A"></a></p>
+<h2 id="cinder-源码大致解析"><a href="#cinder-源码大致解析" class="headerlink" title="cinder 源码大致解析"></a>cinder 源码大致解析</h2><p>看下cinder项目的入口文件setup.cfg：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">console_scripts =</div><div class="line">    cinder-api = cinder.cmd.api:main</div><div class="line">    cinder-backup = cinder.cmd.backup:main</div><div class="line">    cinder-manage = cinder.cmd.manage:main</div><div class="line">    cinder-rootwrap = oslo_rootwrap.cmd:main</div><div class="line">    cinder-rtstool = cinder.cmd.rtstool:main</div><div class="line">    cinder-scheduler = cinder.cmd.scheduler:main</div><div class="line">    cinder-volume = cinder.cmd.volume:main</div><div class="line">    cinder-volume-usage-audit = cinder.cmd.volume_usage_audit:main</div></pre></td></tr></table></figure>
+<ul>
+<li>cinder-api: 启动cinder 的wsgi server,每一个API对应一种资源，在setup.cfg 的entry point 中进行了配置，使用stevedore进行加载。</li>
+<li>cinder-backup:将volume 备份到其他存储系统</li>
+<li>cinder-manage：提供对cinder其他服务的管理操作。</li>
+<li>cinder-rootwrap : 某些cinder操作需要root权限</li>
+<li>cinder-rtstool :如果iSCSI target管理工具不是使用的默认的tgtadm，而是使用LIO iSCSI的话，就可以使用该命令，能够让你创建，删除，和验证卷，以及决定target，且可添加iSCSI initiator到系统。</li>
+<li>cinder-scheduler :用于根据提供的策略调度cinder-volune节点</li>
+<li>cinder-volume：管理 volume的生命周期，与底层存储交互。</li>
+<li>cinder-volume-usage-audit：用于卷使用情况统计。</li>
+</ul>
+<p><a name="B"></a></p>
+<h2 id="以新建-cinder-volume-为例-深入-cinder-代码"><a href="#以新建-cinder-volume-为例-深入-cinder-代码" class="headerlink" title="以新建 cinder volume 为例 深入 cinder 代码"></a>以新建 cinder volume 为例 深入 cinder 代码</h2><p>首先看下cinder –debug create volume 都发送了那些请求：<br><img src="http://7xrnwq.com1.z0.glb.clouddn.com/2016-12-26-cinder-create-api.png" alt="cinder create api"></p>
+<p>可以看到先去keystone验证，然后向cinder-api发送一个v2/{tenant-id}/volumes 的post请求，volume创建，然后发送一个v2/{tenant-id}/volumes/{volume-id} 的get请求获取创建的volume数据。</p>
+<p>接下来看下cinder-api中接受create volume 的post请求代码，路由过程略过：</p>
+<p>/cinder/api/v2/volumes.py 主要代码如下<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@wsgi.response(202)</span></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">create</span><span class="params">(self, req, body)</span>:</span></div><div class="line">        <span class="string">"""Creates a new volume."""</span></div><div class="line">        .....对传入参数的检测.......</div><div class="line"></div><div class="line">        kwargs[<span class="string">'metadata'</span>] = volume.get(<span class="string">'metadata'</span>, <span class="keyword">None</span>)</div><div class="line"></div><div class="line">        snapshot_id = volume.get(<span class="string">'snapshot_id'</span>)</div><div class="line">        <span class="keyword">if</span> snapshot_id <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</div><div class="line">            <span class="keyword">if</span> <span class="keyword">not</span> uuidutils.is_uuid_like(snapshot_id):</div><div class="line">                msg = _(<span class="string">"Snapshot ID must be in UUID form."</span>)</div><div class="line">                <span class="keyword">raise</span> exc.HTTPBadRequest(explanation=msg)</div><div class="line">            <span class="comment"># Not found exception will be handled at the wsgi level</span></div><div class="line">            kwargs[<span class="string">'snapshot'</span>] = self.volume_api.get_snapshot(context,</div><div class="line">                                                              snapshot_id)</div><div class="line">        <span class="keyword">else</span>:</div><div class="line">            kwargs[<span class="string">'snapshot'</span>] = <span class="keyword">None</span></div><div class="line"></div><div class="line">        source_volid = volume.get(<span class="string">'source_volid'</span>)</div><div class="line">        <span class="keyword">if</span> source_volid <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</div><div class="line">            <span class="comment"># Not found exception will be handled at the wsgi level</span></div><div class="line">            kwargs[<span class="string">'source_volume'</span>] = \</div><div class="line">                self.volume_api.get_volume(context,</div><div class="line">                                           source_volid)</div><div class="line">        <span class="keyword">else</span>:</div><div class="line">            kwargs[<span class="string">'source_volume'</span>] = <span class="keyword">None</span></div><div class="line"></div><div class="line">        source_replica = volume.get(<span class="string">'source_replica'</span>)</div><div class="line">        <span class="keyword">if</span> source_replica <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</div><div class="line">            <span class="comment"># Not found exception will be handled at the wsgi level</span></div><div class="line">            src_vol = self.volume_api.get_volume(context,</div><div class="line">                                                 source_replica)</div><div class="line">            <span class="keyword">if</span> src_vol[<span class="string">'replication_status'</span>] == <span class="string">'disabled'</span>:</div><div class="line">                explanation = _(<span class="string">'source volume id:%s is not'</span></div><div class="line">                                <span class="string">' replicated'</span>) % source_replica</div><div class="line">                <span class="keyword">raise</span> exc.HTTPBadRequest(explanation=explanation)</div><div class="line">            kwargs[<span class="string">'source_replica'</span>] = src_vol</div><div class="line">        <span class="keyword">else</span>:</div><div class="line">            kwargs[<span class="string">'source_replica'</span>] = <span class="keyword">None</span></div><div class="line"></div><div class="line">        consistencygroup_id = volume.get(<span class="string">'consistencygroup_id'</span>)</div><div class="line">        <span class="keyword">if</span> consistencygroup_id <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</div><div class="line">            <span class="comment"># Not found exception will be handled at the wsgi level</span></div><div class="line">            kwargs[<span class="string">'consistencygroup'</span>] = \</div><div class="line">                self.consistencygroup_api.get(context,</div><div class="line">                                              consistencygroup_id)</div><div class="line">        <span class="keyword">else</span>:</div><div class="line">            kwargs[<span class="string">'consistencygroup'</span>] = <span class="keyword">None</span></div><div class="line"></div><div class="line">        size = volume.get(<span class="string">'size'</span>, <span class="keyword">None</span>)</div><div class="line">        <span class="keyword">if</span> size <span class="keyword">is</span> <span class="keyword">None</span> <span class="keyword">and</span> kwargs[<span class="string">'snapshot'</span>] <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</div><div class="line">            size = kwargs[<span class="string">'snapshot'</span>][<span class="string">'volume_size'</span>]</div><div class="line">        <span class="keyword">elif</span> size <span class="keyword">is</span> <span class="keyword">None</span> <span class="keyword">and</span> kwargs[<span class="string">'source_volume'</span>] <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</div><div class="line">            size = kwargs[<span class="string">'source_volume'</span>][<span class="string">'size'</span>]</div><div class="line">        <span class="keyword">elif</span> size <span class="keyword">is</span> <span class="keyword">None</span> <span class="keyword">and</span> kwargs[<span class="string">'source_replica'</span>] <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</div><div class="line">            size = kwargs[<span class="string">'source_replica'</span>][<span class="string">'size'</span>]</div><div class="line"></div><div class="line">        LOG.info(_LI(<span class="string">"Create volume of %s GB"</span>), size)</div><div class="line"></div><div class="line">        <span class="keyword">if</span> self.ext_mgr.is_loaded(<span class="string">'os-image-create'</span>):</div><div class="line">            image_ref = volume.get(<span class="string">'imageRef'</span>)</div><div class="line">            <span class="keyword">if</span> image_ref <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</div><div class="line">                image_uuid = self._image_uuid_from_ref(image_ref, context)</div><div class="line">                kwargs[<span class="string">'image_id'</span>] = image_uuid</div><div class="line"></div><div class="line">        kwargs[<span class="string">'availability_zone'</span>] = volume.get(<span class="string">'availability_zone'</span>, <span class="keyword">None</span>)</div><div class="line">        kwargs[<span class="string">'scheduler_hints'</span>] = volume.get(<span class="string">'scheduler_hints'</span>, <span class="keyword">None</span>)</div><div class="line">        kwargs[<span class="string">'multiattach'</span>] = utils.get_bool_param(<span class="string">'multiattach'</span>, volume)</div><div class="line"></div><div class="line">        new_volume = self.volume_api.create(context,</div><div class="line">                                            size,</div><div class="line">                                            volume.get(<span class="string">'display_name'</span>),</div><div class="line">                                            volume.get(<span class="string">'display_description'</span>),</div><div class="line">                                            **kwargs)</div><div class="line"></div><div class="line">        retval = self._view_builder.detail(req, new_volume)</div><div class="line"></div><div class="line">        <span class="keyword">return</span> retval</div></pre></td></tr></table></figure></p>
+<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://int32bit.me/2016/07/16/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Openstack-QoS%E6%8E%A7%E5%88%B6%E5%AE%9E%E7%8E%B0%E4%B8%8E%E5%AE%9E%E8%B7%B5/" target="_blank" rel="external">深入理解Openstack QoS控制实现与实践</a></p>
+<p><a href="http://www.jianshu.com/p/fd432c29f277" target="_blank" rel="external">Volume Transfer(volume过户)</a></p>
+<p><a href="http://int32bit.me/2016/10/25/Openstack%E4%BD%BF%E7%94%A8Ceph%E5%AD%98%E5%82%A8%E5%90%8E%E7%AB%AF%E5%88%9B%E5%BB%BA%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%BF%AB%E7%85%A7%E5%8E%9F%E7%90%86%E5%89%96%E6%9E%90/" target="_blank" rel="external">openstack使用Ceph存储后端创建虚拟机快照原理剖析</a></p>
+<p><strong><em>END</em></strong></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/openstack/" rel="tag"># openstack</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/12/23/cinder-sourcecode-explain-1/" rel="next" title="openstack系列--cinder 源码解读(一)---常见命令行操作">
+                <i class="fa fa-chevron-left"></i> openstack系列--cinder 源码解读(一)---常见命令行操作
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/12/26/AllInOne-openstack-environ/" rel="prev" title="openstack系列--AllInOne openstack 实验环境搭建">
+                openstack系列--AllInOne openstack 实验环境搭建 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2016/12/26/cinder-source-code explain-2/"
+           data-title="openstack系列--cinder 源码解读(二)---常见cinder操作工作流程" data-url="http://yoursite.com/2016/12/26/cinder-source-code explain-2/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="pekingzcc" />
+          <p class="site-author-name" itemprop="name">pekingzcc</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">47</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">10</span>
+                <span class="site-state-item-name">tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/zhangchenchen" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#目录结构："><span class="nav-number">1.</span> <span class="nav-text">目录结构：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#cinder-源码大致解析"><span class="nav-number">2.</span> <span class="nav-text">cinder 源码大致解析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#以新建-cinder-volume-为例-深入-cinder-代码"><span class="nav-number">3.</span> <span class="nav-text">以新建 cinder volume 为例 深入 cinder 代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文章"><span class="nav-number">4.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2016 - 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">pekingzcc</span>
+</div>
+
+
+<div class="powered-by">
+  powered by <a class="theme-link" href="https://hexo.io">Hexo</a> 
+</div>
+
+<div class="theme-info">
+  theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"zhangchenchen"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    
+    <script src="/lib/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+
+</body>
+</html>
