@@ -84,46 +84,48 @@
 
 
 
-<meta name="description" content="目录结构：SaltStalk 是什么
-SaltStalk 安装 
-SaltStalk 配置 
-SaltStalk 使用
-SaltStalk 架构
+<meta name="description" content="目录结构：引出
+nova 相关的快照/备份机制
+cinder相关的快照/备份机制 
 
-SaltStalk是什么salt官网给出的介绍简洁明了：
+引出
+备份作为一种常见的容灾机制，是系统设计中不可或缺的一环，openstack自然也不例外，本文列举了一些opensatck中常见的snapshot,backup等操作。
+重点讨论nova,cinder。其他备份比如trove不再考虑
 
-一个配置管理系统，能够维护预定义状态的远程节点(比如，确保指定的报被安装，指定的服务在运行)
-一个分布式远程执行系统，用来在远程节点（可以是单个节点，也可以是任意规则挑选出来的节点）上执行命令">
+
+nova 相关的快照/备份机制Nova 快照
+命令为nova image">
 <meta property="og:type" content="article">
-<meta property="og:title" content="openstack系列-- 运维利器SaltStalk介绍">
-<meta property="og:url" content="http://yoursite.com/2016/11/03/2016-11-3-intro-to-salt/index.html">
+<meta property="og:title" content="openstack系列--openstack 中的快照与备份">
+<meta property="og:url" content="http://yoursite.com/2017/01/23/openstack-incremental-ackup/index.html">
 <meta property="og:site_name" content="Solar">
-<meta property="og:description" content="目录结构：SaltStalk 是什么
-SaltStalk 安装 
-SaltStalk 配置 
-SaltStalk 使用
-SaltStalk 架构
+<meta property="og:description" content="目录结构：引出
+nova 相关的快照/备份机制
+cinder相关的快照/备份机制 
 
-SaltStalk是什么salt官网给出的介绍简洁明了：
+引出
+备份作为一种常见的容灾机制，是系统设计中不可或缺的一环，openstack自然也不例外，本文列举了一些opensatck中常见的snapshot,backup等操作。
+重点讨论nova,cinder。其他备份比如trove不再考虑
 
-一个配置管理系统，能够维护预定义状态的远程节点(比如，确保指定的报被安装，指定的服务在运行)
-一个分布式远程执行系统，用来在远程节点（可以是单个节点，也可以是任意规则挑选出来的节点）上执行命令">
-<meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/20161107external-job-cache.png">
-<meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/20161107master-job-cache.png">
-<meta property="og:updated_time" content="2017-01-22T05:55:06.600Z">
+
+nova 相关的快照/备份机制Nova 快照
+命令为nova image">
+<meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-01-23-create_glance_snap.jpg">
+<meta property="og:updated_time" content="2017-01-23T09:31:10.186Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="openstack系列-- 运维利器SaltStalk介绍">
-<meta name="twitter:description" content="目录结构：SaltStalk 是什么
-SaltStalk 安装 
-SaltStalk 配置 
-SaltStalk 使用
-SaltStalk 架构
+<meta name="twitter:title" content="openstack系列--openstack 中的快照与备份">
+<meta name="twitter:description" content="目录结构：引出
+nova 相关的快照/备份机制
+cinder相关的快照/备份机制 
 
-SaltStalk是什么salt官网给出的介绍简洁明了：
+引出
+备份作为一种常见的容灾机制，是系统设计中不可或缺的一环，openstack自然也不例外，本文列举了一些opensatck中常见的snapshot,backup等操作。
+重点讨论nova,cinder。其他备份比如trove不再考虑
 
-一个配置管理系统，能够维护预定义状态的远程节点(比如，确保指定的报被安装，指定的服务在运行)
-一个分布式远程执行系统，用来在远程节点（可以是单个节点，也可以是任意规则挑选出来的节点）上执行命令">
-<meta name="twitter:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/20161107external-job-cache.png">
+
+nova 相关的快照/备份机制Nova 快照
+命令为nova image">
+<meta name="twitter:image" content="http://oeptotikb.bkt.clouddn.com/2017-01-23-create_glance_snap.jpg">
 
 
 
@@ -151,13 +153,13 @@ SaltStalk是什么salt官网给出的介绍简洁明了：
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2016/11/03/2016-11-3-intro-to-salt/"/>
+  <link rel="canonical" href="http://yoursite.com/2017/01/23/openstack-incremental-ackup/"/>
 
 
 
 
 
-  <title> openstack系列-- 运维利器SaltStalk介绍 | Solar </title>
+  <title> openstack系列--openstack 中的快照与备份 | Solar </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -270,7 +272,7 @@ SaltStalk是什么salt官网给出的介绍简洁明了：
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/11/03/2016-11-3-intro-to-salt/">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/01/23/openstack-incremental-ackup/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -294,7 +296,7 @@ SaltStalk是什么salt官网给出的介绍简洁明了：
             
             
               
-                openstack系列-- 运维利器SaltStalk介绍
+                openstack系列--openstack 中的快照与备份
               
             
           </h1>
@@ -309,8 +311,8 @@ SaltStalk是什么salt官网给出的介绍简洁明了：
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-11-03T13:06:25+08:00">
-                2016-11-03
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-23T14:54:25+08:00">
+                2017-01-23
               </time>
             
 
@@ -328,8 +330,8 @@ SaltStalk是什么salt官网给出的介绍简洁明了：
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a href="/2016/11/03/2016-11-3-intro-to-salt/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/11/03/2016-11-3-intro-to-salt/" itemprop="commentCount"></span>
+                <a href="/2017/01/23/openstack-incremental-ackup/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/01/23/openstack-incremental-ackup/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -355,53 +357,45 @@ SaltStalk是什么salt官网给出的介绍简洁明了：
       
 
       
-        <h2 id="目录结构："><a href="#目录结构：" class="headerlink" title="目录结构："></a>目录结构：</h2><p><a href="#A">SaltStalk 是什么</a></p>
-<p><a href="#B">SaltStalk 安装 </a></p>
-<p><a href="#C">SaltStalk 配置 </a></p>
-<p><a href="#D">SaltStalk 使用</a></p>
-<p><a href="#E">SaltStalk 架构</a></p>
+        <h2 id="目录结构："><a href="#目录结构：" class="headerlink" title="目录结构："></a>目录结构：</h2><p><a href="#A">引出</a></p>
+<p><a href="#B">nova 相关的快照/备份机制</a></p>
+<p><a href="#C">cinder相关的快照/备份机制 </a></p>
 <p><a name="A"></a></p>
-<h2 id="SaltStalk是什么"><a href="#SaltStalk是什么" class="headerlink" title="SaltStalk是什么"></a>SaltStalk是什么</h2><p>salt官网给出的介绍简洁明了：</p>
-<ul>
-<li>一个配置管理系统，能够维护预定义状态的远程节点(比如，确保指定的报被安装，指定的服务在运行)</li>
-<li>一个分布式远程执行系统，用来在远程节点（可以是单个节点，也可以是任意规则挑选出来的节点）上执行命令和查询数据。开发其的目的是为远程执行提供最好的解决方案，并使远程执行变得更好，更快，更简单。</li>
+<h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><ul>
+<li>备份作为一种常见的容灾机制，是系统设计中不可或缺的一环，openstack自然也不例外，本文列举了一些opensatck中常见的snapshot,backup等操作。</li>
+<li>重点讨论nova,cinder。其他备份比如trove不再考虑</li>
 </ul>
-<p>其实，除了saltstack,还有其他的同类型软件供我们选择，比如puppet、chef、ansible、fabric等,关于其中的区别以及优劣势可以参考这里，<a href="http://blog.takipi.com/deployment-management-tools-chef-vs-puppet-vs-ansible-vs-saltstack-vs-fabric/" target="_blank" rel="external">Ansible vs. Chef vs. Fabric vs. Puppet vs. SaltStack</a><br>稍微总结下：chef,puppet 是出现时间比较早的系统，对于比较重视成熟性和稳定性的公司来说比较合适。ansible与saltstack比较适合快速灵活的生产部署环境，且适合没有太多额外要求，生产环境操作系统一致的情况下。fabric比较适合规模比较小的环境，属于入门级别的配置管理系统。</p>
 <p><a name="B"></a></p>
-<h2 id="SaltStalk-安装"><a href="#SaltStalk-安装" class="headerlink" title="SaltStalk 安装"></a>SaltStalk 安装</h2><p>安装比较简单，<a href="http://docs.saltstack.cn/topics/installation/index.html" target="_blank" rel="external">check this</a>,不再赘述。</p>
+<h2 id="nova-相关的快照-备份机制"><a href="#nova-相关的快照-备份机制" class="headerlink" title="nova 相关的快照/备份机制"></a>nova 相关的快照/备份机制</h2><h4 id="Nova-快照"><a href="#Nova-快照" class="headerlink" title="Nova 快照"></a>Nova 快照</h4><ul>
+<li>命令为nova image-create</li>
+<li>严格来说，该快照并不是真正意义的快照，更像是创建一个镜像，所以命令为image-create.它并没有使用virt提供的virsh snapshot-create来创建snapshot，仅仅将虚拟机的系统磁盘文件完整的复制一份，然后把复制的文件上传至 glance 中作为镜像，之后二者毫无关联，类似于全量快照(没有考虑ceph作为统一存储)<a href="http://wsfdl.com/openstack/2014/08/12/Nova%E5%BF%AB%E7%85%A7%E5%88%86%E6%9E%90.html" target="_blank" rel="external">check this</a>。</li>
+<li>nova 中的快照支持冷快照和live snapshot,两者的命令都是 nova image-create。当满足QEMU 1.3+ and libvirt 1.0+版本要求时会使用live snapshot,否则使用冷快照。关于两者区别以及流程，<a href="http://wsfdl.com/openstack/2014/08/12/Nova%E5%BF%AB%E7%85%A7%E5%88%86%E6%9E%90.html" target="_blank" rel="external">check this</a></li>
+<li>如果是使用ceph作为统一存储(即nova,glance,cinder都将ceph rbd作为默认存储)，那么snapshot可以利用ceph的cow等特性实现更快速的快照，L版本已实现，流程大概如下：</li>
+</ul>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-01-23-create_glance_snap.jpg" alt="snapshot with rbd"><br>这样做的坏处是会产生新建镜像对原虚拟机的依赖性，需要定期flatten。还不知道L版是怎么处理的，挖个坑，回头看下具体实现。详细参考<a href="http://niusmallnan.com/_build/html/_templates/openstack/rbd_snap_insteadof_qemu_snap.html" target="_blank" rel="external">基于rbd提升虚机快照创建速度</a></p>
+<h4 id="Nova-备份"><a href="#Nova-备份" class="headerlink" title="Nova 备份"></a>Nova 备份</h4><ul>
+<li>命令为 nova backup <server> <name> <backup-type> <rotation></rotation></backup-type></name></server></li>
+<li>其实该命令跟image-create的作用差不多，也是创建一个image,最大的区别就是它有一个rotation，会保证备份的个数为rotation个。详细的用法参考这个实例<a href="http://qiita.com/idzzy/items/8b7833fc42b43a6db219" target="_blank" rel="external">Openstack - Nova Backup/Restore</a></li>
+<li>nova backup 不会自动每天/月周期执行，只能是我们自己命令，所以可以利用nova backup 命令写cron脚本或其他脚本实现自动化备份。这里有一个实例<a href="https://raymii.org/s/tutorials/OpenStack_Quick_and_automatic_instance_snapshot_backups.html" target="_blank" rel="external">OpenStack: Quick and automatic instance snapshot backup and restore (and before an apt upgrade) with nova backup</a></li>
+</ul>
 <p><a name="C"></a></p>
-<h2 id="SaltStalk-配置"><a href="#SaltStalk-配置" class="headerlink" title="SaltStalk 配置"></a>SaltStalk 配置</h2><p>saltstalk是典型的CS架构，主要分两种角色，master和minions,master负责minions的配置管理以及远程执行。一般来说，master的配置文件位于/etc/salt/master，minion的配置文件在相应机器的/etc/salt/minion,只需在minion配置文件中指定master指向即可运行。</p>
-<p><a href="http://docs.saltstack.cn/ref/configuration/master.html" target="_blank" rel="external">master的配置项</a>非常多，大致包括以下几项：</p>
-<ul>
-<li>主要配置：包括网络接口，提供服务的端口，master id,最大打开文件数，工作线程个数，返回端口，缓存目录，各种缓存配置（minions数据缓存，作业缓存等）</li>
-<li>master 安全相关配置：主要是针对PKI验证的一些配置。</li>
-<li>master模块管理相关配置</li>
-<li>master state system 相关配置</li>
-<li>pillar 相关配置</li>
-<li>日志相关配置</li>
-<li>windows软件源相关配置</li>
+<h2 id="cinder相关的快照-备份机制"><a href="#cinder相关的快照-备份机制" class="headerlink" title="cinder相关的快照/备份机制"></a>cinder相关的快照/备份机制</h2><h4 id="cinder-快照"><a href="#cinder-快照" class="headerlink" title="cinder 快照"></a>cinder 快照</h4><ul>
+<li>命令为 cinder snapshot-create 同nova volume-snapshot-create一样效果。除了create,还有其他list,delete,metadata等命令。</li>
+<li>可以用snapshot 对volume进行恢复，见示例<a href="http://qiita.com/idzzy/items/cfb568e83e2645e3f32e" target="_blank" rel="external">Openstack - Cinder Snapshot/Restore</a>  </li>
 </ul>
-<p><a href="http://docs.saltstack.cn/ref/configuration/minion.html" target="_blank" rel="external">minion的配置项</a>跟master大致类似，不再赘述。</p>
-<p>其他：</p>
-<ul>
-<li>新版saltstack 中minion有一个minion_blackout的配置，该选项设为true后，该minion不会执行除saltutil.refresh_pillar之外的其他所有命令。</li>
-<li>saltstack有一个访问控制系统对于非admin用户进行细粒度的访问控制。<a href="http://docs.saltstack.cn/topics/eauth/access_control.html" target="_blank" rel="external">check this</a></li>
-<li>job管理器：可以实现对minion job的发送信号，定时调度等</li>
-<li>job 返回数据管理：系统默认返回数据存储在Job cache（默认是在/var/cache/salt/master/jobs目录）中，还有其他两种存储模式：一种是External Job Cache，如下图</li>
+<h4 id="cinder-备份"><a href="#cinder-备份" class="headerlink" title="cinder 备份"></a>cinder 备份</h4><ul>
+<li>命令 cinder backup-create </li>
+<li>cinder支持多种backend,对全量备份，增量备份的支持也不尽相同，这里只讨论以ceph rbd 作为backend的情况，其他的backend可以参考这里，<a href="http://blog.csdn.net/wytdahu/article/details/45246095" target="_blank" rel="external">Openstack 中cinder backup三种backend的对比</a>- 使用 rbd作为后端，支持全量备份和增量备份。backup-create时先尝试创建增量备份，如果不成功，会创建全量备份，不需要指明专门的参数。</li>
+<li>原理可以看看这篇, <a href="http://blog.csdn.net/wytdahu/article/details/45246095" target="_blank" rel="external">Openstack 中cinder backup三种backend的对比</a>。        </li>
 </ul>
-<p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/20161107external-job-cache.png" alt="External Job Cache"></p>
-<p>另一种是Master Job Cache，如下图：</p>
-<p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/20161107master-job-cache.png" alt="Master Job Cache"></p>
-<ul>
-<li>returner: 我们可以在master端执行远程指令时指定returner,这样minion返回的数据不仅会返回到master，也会返回到我们指定的returner。而且我们也可以按照要求实现一个returner，来替换我们的Default Job Cache。</li>
-</ul>
-<p><a name="D"></a></p>
-<h2 id="SaltStalk-使用"><a href="#SaltStalk-使用" class="headerlink" title="SaltStalk 使用"></a>SaltStalk 使用</h2><p><a name="E"></a></p>
-<h2 id="SaltStalk-架构"><a href="#SaltStalk-架构" class="headerlink" title="SaltStalk 架构"></a>SaltStalk 架构</h2><h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://www.v2ex.com/t/316723#reply21" target="_blank" rel="external">v2ex</a></p>
-<p><a href="http://stackoverflow.com/questions/2964391/preventing-multiple-process-instances-on-linux" target="_blank" rel="external">stackoverflow-Preventing multiple process instances on Linux</a></p>
-<p><a href="http://blog.jobbole.com/102538/" target="_blank" rel="external">Linux 编程中的文件锁之 flock</a></p>
-<p><a href="https://www.ibm.com/developerworks/cn/linux/l-cn-filelock/" target="_blank" rel="external">Linux 2.6 中的文件锁</a></p>
-<p><a href="https://wiki.python.org/moin/DbusExamples" target="_blank" rel="external">Python wiki</a></p>
+<h2 id="未完待续"><a href="#未完待续" class="headerlink" title="未完待续"></a>未完待续</h2><h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://wsfdl.com/openstack/2014/08/12/Nova%E5%BF%AB%E7%85%A7%E5%88%86%E6%9E%90.html" target="_blank" rel="external">Nova 快照分析</a></p>
+<p><a href="https://raymii.org/s/tutorials/OpenStack_Quick_and_automatic_instance_snapshot_backups.html" target="_blank" rel="external">OpenStack: Quick and automatic instance snapshot backup and restore (and before an apt upgrade) with nova backup</a></p>
+<p><a href="http://niusmallnan.com/_build/html/_templates/openstack/rbd_snap_insteadof_qemu_snap.html" target="_blank" rel="external">基于rbd提升虚机快照创建速度</a></p>
+<p><a href="https://www.sebastien-han.fr/blog/2015/10/05/openstack-nova-snapshots-on-ceph-rbd/#disqus_comments" target="_blank" rel="external">OpenStack Nova snapshots on Ceph RBD</a></p>
+<p><a href="http://qiita.com/idzzy/items/8b7833fc42b43a6db219" target="_blank" rel="external">Openstack - Nova Backup/Restore</a></p>
+<p><a href="https://www.zybuluo.com/zwei/note/352999" target="_blank" rel="external">openstack liberty版本使用 ceph 作为存储后端</a></p>
+<p><a href="http://blog.csdn.net/wytdahu/article/details/45246095" target="_blank" rel="external">Openstack 中cinder backup三种backend的对比</a></p>
+<p><a href="http://gorka.eguileor.com/inside-cinders-incremental-backup/" target="_blank" rel="external">Inside Cinder’s Incremental Backup</a></p>
 <p><strong><em>END</em></strong></p>
 
       
@@ -435,8 +429,8 @@ SaltStalk是什么salt官网给出的介绍简洁明了：
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/11/01/2016-11-1-keep-one-instance-in-a-machine/" rel="next" title="linux shell系列-- 如何在系统中保证只有一个实例">
-                <i class="fa fa-chevron-left"></i> linux shell系列-- 如何在系统中保证只有一个实例
+              <a href="/2017/01/19/openstack-reset-instance-password/" rel="next" title="openstack系列--重设虚拟机实例密码几种方法">
+                <i class="fa fa-chevron-left"></i> openstack系列--重设虚拟机实例密码几种方法
               </a>
             
           </div>
@@ -444,10 +438,6 @@ SaltStalk是什么salt官网给出的介绍简洁明了：
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/11/10/make-nfs-as-cinder-backend/" rel="prev" title="openstack系列--设置nfs作为cinder backend">
-                openstack系列--设置nfs作为cinder backend <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -473,8 +463,8 @@ SaltStalk是什么salt官网给出的介绍简洁明了：
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/11/03/2016-11-3-intro-to-salt/"
-           data-title="openstack系列-- 运维利器SaltStalk介绍" data-url="http://yoursite.com/2016/11/03/2016-11-3-intro-to-salt/">
+      <div class="ds-thread" data-thread-key="2017/01/23/openstack-incremental-ackup/"
+           data-title="openstack系列--openstack 中的快照与备份" data-url="http://yoursite.com/2017/01/23/openstack-incremental-ackup/">
       </div>
     
   </div>
@@ -578,7 +568,7 @@ SaltStalk是什么salt官网给出的介绍简洁明了：
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#目录结构："><span class="nav-number">1.</span> <span class="nav-text">目录结构：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SaltStalk是什么"><span class="nav-number">2.</span> <span class="nav-text">SaltStalk是什么</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SaltStalk-安装"><span class="nav-number">3.</span> <span class="nav-text">SaltStalk 安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SaltStalk-配置"><span class="nav-number">4.</span> <span class="nav-text">SaltStalk 配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SaltStalk-使用"><span class="nav-number">5.</span> <span class="nav-text">SaltStalk 使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SaltStalk-架构"><span class="nav-number">6.</span> <span class="nav-text">SaltStalk 架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文章"><span class="nav-number">7.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#目录结构："><span class="nav-number">1.</span> <span class="nav-text">目录结构：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#引出"><span class="nav-number">2.</span> <span class="nav-text">引出</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#nova-相关的快照-备份机制"><span class="nav-number">3.</span> <span class="nav-text">nova 相关的快照/备份机制</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Nova-快照"><span class="nav-number">3.0.1.</span> <span class="nav-text">Nova 快照</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Nova-备份"><span class="nav-number">3.0.2.</span> <span class="nav-text">Nova 备份</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#cinder相关的快照-备份机制"><span class="nav-number">4.</span> <span class="nav-text">cinder相关的快照/备份机制</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#cinder-快照"><span class="nav-number">4.0.1.</span> <span class="nav-text">cinder 快照</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#cinder-备份"><span class="nav-number">4.0.2.</span> <span class="nav-text">cinder 备份</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#未完待续"><span class="nav-number">5.</span> <span class="nav-text">未完待续</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文章"><span class="nav-number">6.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
             
 
           </div>

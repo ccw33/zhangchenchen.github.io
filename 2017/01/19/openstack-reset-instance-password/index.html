@@ -92,7 +92,7 @@
 
 引出
 要解决的问题很明确：就是如果虚拟机的连接采用用户名密码登录的方式，而密码忘记的话，需要采取什么手段解决。
-最简单的解决方案当然是运营端通过VNC连接直接重设密码就行了。这里">
+其实解决方案是要取决于真实的生产环境，虚拟化方式的不同，初始化虚拟">
 <meta property="og:type" content="article">
 <meta property="og:title" content="openstack系列--重设虚拟机实例密码几种方法">
 <meta property="og:url" content="http://yoursite.com/2017/01/19/openstack-reset-instance-password/index.html">
@@ -105,11 +105,11 @@
 
 引出
 要解决的问题很明确：就是如果虚拟机的连接采用用户名密码登录的方式，而密码忘记的话，需要采取什么手段解决。
-最简单的解决方案当然是运营端通过VNC连接直接重设密码就行了。这里">
+其实解决方案是要取决于真实的生产环境，虚拟化方式的不同，初始化虚拟">
 <meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-01-22-image-create.png">
 <meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-01-20-image-snap.png">
 <meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-01-20-snap-boot.png">
-<meta property="og:updated_time" content="2017-01-23T02:09:24.058Z">
+<meta property="og:updated_time" content="2017-01-23T06:56:19.867Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="openstack系列--重设虚拟机实例密码几种方法">
 <meta name="twitter:description" content="目录结构：引出
@@ -120,7 +120,7 @@
 
 引出
 要解决的问题很明确：就是如果虚拟机的连接采用用户名密码登录的方式，而密码忘记的话，需要采取什么手段解决。
-最简单的解决方案当然是运营端通过VNC连接直接重设密码就行了。这里">
+其实解决方案是要取决于真实的生产环境，虚拟化方式的不同，初始化虚拟">
 <meta name="twitter:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-01-22-image-create.png">
 
 
@@ -361,7 +361,6 @@
 <p><a name="A"></a></p>
 <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><ul>
 <li>要解决的问题很明确：就是如果虚拟机的连接采用用户名密码登录的方式，而密码忘记的话，需要采取什么手段解决。</li>
-<li>最简单的解决方案当然是运营端通过VNC连接直接重设密码就行了。这里只讨论不进入虚拟机，依靠openstack提供的接口实现的情况。。</li>
 <li>其实解决方案是要取决于真实的生产环境，虚拟化方式的不同，初始化虚拟机密码方式的不同，openstack版本的不同，都会造成某个方案的可行不可行。以下几种方案可能或多或少会出现无法实现的情况，楼主尽量把条件讲清楚。</li>
 </ul>
 <p><a name="B"></a></p>
@@ -442,6 +441,10 @@
 
           <div class="post-nav-prev post-nav-item">
             
+              <a href="/2017/01/23/openstack-incremental-ackup/" rel="prev" title="openstack系列--openstack 中的快照与备份">
+                openstack系列--openstack 中的快照与备份 <i class="fa fa-chevron-right"></i>
+              </a>
+            
           </div>
         </div>
       
@@ -514,7 +517,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">47</span>
+                <span class="site-state-item-count">48</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
