@@ -89,15 +89,14 @@
 安装Centos系统
 配置系统
 上传镜像
+自动创建镜像工具
 参考文章
+tips:在制作镜像的时候最好先知晓镜像所要满足的要求，比如：是否支持磁盘分区，重设根分区大小，密码初始化等等。最常见的需求有如下几种：
 
-准备工作
-下载Vmware workstation,并安装Centos7,配置好网络。注：刚开始是用的virtualbox,发现不支持nested KVM,Vmware workstation 10+版本以上应该都可以。
-宿主机（刚装好的Centos）安装libvirt系列工具:
-
-123yum groupin">
+Disk partitions and resize root partition on boot (cloud-init)
+No hard-coded M">
 <meta property="og:type" content="article">
-<meta property="og:title" content="openstack 系列--制作 openstack 镜像简记">
+<meta property="og:title" content="openstack 系列--手动制作 openstack 镜像简记">
 <meta property="og:url" content="http://yoursite.com/2017/01/17/make-openstack-image/index.html">
 <meta property="og:site_name" content="Solar">
 <meta property="og:description" content="目录结构：准备工作 
@@ -105,28 +104,26 @@
 安装Centos系统
 配置系统
 上传镜像
+自动创建镜像工具
 参考文章
+tips:在制作镜像的时候最好先知晓镜像所要满足的要求，比如：是否支持磁盘分区，重设根分区大小，密码初始化等等。最常见的需求有如下几种：
 
-准备工作
-下载Vmware workstation,并安装Centos7,配置好网络。注：刚开始是用的virtualbox,发现不支持nested KVM,Vmware workstation 10+版本以上应该都可以。
-宿主机（刚装好的Centos）安装libvirt系列工具:
-
-123yum groupin">
-<meta property="og:updated_time" content="2017-01-22T05:55:06.688Z">
+Disk partitions and resize root partition on boot (cloud-init)
+No hard-coded M">
+<meta property="og:updated_time" content="2017-02-06T09:42:16.783Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="openstack 系列--制作 openstack 镜像简记">
+<meta name="twitter:title" content="openstack 系列--手动制作 openstack 镜像简记">
 <meta name="twitter:description" content="目录结构：准备工作 
 创建虚拟机
 安装Centos系统
 配置系统
 上传镜像
+自动创建镜像工具
 参考文章
+tips:在制作镜像的时候最好先知晓镜像所要满足的要求，比如：是否支持磁盘分区，重设根分区大小，密码初始化等等。最常见的需求有如下几种：
 
-准备工作
-下载Vmware workstation,并安装Centos7,配置好网络。注：刚开始是用的virtualbox,发现不支持nested KVM,Vmware workstation 10+版本以上应该都可以。
-宿主机（刚装好的Centos）安装libvirt系列工具:
-
-123yum groupin">
+Disk partitions and resize root partition on boot (cloud-init)
+No hard-coded M">
 
 
 
@@ -160,7 +157,7 @@
 
 
 
-  <title> openstack 系列--制作 openstack 镜像简记 | Solar </title>
+  <title> openstack 系列--手动制作 openstack 镜像简记 | Solar </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -297,7 +294,7 @@
             
             
               
-                openstack 系列--制作 openstack 镜像简记
+                openstack 系列--手动制作 openstack 镜像简记
               
             
           </h1>
@@ -363,7 +360,19 @@
 <p><a href="#C">安装Centos系统</a></p>
 <p><a href="#D">配置系统</a></p>
 <p><a href="#E">上传镜像</a></p>
-<p><a href="#F">参考文章</a></p>
+<p><a href="#F">自动创建镜像工具</a></p>
+<p><a href="#G">参考文章</a></p>
+<p>tips:在制作镜像的时候最好先知晓镜像所要满足的要求，比如：是否支持磁盘分区，重设根分区大小，密码初始化等等。最常见的需求有如下几种：</p>
+<ul>
+<li>Disk partitions and resize root partition on boot (cloud-init)</li>
+<li>No hard-coded MAC address information</li>
+<li>SSH server running</li>
+<li>Disable firewall</li>
+<li>Access instance using ssh public key (cloud-init)</li>
+<li>Process user data and other metadata (cloud-init)</li>
+<li>Paravirtualized Xen support in Linux kernel (Xen hypervisor only with Linux kernel version &lt; 3.0)</li>
+</ul>
+<p>这部分内容可参考官方文档，<a href="http://docs.openstack.org/image-guide/openstack-images.html" target="_blank" rel="external">Image requirements</a> 。</p>
 <p><a name="A"></a></p>
 <h2 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h2><ul>
 <li>下载Vmware workstation,并安装Centos7,配置好网络。注：刚开始是用的virtualbox,发现不支持nested KVM,Vmware workstation 10+版本以上应该都可以。</li>
@@ -371,7 +380,7 @@
 </ul>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">yum groupinstall Virtualization <span class="string">"Virtualization Client"</span> </div><div class="line">yum install libvirt</div><div class="line">yum install libguestfs-tools</div></pre></td></tr></table></figure>
 <ul>
-<li>从<a href="https://www.centos.org/download/mirrors/" target="_blank" rel="external">Centos镜像源</a>下载一个最小的Centos7镜像。</li>
+<li>从<a href="https://www.centos.org/download/mirrors/" target="_blank" rel="external">Centos镜像源</a>下载一个最小的Centos7镜像。本文是以centos为例,其他操作系统类似，详见<a href="http://docs.openstack.org/image-guide/create-images-manually.html#" target="_blank" rel="external">Create images manually</a></li>
 </ul>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">wget - O http://mirrors.163.com/centos/7.2.1511/isos/x86_64/CentOS-7-x86_64-Minimal-1511.iso</div></pre></td></tr></table></figure>
 <p><a name="B"></a></p>
@@ -402,7 +411,7 @@
 <li><p>虚拟机需要打开boot日志功能，并指定console，这样nova console-log才能获取虚拟机启动时的日志。修改配置文件/etc/default/grub，设置GRUB_CMDLINE_LINUX为：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">GRUB_CMDLINE_LINUX=<span class="string">"crashkernel=auto console=tty0 console=ttyS0,115200n8"</span></div></pre></td></tr></table></figure>
 </li>
-<li><p>手动安装qemu-guest-agent：</p>
+<li><p>手动安装qemu-guest-agent(L 版的动态修改密码需要用到)：</p>
 </li>
 </ul>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">yum install -y qemu-guest-agent</div></pre></td></tr></table></figure>
@@ -421,16 +430,45 @@
 </ul>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">yum update -y</div><div class="line">yum install -y epel-release</div><div class="line">yum install -y cloud-utils-growpart.x86_64</div><div class="line">rpm -qa kernel | sed <span class="string">'s/^kernel-//'</span>  | xargs -I &#123;&#125; dracut <span class="_">-f</span> /boot/initramfs-&#123;&#125;.img &#123;&#125;</div></pre></td></tr></table></figure>
 <ul>
-<li>完成，虚拟机关机。</li>
+<li><p>基本完成，虚拟机关机。</p>
+</li>
+<li><p>宿主机上进行清理工作：</p>
+</li>
 </ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">virt-sysprep <span class="_">-d</span> centos7 <span class="comment"># 移除mac地址信息</span></div><div class="line">virsh undefine centos7 <span class="comment"># 删除虚拟机</span></div></pre></td></tr></table></figure>
 <p><a name="E"></a></p>
-<h2 id="上传镜像"><a href="#上传镜像" class="headerlink" title="上传镜像"></a>上传镜像</h2><p>上传镜像就不赘述了，有个窍门就是如果后端是ceph的话可以利用rbd import 的方式来加快速度。具体参考<a href="http://int32bit.me/2016/05/28/%E6%89%8B%E5%8A%A8%E5%88%B6%E4%BD%9COpenstack%E9%95%9C%E5%83%8F/" target="_blank" rel="external">手动制作Openstack镜像</a> 的上传镜像部分。</p>
+<h2 id="上传镜像"><a href="#上传镜像" class="headerlink" title="上传镜像"></a>上传镜像</h2><ul>
+<li>镜像格式转换（ceph只支持raw格式）</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">qemu-img convert <span class="_">-f</span> qcow2 -O raw centos.qcow2 centos.raw</div></pre></td></tr></table></figure>
+<ul>
+<li>直接用glance上传镜像就不赘述了，这里有个窍门就是如果后端是ceph的话可以利用rbd import 的方式来加快速度，如下。 </li>
+<li>首先glance create 一条记录，但没有执行镜像上传操作，只是新建一条数据库记录。并记录下image-id。</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">glance image-create</div></pre></td></tr></table></figure>
+<ul>
+<li>利用ceph import 镜像并执行快照</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">rbd --pool=volumes import  centos.raw  --image=<span class="variable">$IMAGE_ID</span> --new-format --order 24</div><div class="line">rbd --pool=volumes --image=<span class="variable">$IMAGE_ID</span> --snap=snap snap create</div><div class="line">rbd --pool=volumes --image=<span class="variable">$IMAGE_ID</span> --snap=snap snap protect</div></pre></td></tr></table></figure>
+<ul>
+<li><p>设置镜像的location url</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">glance location-add --url rbd://<span class="variable">$FS_ROOT</span>/glance_images/<span class="variable">$IMAGE_ID</span>/snap <span class="variable">$IMAGE_ID</span><span class="comment">#这里的$FS_ROOT 可以通过查看ceph -s 中的cluster.</span></div></pre></td></tr></table></figure>
+</li>
+<li><p>完善镜像的其他属性</p>
+</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">glance image-update --name=<span class="string">"centos-7.2-64bit"</span> --disk-format=raw --container-format=bare</div><div class="line"></div><div class="line"><span class="comment"># 配置qemu-ga，该步骤是必须的，否则libvert启动虚拟机时不会生成qemu-ga配置项，导致虚拟机内部的qemu-ga由于找不到对应的虚拟串行字符设备而启动失败，提示找不到channel</span></div><div class="line">glance image-update --property hw_qemu_guest_agent=yes <span class="variable">$IMAGE_ID</span></div></pre></td></tr></table></figure>
+<p>具体参考<a href="http://int32bit.me/2016/05/28/%E6%89%8B%E5%8A%A8%E5%88%B6%E4%BD%9COpenstack%E9%95%9C%E5%83%8F/" target="_blank" rel="external">手动制作Openstack镜像</a> 的上传镜像部分。</p>
 <p><a name="F"></a></p>
-<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://int32bit.me/2016/05/28/%E6%89%8B%E5%8A%A8%E5%88%B6%E4%BD%9COpenstack%E9%95%9C%E5%83%8F/" target="_blank" rel="external">手动制作Openstack镜像</a></p>
+<h2 id="自动创建镜像工具"><a href="#自动创建镜像工具" class="headerlink" title="自动创建镜像工具"></a>自动创建镜像工具</h2><p>openstack 文档提供了几个类似的工具，没有尝试，<a href="http://docs.openstack.org/image-guide/create-images-automatically.html" target="_blank" rel="external">Tool support for image creation</a>.</p>
+<p><a name="G"></a></p>
+<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://docs.openstack.org/image-guide/centos-image.html" target="_blank" rel="external">openstack doc:Example: CentOS image</a></p>
+<p><a href="http://int32bit.me/2016/05/28/%E6%89%8B%E5%8A%A8%E5%88%B6%E4%BD%9COpenstack%E9%95%9C%E5%83%8F/" target="_blank" rel="external">手动制作Openstack镜像</a></p>
 <p><a href="http://yanheven.github.io/centos65-image-create" target="_blank" rel="external">制作openstack用的centos6.5镜像</a></p>
 <p><a href="http://blog.csdn.net/hzhsan/article/details/44098537/" target="_blank" rel="external">KVM虚拟机网络配置 Bridge方式，NAT方式</a></p>
 <p><a href="http://www.bkjia.com/Linuxjc/877147.html#top" target="_blank" rel="external">烂泥：KVM使用NAT联网并为VM配置iptables端口转发，kvmiptables</a></p>
 <p><a href="http://www.chenshake.com/about-openstack-centos-mirror/" target="_blank" rel="external">谈谈Openstack的CentOS镜像</a></p>
+<p><a href="http://docs.openstack.org/image-guide/openstack-images.html" target="_blank" rel="external">Image requirements</a></p>
 <p><strong><em>END</em></strong></p>
 
       
@@ -503,7 +541,7 @@
   <div class="comments" id="comments">
     
       <div class="ds-thread" data-thread-key="2017/01/17/make-openstack-image/"
-           data-title="openstack 系列--制作 openstack 镜像简记" data-url="http://yoursite.com/2017/01/17/make-openstack-image/">
+           data-title="openstack 系列--手动制作 openstack 镜像简记" data-url="http://yoursite.com/2017/01/17/make-openstack-image/">
       </div>
     
   </div>
@@ -607,7 +645,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#目录结构："><span class="nav-number">1.</span> <span class="nav-text">目录结构：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#准备工作"><span class="nav-number">2.</span> <span class="nav-text">准备工作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#创建虚拟机"><span class="nav-number">3.</span> <span class="nav-text">创建虚拟机</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安装Centos系统"><span class="nav-number">4.</span> <span class="nav-text">安装Centos系统</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#配置系统"><span class="nav-number">5.</span> <span class="nav-text">配置系统</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#上传镜像"><span class="nav-number">6.</span> <span class="nav-text">上传镜像</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文章"><span class="nav-number">7.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#目录结构："><span class="nav-number">1.</span> <span class="nav-text">目录结构：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#准备工作"><span class="nav-number">2.</span> <span class="nav-text">准备工作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#创建虚拟机"><span class="nav-number">3.</span> <span class="nav-text">创建虚拟机</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安装Centos系统"><span class="nav-number">4.</span> <span class="nav-text">安装Centos系统</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#配置系统"><span class="nav-number">5.</span> <span class="nav-text">配置系统</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#上传镜像"><span class="nav-number">6.</span> <span class="nav-text">上传镜像</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#自动创建镜像工具"><span class="nav-number">7.</span> <span class="nav-text">自动创建镜像工具</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文章"><span class="nav-number">8.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
             
 
           </div>
