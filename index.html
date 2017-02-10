@@ -328,14 +328,13 @@
       
         
           
-            <p><a name="A"></a></p>
-<h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>openstack网络部分应该算是最为复杂的，这里简单罗列下常用的命令作为备注，主要包括以下三个部分：</p>
+            <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>openstack网络部分应该算是最为复杂的，这里简单罗列下常用的命令作为备注，主要包括以下三个部分：</p>
 <ol>
 <li>neutron 命令</li>
 <li>ip netns 命令（即网络命名空间）</li>
 <li>ovs/brctl 命令（即ovs和网桥命令）</li>
+<li>iptables 命令</li>
 </ol>
-<p><a name="B"></a></p>
 <h2 id="neutron-命令"><a href="#neutron-命令" class="headerlink" title="neutron 命令"></a>neutron 命令</h2><ul>
 <li>对net, subnet, port 这些core service的操作，略</li>
 <li>对ext service 的操作(略)，常见ext service 包括：<pre><code>1. router
@@ -348,7 +347,6 @@
 <li>查看agent列表：neutron agent-list</li>
 <li>查看service provider: neutron service-provider-list</li>
 </ul>
-<p><a name="B"></a></p>
 <h2 id="ip-netns-命令"><a href="#ip-netns-命令" class="headerlink" title="ip netns 命令"></a>ip netns 命令</h2><ul>
 <li>列出宿主机所有网络命名空间：ip netns</li>
 <li>在某一网络命名空间执行命令：ip netns exec $NAMESPACE COMMAND  ,示例：<pre><code>1. ip netns  exec qrouter-a123f550-747b-4b67-8006-2c29a5dd4c6d ip a
@@ -360,6 +358,16 @@
 <li>ovs-vsctl show</li>
 <li>brctl show </li>
 </ul>
+<h2 id="iptables-命令"><a href="#iptables-命令" class="headerlink" title="iptables 命令"></a>iptables 命令</h2><p>neutron 中的L3-agent 默认是用iptables来实现3层网络的实现，而且，security-group, Firewall的实现也都与iptables息息相关。</p>
+<ul>
+<li>新增规则到某个规则链的最后一个：iptables -A INPUT …  </li>
+<li>删除某个规则：iptables -D INPUT –dport 80 -j DROP </li>
+<li>取代现行规则，顺序不变：iptables -R INPUT 1 -s 192.168.0.1 -j DROP  </li>
+<li>插入一条规则：iptables -I INPUT 1 –dport 80 -j ACCEPT  </li>
+<li>列出某规则链中的所有规则：iptables -L INPUT  </li>
+<li>列出nat表所有链中的所有规则：iptables -t nat -L  </li>
+</ul>
+<p>参考<a href="http://liaoph.com/iptables/" target="_blank" rel="external">Linux 防火墙和 iptables</a><br><a href="https://cnzhx.net/blog/common-iptables-cli/" target="_blank" rel="external">Linux iptables 命令行操作常用指令</a></p>
 <p><strong><em>END</em></strong></p>
 
           
