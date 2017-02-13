@@ -108,7 +108,7 @@ iptables 命令
 neutron 命令
 对net, subnet, port 这些core service的操作，略
 对ext service 的操作(略)，常见ext">
-<meta property="og:updated_time" content="2017-02-10T08:02:55.379Z">
+<meta property="og:updated_time" content="2017-02-13T00:42:26.147Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="openstack--openstack 常用网络调试命令">
 <meta name="twitter:description" content="引出openstack网络部分应该算是最为复杂的，这里简单罗列下常用的命令作为备注，主要包括以下三个部分：
@@ -377,20 +377,24 @@ neutron 命令
 2. ip netns  exec qrouter-a123f550-747b-4b67-8006-2c29a5dd4c6d ping www.baidu.com 
 </code></pre></li>
 </ul>
-<h2 id="ovs-brctl-命令"><a href="#ovs-brctl-命令" class="headerlink" title="ovs/brctl 命令"></a>ovs/brctl 命令</h2><p>主要是查看 openvswitch 创造的网桥信息 和 linux bridge 创造的网桥信息</p>
-<ul>
-<li>ovs-vsctl show</li>
-<li>brctl show </li>
-</ul>
+<h2 id="ovs-brctl-命令"><a href="#ovs-brctl-命令" class="headerlink" title="ovs/brctl 命令"></a>ovs/brctl 命令</h2><p>主要是针对 openvswitch 创造的网桥信息 和 linux bridge 创造的网桥信息</p>
+<ol>
+<li>显示ovs创建的网桥信息：ovs-vsctl show  </li>
+<li>ovs 创建网桥br-eth0：ovs-vsctl add-br br-eth0</li>
+<li>将网卡eth0 桥接在br-eth0上：ovs-vsctl add-port br-eth0 eth0</li>
+<li>显示linux bridge 创建的网桥信息：brctl show </li>
+<li>linux bridge 创建网桥br-eth1: brctl addbr br-eth1</li>
+<li>将网卡eth1 桥接在br-eth1上: brctl addif br-eth1 eth1</li>
+</ol>
 <h2 id="iptables-命令"><a href="#iptables-命令" class="headerlink" title="iptables 命令"></a>iptables 命令</h2><p>neutron 中的L3-agent 默认是用iptables来实现3层网络的实现，而且，security-group, Firewall的实现也都与iptables息息相关。</p>
-<ul>
+<ol>
 <li>新增规则到某个规则链的最后一个：iptables -A INPUT …  </li>
 <li>删除某个规则：iptables -D INPUT –dport 80 -j DROP </li>
 <li>取代现行规则，顺序不变：iptables -R INPUT 1 -s 192.168.0.1 -j DROP  </li>
 <li>插入一条规则：iptables -I INPUT 1 –dport 80 -j ACCEPT  </li>
 <li>列出某规则链中的所有规则：iptables -L INPUT  </li>
 <li>列出nat表所有链中的所有规则：iptables -t nat -L  </li>
-</ul>
+</ol>
 <p>参考<a href="http://liaoph.com/iptables/" target="_blank" rel="external">Linux 防火墙和 iptables</a><br><a href="https://cnzhx.net/blog/common-iptables-cli/" target="_blank" rel="external">Linux iptables 命令行操作常用指令</a></p>
 <p><strong><em>END</em></strong></p>
 
@@ -434,6 +438,10 @@ neutron 命令
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/02/12/neutron-layer2-3-realization-discovry/" rel="prev" title="openstack-- neutron 二/三层网络实现探究">
+                openstack-- neutron 二/三层网络实现探究 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -507,7 +515,7 @@ neutron 命令
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">50</span>
+                <span class="site-state-item-count">51</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
