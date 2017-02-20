@@ -91,7 +91,7 @@
 <meta property="og:site_name" content="Solar">
 <meta property="og:description" content="引出在调试 cloud-init的时候发现在虚拟机内执行“ curl 169.254.169.254” 的时候出现“host not reachable”错误。在对 openstack instance（确切的说应该是server,因为还没有正式生成云主机） metadata 服务机制探索了一番之后，发现了错误所在，在分析该问题之前先记录下metadata 服务的原理，最后再记录下问题的解决过程。">
 <meta property="og:image" content="http://www.ibm.com/developerworks/cn/cloud/library/1509_liukg_openstackmeta/index2894.png">
-<meta property="og:updated_time" content="2017-02-18T13:08:48.142Z">
+<meta property="og:updated_time" content="2017-02-20T00:39:50.819Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="openstack-- openstack instance metadata 服务机制探索">
 <meta name="twitter:description" content="引出在调试 cloud-init的时候发现在虚拟机内执行“ curl 169.254.169.254” 的时候出现“host not reachable”错误。在对 openstack instance（确切的说应该是server,因为还没有正式生成云主机） metadata 服务机制探索了一番之后，发现了错误所在，在分析该问题之前先记录下metadata 服务的原理，最后再记录下问题的解决过程。">
@@ -333,7 +333,7 @@
 <p>在创建虚拟机的时候，用户往往需要对虚拟机进行一些配置，比如：开启一些服务、安装某些包、添加 SSH 秘钥、配置 hostname 等等。在 OpenStack 中，这些配置信息被分成两类：metadata 和 user data。Metadata 主要包括虚拟机自身的一些常用属性，如 hostname、网络配置信息、SSH 登陆秘钥等，主要的形式为键值对。而 user data 主要包括一些命令、脚本等。User data 通过文件传递，并支持多种文件格式，包括 gzip 压缩文件、shell 脚本、cloud-init 配置文件等。这些信息被获取到后被cloudinit 利用并实现各自目的。虽然 metadata 和 user data 并不相同，但是 OpenStack 向虚拟机提供这两种信息的机制是一致的，只是虚拟机在获取到信息后，对两者的处理方式不同罢了</p>
 </blockquote>
 <p>openstack 中，虚拟机获取metadata 的信息有两种，即config drive 和 metadata restful 服务（即EC2方式）。下面分别记录下两种方式的原理：</p>
-<h4 id="config-drive-的方式"><a href="#config-drive-的方式" class="headerlink" title="config drive 的方式"></a>config drive 的方式</h4><p>所谓 config drive的方式就是将metadata信息写入虚拟机的一个特殊配置设备中，虚拟机启动的时候会挂载并读取metadata信息。要想实现这个功能，还需要宿主机和镜像满足一些条件：</p>
+<h3 id="config-drive-的方式"><a href="#config-drive-的方式" class="headerlink" title="config drive 的方式"></a>config drive 的方式</h3><p>所谓 config drive的方式就是将metadata信息写入虚拟机的一个特殊配置设备中，虚拟机启动的时候会挂载并读取metadata信息。要想实现这个功能，还需要宿主机和镜像满足一些条件：</p>
 <ol>
 <li>宿主机满足条件：<ul>
 <li>虚拟化方式为以下几种：libvirt,xen,hyper-v,vmware.</li>
@@ -353,7 +353,7 @@
 <p>如果镜像操作系统支持通过标签访问磁盘的话，可以使用如下命令查看config drive中的内容：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">mkdir -p /mnt/config</div><div class="line">mount /dev/disk/by-label/config-2 /mnt/config</div><div class="line"><span class="built_in">cd</span> /mnt/config &amp; ls <span class="_">-l</span></div></pre></td></tr></table></figure></p>
 <p>进入该目录后，看到的内容大致如下：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">ec2/2009-04-04/meta-data.json</div><div class="line">ec2/2009-04-04/user-data</div><div class="line">ec2/latest/meta-data.json</div><div class="line">ec2/latest/user-data</div><div class="line">openstack/2012-08-10/meta_data.json</div><div class="line">openstack/2012-08-10/user_data</div><div class="line">openstack/content</div><div class="line">openstack/content/0000</div><div class="line">openstack/content/0001</div><div class="line">openstack/latest/meta_data.json</div><div class="line">openstack/latest/user_data</div></pre></td></tr></table></figure></p>
 <p>可以看出，config drive支持 openstack以及EC2的方式获取数据，官方手册建议使用opensatck的方式（即读取opensatck目录里的内容），因为EC2的目录以后可能会弃用。而且最好使用最近的版本目录读取。</p>
-<h4 id="metadata-restful-服务的方式"><a href="#metadata-restful-服务的方式" class="headerlink" title="metadata restful 服务的方式"></a>metadata restful 服务的方式</h4><p>就是我们在虚拟机通过169.254.169.254的方式来获取metadata的方式。由以下三个组件来完成这项工作：</p>
+<h3 id="metadata-restful-服务的方式"><a href="#metadata-restful-服务的方式" class="headerlink" title="metadata restful 服务的方式"></a>metadata restful 服务的方式</h3><p>就是我们在虚拟机通过169.254.169.254的方式来获取metadata的方式。由以下三个组件来完成这项工作：</p>
 <ul>
 <li>Nova-api-metadata：运行在计算节点，启动restful服务，真正负责处理虚拟机发送来的rest 请求。从请求头中获取租户，虚拟机ID，再去数据库中查询相应的metadata信息并返回结果。</li>
 <li>Neutron-metadata-agent：运行在网络节点，负责将接收到的获取 metadata 的请求转发给 nova-api-metadata。</li>
@@ -538,7 +538,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#引出"><span class="nav-number">1.</span> <span class="nav-text">引出</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#openstack-instance-metadata-服务机制"><span class="nav-number">2.</span> <span class="nav-text">openstack instance metadata 服务机制</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#config-drive-的方式"><span class="nav-number">2.0.1.</span> <span class="nav-text">config drive 的方式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#metadata-restful-服务的方式"><span class="nav-number">2.0.2.</span> <span class="nav-text">metadata restful 服务的方式</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#问题解决"><span class="nav-number">3.</span> <span class="nav-text">问题解决</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文章"><span class="nav-number">4.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#引出"><span class="nav-number">1.</span> <span class="nav-text">引出</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#openstack-instance-metadata-服务机制"><span class="nav-number">2.</span> <span class="nav-text">openstack instance metadata 服务机制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#config-drive-的方式"><span class="nav-number">2.1.</span> <span class="nav-text">config drive 的方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#metadata-restful-服务的方式"><span class="nav-number">2.2.</span> <span class="nav-text">metadata restful 服务的方式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#问题解决"><span class="nav-number">3.</span> <span class="nav-text">问题解决</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文章"><span class="nav-number">4.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
             
 
           </div>
