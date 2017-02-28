@@ -68,7 +68,7 @@
 <link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="shell," />
+  <meta name="keywords" content="ceph," />
 
 
 
@@ -84,61 +84,22 @@
 
 
 
-<meta name="description" content="目录结构：命令用途 
-常用命令参数 
-使用示例
-
-命令用途declare 与 typeset 命令是bash的内建命令，两者是完全一样的，用来声明shell变量，设置变量的属性。
-
-常用命令参数
--r  设置变量为只读
-
--i 设置变量为整数
-
--a 设置变量为数组array
-
--f 如果后面没有参数的话会列出之前脚本定义的所有函数，如果有参数的话列出以参数命名的函数
-
--x 设置变量在脚本外也可">
+<meta name="description" content="引出初衷是自己搭建一套ceph的实验集群，按照官方的quick start,按理说应该是分分钟的事，因为GFW的原因，搞得忙活了一上午，再加上心情烦躁,中间出现了各种差错，这里记录一下。
+系统预检并安装ceph-deploy准备集群系统，网络设置，SSH无密码登录等设置略过，详细参考PREFLIGHT CHECKLIST
+这里有一个地方需要注意的是：centos7 在修改HOSTNAME 的时候命">
 <meta property="og:type" content="article">
-<meta property="og:title" content="shell脚本系列--declare 与 typeset">
-<meta property="og:url" content="http://yoursite.com/2016/08/26/shell-declare-typeset/index.html">
+<meta property="og:title" content="ceph-- 使用国内yum源搭建ceph集群">
+<meta property="og:url" content="http://yoursite.com/2017/02/28/install-ceph-with-domestic-yum-source/index.html">
 <meta property="og:site_name" content="Solar">
-<meta property="og:description" content="目录结构：命令用途 
-常用命令参数 
-使用示例
-
-命令用途declare 与 typeset 命令是bash的内建命令，两者是完全一样的，用来声明shell变量，设置变量的属性。
-
-常用命令参数
--r  设置变量为只读
-
--i 设置变量为整数
-
--a 设置变量为数组array
-
--f 如果后面没有参数的话会列出之前脚本定义的所有函数，如果有参数的话列出以参数命名的函数
-
--x 设置变量在脚本外也可">
-<meta property="og:updated_time" content="2017-01-22T05:55:06.526Z">
+<meta property="og:description" content="引出初衷是自己搭建一套ceph的实验集群，按照官方的quick start,按理说应该是分分钟的事，因为GFW的原因，搞得忙活了一上午，再加上心情烦躁,中间出现了各种差错，这里记录一下。
+系统预检并安装ceph-deploy准备集群系统，网络设置，SSH无密码登录等设置略过，详细参考PREFLIGHT CHECKLIST
+这里有一个地方需要注意的是：centos7 在修改HOSTNAME 的时候命">
+<meta property="og:updated_time" content="2017-02-28T09:11:24.214Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="shell脚本系列--declare 与 typeset">
-<meta name="twitter:description" content="目录结构：命令用途 
-常用命令参数 
-使用示例
-
-命令用途declare 与 typeset 命令是bash的内建命令，两者是完全一样的，用来声明shell变量，设置变量的属性。
-
-常用命令参数
--r  设置变量为只读
-
--i 设置变量为整数
-
--a 设置变量为数组array
-
--f 如果后面没有参数的话会列出之前脚本定义的所有函数，如果有参数的话列出以参数命名的函数
-
--x 设置变量在脚本外也可">
+<meta name="twitter:title" content="ceph-- 使用国内yum源搭建ceph集群">
+<meta name="twitter:description" content="引出初衷是自己搭建一套ceph的实验集群，按照官方的quick start,按理说应该是分分钟的事，因为GFW的原因，搞得忙活了一上午，再加上心情烦躁,中间出现了各种差错，这里记录一下。
+系统预检并安装ceph-deploy准备集群系统，网络设置，SSH无密码登录等设置略过，详细参考PREFLIGHT CHECKLIST
+这里有一个地方需要注意的是：centos7 在修改HOSTNAME 的时候命">
 
 
 
@@ -166,13 +127,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2016/08/26/shell-declare-typeset/"/>
+  <link rel="canonical" href="http://yoursite.com/2017/02/28/install-ceph-with-domestic-yum-source/"/>
 
 
 
 
 
-  <title> shell脚本系列--declare 与 typeset | Solar </title>
+  <title> ceph-- 使用国内yum源搭建ceph集群 | Solar </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -317,7 +278,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/08/26/shell-declare-typeset/">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/02/28/install-ceph-with-domestic-yum-source/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -341,7 +302,7 @@
             
             
               
-                shell脚本系列--declare 与 typeset
+                ceph-- 使用国内yum源搭建ceph集群
               
             
           </h1>
@@ -356,8 +317,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-08-26T09:24:25+08:00">
-                2016-08-26
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-02-28T16:13:46+08:00">
+                2017-02-28
               </time>
             
 
@@ -375,8 +336,8 @@
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a href="/2016/08/26/shell-declare-typeset/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/08/26/shell-declare-typeset/" itemprop="commentCount"></span>
+                <a href="/2017/02/28/install-ceph-with-domestic-yum-source/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/02/28/install-ceph-with-domestic-yum-source/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -402,28 +363,34 @@
       
 
       
-        <h2 id="目录结构："><a href="#目录结构：" class="headerlink" title="目录结构："></a>目录结构：</h2><p><a href="#A">命令用途 </a></p>
-<p><a href="#B">常用命令参数 </a></p>
-<p><a href="#C">使用示例</a></p>
-<p><a name="A"></a></p>
-<h2 id="命令用途"><a href="#命令用途" class="headerlink" title="命令用途"></a>命令用途</h2><p>declare 与 typeset 命令是bash的内建命令，两者是完全一样的，用来声明shell变量，设置变量的属性。</p>
-<p><a name="B"></a></p>
-<h2 id="常用命令参数"><a href="#常用命令参数" class="headerlink" title="常用命令参数"></a>常用命令参数</h2><ol>
-<li><p>-r  设置变量为只读</p>
-</li>
-<li><p>-i 设置变量为整数</p>
-</li>
-<li><p>-a 设置变量为数组array</p>
-</li>
-<li><p>-f 如果后面没有参数的话会列出之前脚本定义的所有函数，如果有参数的话列出以参数命名的函数</p>
-</li>
-<li><p>-x 设置变量在脚本外也可以访问到</p>
-</li>
-</ol>
-<p><a name="C"></a></p>
-<h2 id="使用示例"><a href="#使用示例" class="headerlink" title="使用示例"></a>使用示例</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#!/bin/bash</span></div><div class="line"></div><div class="line"><span class="function"><span class="title">func1</span></span> ()</div><div class="line">&#123;</div><div class="line">  <span class="built_in">echo</span> This is a function.</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="built_in">declare</span> <span class="_">-f</span>        <span class="comment"># Lists the function above.</span></div><div class="line"></div><div class="line"><span class="built_in">echo</span></div><div class="line"></div><div class="line"><span class="built_in">declare</span> -i var1   <span class="comment"># var1 is an integer.</span></div><div class="line">var1=2367</div><div class="line"><span class="built_in">echo</span> <span class="string">"var1 declared as <span class="variable">$var1</span>"</span></div><div class="line">var1=var1+1       <span class="comment"># Integer declaration eliminates the need for 'let'.</span></div><div class="line"><span class="built_in">echo</span> <span class="string">"var1 incremented by 1 is <span class="variable">$var1</span>."</span></div><div class="line"><span class="comment"># Attempt to change variable declared as integer.</span></div><div class="line"><span class="built_in">echo</span> <span class="string">"Attempting to change var1 to floating point value, 2367.1."</span></div><div class="line">var1=2367.1       <span class="comment"># Results in error message, with no change to variable.</span></div><div class="line"><span class="built_in">echo</span> <span class="string">"var1 is still <span class="variable">$var1</span>"</span></div><div class="line"></div><div class="line"><span class="built_in">echo</span></div><div class="line"></div><div class="line"><span class="built_in">declare</span> -r var2=13.36         <span class="comment"># 'declare' permits setting a variable property</span></div><div class="line">                              <span class="comment">#+ and simultaneously assigning it a value.</span></div><div class="line"><span class="built_in">echo</span> <span class="string">"var2 declared as <span class="variable">$var2</span>"</span> <span class="comment"># Attempt to change readonly variable.</span></div><div class="line">var2=13.37                    <span class="comment"># Generates error message, and exit from script.</span></div><div class="line"></div><div class="line"><span class="built_in">echo</span> <span class="string">"var2 is still <span class="variable">$var2</span>"</span>    <span class="comment"># This line will not execute.</span></div><div class="line"></div><div class="line"><span class="built_in">exit</span> 0                        <span class="comment"># Script will not exit here.</span></div></pre></td></tr></table></figure>
-<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://tldp.org/LDP/abs/html/declareref.html" target="_blank" rel="external">Advanced Bash-Scripting Guide</a></p>
-<p><a href="http://www.cnblogs.com/fhefh/archive/2011/04/22/2024857.html" target="_blank" rel="external">linux bash shell之declare </a></p>
+        <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>初衷是自己搭建一套ceph的实验集群，按照官方的quick start,按理说应该是分分钟的事，因为GFW的原因，搞得忙活了一上午，再加上心情烦躁,中间出现了各种差错，这里记录一下。</p>
+<h2 id="系统预检并安装ceph-deploy"><a href="#系统预检并安装ceph-deploy" class="headerlink" title="系统预检并安装ceph-deploy"></a>系统预检并安装ceph-deploy</h2><p>准备集群系统，网络设置，SSH无密码登录等设置略过，详细参考<a href="http://docs.ceph.com/docs/master/start/quick-start-preflight/" target="_blank" rel="external">PREFLIGHT CHECKLIST</a></p>
+<p>这里有一个地方需要注意的是：centos7 在修改HOSTNAME 的时候命令如下，无需重启：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ sudo hostnamectl --static <span class="built_in">set</span>-hostname &lt;host-name&gt;</div></pre></td></tr></table></figure>
+<p>预检完成后，ceph-deploy 的安装以及 ceph在各节点的安装如果出现错误的话很大可能上是yum 源的问题，所以重点说下如何配置yum国内源。</p>
+<h3 id="更换国内-YUM-源"><a href="#更换国内-YUM-源" class="headerlink" title="更换国内 YUM 源"></a>更换国内 YUM 源</h3><ul>
+<li>更换base源为国内163源:</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.163.com/.help/CentOS7-Base-163.repo</div></pre></td></tr></table></figure>
+<ul>
+<li>更换epel源为上海交大的源(注：随着版本更迭，以下链接可能会失效，如果出现404错误，那就需要更改链接)：</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">$ rpm -Uvh http://ftp.sjtu.edu.cn/fedora/epel/7/x86_64/e/epel-release-7-9.noarch.rpm</div><div class="line"></div><div class="line">$ rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7</div></pre></td></tr></table></figure>
+<ul>
+<li>更换ceph源为国内163源</li>
+</ul>
+<p>建议不用改变ceph.repo,直接设置环境变量即可，如果更改ceph.repo，那么执行ceph-deploy的时候还是需要在命令行中指定国内源url，否则又会使用官方源。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">export</span> CEPH_DEPLOY_REPO_URL=http://mirrors.163.com/ceph/rpm-jewel/el7</div><div class="line"></div><div class="line">$ <span class="built_in">export</span> CEPH_DEPLOY_GPG_URL=http://mirrors.163.com/ceph/keys/release.asc</div><div class="line"></div><div class="line">$ yum clean all</div><div class="line"></div><div class="line">$ yum makecache</div><div class="line"></div><div class="line">$ yum update -y</div></pre></td></tr></table></figure>
+<h2 id="安装并配置ceph-cluster"><a href="#安装并配置ceph-cluster" class="headerlink" title="安装并配置ceph cluster"></a>安装并配置ceph cluster</h2><p>接下来的事情就跟官网的步骤差不多了，大致如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># Create monitor node</span></div><div class="line">ceph-deploy new node1 node2 node3</div><div class="line"></div><div class="line"><span class="comment"># Software Installation</span></div><div class="line">ceph-deploy install deploy node1 node2 node3</div><div class="line"></div><div class="line"><span class="comment"># Gather keys</span></div><div class="line">ceph-deploy mon create-initial</div><div class="line"></div><div class="line"><span class="comment"># Ceph deploy parepare and activate</span></div><div class="line">ceph-deploy osd prepare node1:/dev/sdb node2:/dev/sdb node3:/dev/sdb</div><div class="line">ceph-deploy osd activate node1:/var/lib/ceph/osd/ceph-0 node2:/var/lib/ceph/osd/ceph-1 node3:/var/lib/ceph/osd/ceph-2</div><div class="line"></div><div class="line"><span class="comment"># Make 3 copies by default</span></div><div class="line"><span class="built_in">echo</span> <span class="string">"osd pool default size = 3"</span> | tee <span class="_">-a</span> <span class="variable">$HOME</span>/ceph.conf</div><div class="line"></div><div class="line"><span class="comment"># Copy admin keys and configuration files</span></div><div class="line">ceph-deploy --overwrite-conf admin deploy node1 node2 node3</div></pre></td></tr></table></figure>
+<h2 id="一个尚未解决的顽疾"><a href="#一个尚未解决的顽疾" class="headerlink" title="一个尚未解决的顽疾"></a>一个尚未解决的顽疾</h2><p>在公司使用国内源安装ceph的时候，出现了一个这样的错误：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">http://mirrors.163.com/ceph/rpm-jewel/el7/x86_64/ceph-mds-10.2.5-0.el7.x86_64.rpm: [Errno -1] Package does not match intended download. Suggestion: run yum --enablerepo=ceph clean metadata</div></pre></td></tr></table></figure>
+<p>Package does not match intended 这个错误在我安装其他软件的时候也出现过，用尽了各种办法也没有解决该问题，但我在家里的时候却没有出现过该问题。所以推测是公司网络用了类似缓存的机制。</p>
+<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://docs.ceph.com/docs/master/start/quick-start-preflight/" target="_blank" rel="external">PREFLIGHT CHECKLIST</a></p>
+<p><a href="http://docs.ceph.com/docs/master/start/quick-ceph-deploy/" target="_blank" rel="external">STORAGE CLUSTER QUICK START</a></p>
+<p><a href="http://ceph.org.cn/2016/09/02/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8%E5%9B%BD%E5%86%85%E6%BA%90%E9%83%A8%E7%BD%B2ceph%EF%BC%9F/" target="_blank" rel="external">如何使用国内源部署Ceph？</a></p>
+<p><a href="http://www.centoscn.com/CentOS/config/2014/1031/4039.html" target="_blank" rel="external">CentOS7修改主机名</a></p>
+<p><a href="http://itgeeker.net/centos-7-epel-china-mirror-repository/" target="_blank" rel="external">CentOS 7 x86_64适用的EPEL安装源 国内镜像列表</a></p>
 <p><strong><em>END</em></strong></p>
 
       
@@ -448,7 +415,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/shell/" rel="tag"># shell</a>
+            <a href="/tags/ceph/" rel="tag"># ceph</a>
           
         </div>
       
@@ -457,8 +424,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/08/22/openstack-nova/" rel="next" title="openstack系列--Nova">
-                <i class="fa fa-chevron-left"></i> openstack系列--Nova
+              <a href="/2017/02/22/how-to-debug-openstack-rest-api/" rel="next" title="openstack-- 如何调试openstack rest API">
+                <i class="fa fa-chevron-left"></i> openstack-- 如何调试openstack rest API
               </a>
             
           </div>
@@ -466,10 +433,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/08/29/shell-set/" rel="prev" title="shell脚本系列--set 与 unset">
-                shell脚本系列--set 与 unset <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -495,8 +458,8 @@
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/08/26/shell-declare-typeset/"
-           data-title="shell脚本系列--declare 与 typeset" data-url="http://yoursite.com/2016/08/26/shell-declare-typeset/">
+      <div class="ds-thread" data-thread-key="2017/02/28/install-ceph-with-domestic-yum-source/"
+           data-title="ceph-- 使用国内yum源搭建ceph集群" data-url="http://yoursite.com/2017/02/28/install-ceph-with-domestic-yum-source/">
       </div>
     
   </div>
@@ -600,7 +563,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#目录结构："><span class="nav-number">1.</span> <span class="nav-text">目录结构：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#命令用途"><span class="nav-number">2.</span> <span class="nav-text">命令用途</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#常用命令参数"><span class="nav-number">3.</span> <span class="nav-text">常用命令参数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用示例"><span class="nav-number">4.</span> <span class="nav-text">使用示例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文章"><span class="nav-number">5.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#引出"><span class="nav-number">1.</span> <span class="nav-text">引出</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#系统预检并安装ceph-deploy"><span class="nav-number">2.</span> <span class="nav-text">系统预检并安装ceph-deploy</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#更换国内-YUM-源"><span class="nav-number">2.1.</span> <span class="nav-text">更换国内 YUM 源</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安装并配置ceph-cluster"><span class="nav-number">3.</span> <span class="nav-text">安装并配置ceph cluster</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一个尚未解决的顽疾"><span class="nav-number">4.</span> <span class="nav-text">一个尚未解决的顽疾</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文章"><span class="nav-number">5.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
             
 
           </div>
