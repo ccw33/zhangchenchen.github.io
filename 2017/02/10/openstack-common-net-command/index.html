@@ -108,7 +108,7 @@ iptables 命令
 neutron 命令
 对net, subnet, port 这些core service的操作，略
 对ext service 的操作(略)，常见ext">
-<meta property="og:updated_time" content="2017-02-13T00:42:26.147Z">
+<meta property="og:updated_time" content="2017-03-02T07:16:06.339Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="openstack--openstack 常用网络调试命令">
 <meta name="twitter:description" content="引出openstack网络部分应该算是最为复杂的，这里简单罗列下常用的命令作为备注，主要包括以下三个部分：
@@ -412,8 +412,10 @@ neutron 命令
 <h2 id="ovs-brctl-命令"><a href="#ovs-brctl-命令" class="headerlink" title="ovs/brctl 命令"></a>ovs/brctl 命令</h2><p>主要是针对 openvswitch 创造的网桥信息 和 linux bridge 创造的网桥信息</p>
 <ol>
 <li>显示ovs创建的网桥信息：ovs-vsctl show  </li>
+<li>查看网桥br-tun上的流表信息：ovs-ofctl dump-flows br-tun</li>
 <li>ovs 创建网桥br-eth0：ovs-vsctl add-br br-eth0</li>
 <li>将网卡eth0 桥接在br-eth0上：ovs-vsctl add-port br-eth0 eth0</li>
+<li>查看datapath统计信息：ovs-dpctl show -s</li>
 <li>显示linux bridge 创建的网桥信息：brctl show </li>
 <li>linux bridge 创建网桥br-eth1: brctl addbr br-eth1</li>
 <li>将网卡eth1 桥接在br-eth1上: brctl addif br-eth1 eth1</li>
@@ -547,7 +549,7 @@ neutron 命令
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">54</span>
+                <span class="site-state-item-count">55</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
