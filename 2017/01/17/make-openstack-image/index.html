@@ -96,7 +96,7 @@ tips:在制作镜像的时候最好先知晓镜像所要满足的要求，比如
 Disk partitions and resize root partition on boot (cloud-init)
 No hard-coded M">
 <meta property="og:type" content="article">
-<meta property="og:title" content="openstack 系列--手动制作 openstack 镜像简记">
+<meta property="og:title" content="openstack 系列--利用Vmware workstation手动制作 openstack centos镜像简记">
 <meta property="og:url" content="http://yoursite.com/2017/01/17/make-openstack-image/index.html">
 <meta property="og:site_name" content="Solar">
 <meta property="og:description" content="目录结构：准备工作 
@@ -110,9 +110,9 @@ tips:在制作镜像的时候最好先知晓镜像所要满足的要求，比如
 
 Disk partitions and resize root partition on boot (cloud-init)
 No hard-coded M">
-<meta property="og:updated_time" content="2017-02-06T09:43:10.759Z">
+<meta property="og:updated_time" content="2017-03-07T01:58:07.439Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="openstack 系列--手动制作 openstack 镜像简记">
+<meta name="twitter:title" content="openstack 系列--利用Vmware workstation手动制作 openstack centos镜像简记">
 <meta name="twitter:description" content="目录结构：准备工作 
 创建虚拟机
 安装Centos系统
@@ -157,7 +157,7 @@ No hard-coded M">
 
 
 
-  <title> openstack 系列--手动制作 openstack 镜像简记 | Solar </title>
+  <title> openstack 系列--利用Vmware workstation手动制作 openstack centos镜像简记 | Solar </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -326,7 +326,7 @@ No hard-coded M">
             
             
               
-                openstack 系列--手动制作 openstack 镜像简记
+                openstack 系列--利用Vmware workstation手动制作 openstack centos镜像简记
               
             
           </h1>
@@ -407,10 +407,10 @@ No hard-coded M">
 <p>这部分内容可参考官方文档，<a href="http://docs.openstack.org/image-guide/openstack-images.html" target="_blank" rel="external">Image requirements</a> 。</p>
 <p><a name="A"></a></p>
 <h2 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h2><ul>
-<li>下载Vmware workstation,并安装Centos7,配置好网络。注：刚开始是用的virtualbox,发现不支持nested KVM,Vmware workstation 10+版本以上应该都可以。</li>
+<li>下载Vmware workstation,并安装Centos7,配置好网络。注：刚开始是用的virtualbox,发现不支持nested KVM,Vmware workstation 10+版本以上应该都可以,注意开启workstation的虚拟化设置。</li>
 <li>宿主机（刚装好的Centos）安装libvirt系列工具:</li>
 </ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">yum groupinstall Virtualization <span class="string">"Virtualization Client"</span> </div><div class="line">yum install libvirt</div><div class="line">yum install libguestfs-tools</div></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">yum groupinstall Virtualization <span class="string">"Virtualization Client"</span> </div><div class="line">yum install libvirt</div><div class="line">yum install libguestfs-tools</div><div class="line">service libvirtd restart</div></pre></td></tr></table></figure>
 <ul>
 <li>从<a href="https://www.centos.org/download/mirrors/" target="_blank" rel="external">Centos镜像源</a>下载一个最小的Centos7镜像。本文是以centos为例,其他操作系统类似，详见<a href="http://docs.openstack.org/image-guide/create-images-manually.html#" target="_blank" rel="external">Create images manually</a></li>
 </ul>
@@ -573,7 +573,7 @@ No hard-coded M">
   <div class="comments" id="comments">
     
       <div class="ds-thread" data-thread-key="2017/01/17/make-openstack-image/"
-           data-title="openstack 系列--手动制作 openstack 镜像简记" data-url="http://yoursite.com/2017/01/17/make-openstack-image/">
+           data-title="openstack 系列--利用Vmware workstation手动制作 openstack centos镜像简记" data-url="http://yoursite.com/2017/01/17/make-openstack-image/">
       </div>
     
   </div>
@@ -620,7 +620,7 @@ No hard-coded M">
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">55</span>
+                <span class="site-state-item-count">56</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>

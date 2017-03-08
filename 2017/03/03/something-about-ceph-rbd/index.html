@@ -99,7 +99,7 @@ ceph rbd是基于 rad">
 <meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-03-openstack-ceph-rbd.png">
 <meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-03-ceph-cow.png">
 <meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-03-clone-process.png">
-<meta property="og:updated_time" content="2017-03-03T06:37:34.125Z">
+<meta property="og:updated_time" content="2017-03-07T08:46:56.837Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="ceph-- 关于ceph rbd 的一些记录">
 <meta name="twitter:description" content="引出ceph 的中文文档做的真是非常棒，比起openstack的中文文档来说，不仅全，而且更新也比较及时，openstack的文档还是直接查阅英文版的比较好。
@@ -392,7 +392,9 @@ ceph rbd是基于 rad">
 <p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-03-clone-process.png" alt="clone-process"></p>
 <p>相关命令如下：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">$ rbd snap protect &#123;pool-name&#125;/&#123;image-name&#125;@&#123;snapshot-name&#125; <span class="comment"># 保护快照</span></div><div class="line"></div><div class="line">$ rbd <span class="built_in">clone</span> &#123;pool-name&#125;/&#123;parent-image&#125;@&#123;snap-name&#125; &#123;pool-name&#125;/&#123;child-image-name&#125; <span class="comment">#克隆快照</span></div><div class="line"></div><div class="line">$ rbd snap unprotect &#123;pool-name&#125;/&#123;image-name&#125;@&#123;snapshot-name&#125; <span class="comment"># 删除快照前，必须先取消保护。此外，不可以删除被克隆映像引用的快照，所以在删除快照前，必须先拍平（ flatten ）此快照的各个克隆。</span></div><div class="line"></div><div class="line">$ rbd children &#123;pool-name&#125;/&#123;image-name&#125;@&#123;snapshot-name&#125; <span class="comment"># 罗列快照的子孙</span></div><div class="line"></div><div class="line">$ rbd flatten &#123;pool-name&#125;/&#123;image-name&#125; <span class="comment"># 拍平克隆映像</span></div></pre></td></tr></table></figure>
-<h3 id="rbd-与内核相关的map-unmap"><a href="#rbd-与内核相关的map-unmap" class="headerlink" title="rbd 与内核相关的map/unmap"></a>rbd 与内核相关的map/unmap</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">$ rbd map &#123;pool-name&#125;/&#123;image-name&#125; --id &#123;user-name&#125; <span class="comment"># 映射块设备</span></div><div class="line"></div><div class="line">$ rbd showmapped <span class="comment"># 查看已映射块设备</span></div><div class="line"></div><div class="line">$ rbd unmap /dev/rbd/&#123;poolname&#125;/&#123;imagename&#125; <span class="comment"># 取消块设备映射</span></div></pre></td></tr></table></figure>
+<h3 id="rbd-与内核相关的map-unmap"><a href="#rbd-与内核相关的map-unmap" class="headerlink" title="rbd 与内核相关的map/unmap"></a>rbd 与内核相关的map/unmap</h3><p>注意：由于Linux kernel支持rbd的版本较高，一般需要升级到较高版本（建议升级到3.11+）</p>
+<p>升级内核参考<a href="https://www.sjy.im/toss/use-yum-update-centos-kernel-quickly.html" target="_blank" rel="external">使用Yum快速更新升级CentOS内核</a></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">$ rbd map &#123;pool-name&#125;/&#123;image-name&#125; --id &#123;user-name&#125; <span class="comment"># 映射块设备</span></div><div class="line"></div><div class="line">$ rbd showmapped <span class="comment"># 查看已映射块设备</span></div><div class="line"></div><div class="line">$ rbd unmap /dev/rbd/&#123;poolname&#125;/&#123;imagename&#125; <span class="comment"># 取消块设备映射</span></div></pre></td></tr></table></figure>
 <h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://docs.ceph.org.cn/rbd/rbd/" target="_blank" rel="external">CEPH 块设备</a></p>
 <p><a href="http://ceph.org.cn/2016/05/02/%E5%9F%BA%E4%BA%8Eceph-rbd%E7%9A%84openstack-nova%E5%BF%AB%E7%85%A7/" target="_blank" rel="external">基于Ceph RBD的OpenStack Nova快照</a></p>
 <p><a href="http://www.sysnote.org/2016/02/28/ceph-rbd-snap/" target="_blank" rel="external">ceph rbd快照原理解析</a></p>
@@ -438,6 +440,10 @@ ceph rbd是基于 rad">
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/03/07/update-your-openstack-image/" rel="prev" title="openstack-- 如何升级现有镜像">
+                openstack-- 如何升级现有镜像 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -511,7 +517,7 @@ ceph rbd是基于 rad">
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">55</span>
+                <span class="site-state-item-count">56</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
