@@ -68,7 +68,7 @@
 <link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="openstack," />
+  <meta name="keywords" content="openstack ceph," />
 
 
 
@@ -91,7 +91,7 @@
 <meta property="og:site_name" content="Solar">
 <meta property="og:description" content="引出公司云平台有些镜像的密码注入出了点问题，问题的原因初步诊断为镜像问题，需要对这些镜像进行cloudinit/cloudbase的升级操作。对于已知密码的镜像，可以直接开启一个虚拟机，完成升级后，对该虚拟机做snapshot 操作（nova image-create）即可。对于不知道密码的镜像，经过一番搜索后，可以通过将镜像挂载到本地宿主机，然后chroot的方法进行升级。以下为一些简单记录。">
 <meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-08-chroot-lvm.png">
-<meta property="og:updated_time" content="2017-03-08T02:07:14.489Z">
+<meta property="og:updated_time" content="2017-03-08T02:11:51.428Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="openstack-- 如何升级现有镜像">
 <meta name="twitter:description" content="引出公司云平台有些镜像的密码注入出了点问题，问题的原因初步诊断为镜像问题，需要对这些镜像进行cloudinit/cloudbase的升级操作。对于已知密码的镜像，可以直接开启一个虚拟机，完成升级后，对该虚拟机做snapshot 操作（nova image-create）即可。对于不知道密码的镜像，经过一番搜索后，可以通过将镜像挂载到本地宿主机，然后chroot的方法进行升级。以下为一些简单记录。">
@@ -414,7 +414,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/openstack/" rel="tag"># openstack</a>
+            <a href="/tags/openstack-ceph/" rel="tag"># openstack ceph</a>
           
         </div>
       
@@ -516,7 +516,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">11</span>
+                <span class="site-state-item-count">12</span>
                 <span class="site-state-item-name">tags</span>
               </a>
             </div>
