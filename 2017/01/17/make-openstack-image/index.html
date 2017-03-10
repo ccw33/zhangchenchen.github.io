@@ -110,7 +110,7 @@ tips:在制作镜像的时候最好先知晓镜像所要满足的要求，比如
 
 Disk partitions and resize root partition on boot (cloud-init)
 No hard-coded M">
-<meta property="og:updated_time" content="2017-03-07T01:58:07.439Z">
+<meta property="og:updated_time" content="2017-03-09T13:21:27.901Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="openstack 系列--利用Vmware workstation手动制作 openstack centos镜像简记">
 <meta name="twitter:description" content="目录结构：准备工作 
@@ -437,7 +437,7 @@ No hard-coded M">
 <p><a name="D"></a></p>
 <h2 id="配置系统"><a href="#配置系统" class="headerlink" title="配置系统"></a>配置系统</h2><ul>
 <li>SSH到虚拟机后就可以开始一系列的配置工作，首先修改yum源为国内源。</li>
-<li><p>安装acpid服务，并设置开机自启动。</p>
+<li><p>安装acpid服务，并设置开机自启动（acpid服务是用于hypervisor与虚拟机的交互）。</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">yum install -y acpid</div><div class="line">systemctl <span class="built_in">enable</span> acpid</div></pre></td></tr></table></figure>
 </li>
 <li><p>虚拟机需要打开boot日志功能，并指定console，这样nova console-log才能获取虚拟机启动时的日志。修改配置文件/etc/default/grub，设置GRUB_CMDLINE_LINUX为：</p>
@@ -483,13 +483,13 @@ No hard-coded M">
 </ul>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">rbd --pool=volumes import  centos.raw  --image=<span class="variable">$IMAGE_ID</span> --new-format --order 24</div><div class="line">rbd --pool=volumes --image=<span class="variable">$IMAGE_ID</span> --snap=snap snap create</div><div class="line">rbd --pool=volumes --image=<span class="variable">$IMAGE_ID</span> --snap=snap snap protect</div></pre></td></tr></table></figure>
 <ul>
-<li><p>设置镜像的location url</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">glance location-add --url rbd://<span class="variable">$FS_ROOT</span>/glance_images/<span class="variable">$IMAGE_ID</span>/snap <span class="variable">$IMAGE_ID</span><span class="comment">#这里的$FS_ROOT 可以通过查看ceph -s 中的cluster.</span></div></pre></td></tr></table></figure>
-</li>
-<li><p>完善镜像的其他属性</p>
-</li>
+<li>完善镜像的必要属性</li>
 </ul>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">glance image-update --name=<span class="string">"centos-7.2-64bit"</span> --disk-format=raw --container-format=bare</div><div class="line"></div><div class="line"><span class="comment"># 配置qemu-ga，该步骤是必须的，否则libvert启动虚拟机时不会生成qemu-ga配置项，导致虚拟机内部的qemu-ga由于找不到对应的虚拟串行字符设备而启动失败，提示找不到channel</span></div><div class="line">glance image-update --property hw_qemu_guest_agent=yes <span class="variable">$IMAGE_ID</span></div></pre></td></tr></table></figure>
+<ul>
+<li>设置镜像的location url<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">glance location-add --url rbd://<span class="variable">$FS_ROOT</span>/glance_images/<span class="variable">$IMAGE_ID</span>/snap <span class="variable">$IMAGE_ID</span><span class="comment">#这里的$FS_ROOT 可以通过查看ceph -s 中的cluster.</span></div></pre></td></tr></table></figure>
+</li>
+</ul>
 <p>具体参考<a href="http://int32bit.me/2016/05/28/%E6%89%8B%E5%8A%A8%E5%88%B6%E4%BD%9COpenstack%E9%95%9C%E5%83%8F/" target="_blank" rel="external">手动制作Openstack镜像</a> 的上传镜像部分。</p>
 <p><a name="F"></a></p>
 <h2 id="自动创建镜像工具"><a href="#自动创建镜像工具" class="headerlink" title="自动创建镜像工具"></a>自动创建镜像工具</h2><p>openstack 文档提供了几个类似的工具，没有尝试，<a href="http://docs.openstack.org/image-guide/create-images-automatically.html" target="_blank" rel="external">Tool support for image creation</a>.</p>
@@ -620,7 +620,7 @@ No hard-coded M">
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">56</span>
+                <span class="site-state-item-count">57</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -631,7 +631,7 @@ No hard-coded M">
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">11</span>
+                <span class="site-state-item-count">12</span>
                 <span class="site-state-item-name">tags</span>
               </a>
             </div>

@@ -68,7 +68,7 @@
 <link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="openstack," />
+  <meta name="keywords" content="openstack,linux,lvm," />
 
 
 
@@ -84,46 +84,30 @@
 
 
 
-<meta name="description" content="目录结构：SaltStalk 是什么
-SaltStalk 安装 
-SaltStalk 配置 
-SaltStalk 使用
-SaltStalk 架构
-
-SaltStalk是什么salt官网给出的介绍简洁明了：
-
-一个配置管理系统，能够维护预定义状态的远程节点(比如，确保指定的报被安装，指定的服务在运行)
-一个分布式远程执行系统，用来在远程节点（可以是单个节点，也可以是任意规则挑选出来的节点）上执行命令">
+<meta name="description" content="引出一般来说，如果openstck镜像中安装了growpart(之前的版本叫做growroot),在创建虚拟机的时候就会实现自动扩容。但是今天碰到几个虚拟机没有实现自动扩容的情况，需要手动进行扩容，用到lvm的一些知识，这里记录一下。
+关于LVM的一些知识LVM利用Linux内核的device-mapper来实现存储系统的虚拟化（系统分区独立于底层硬件）。通过LVM，你可以实现存储空间的抽象化并在">
 <meta property="og:type" content="article">
-<meta property="og:title" content="openstack系列-- 运维利器SaltStalk介绍">
-<meta property="og:url" content="http://yoursite.com/2016/11/03/2016-11-3-intro-to-salt/index.html">
+<meta property="og:title" content="linux-- 利用LVM 对虚拟机进行手动扩容">
+<meta property="og:url" content="http://yoursite.com/2017/03/10/LVM-command/index.html">
 <meta property="og:site_name" content="Solar">
-<meta property="og:description" content="目录结构：SaltStalk 是什么
-SaltStalk 安装 
-SaltStalk 配置 
-SaltStalk 使用
-SaltStalk 架构
-
-SaltStalk是什么salt官网给出的介绍简洁明了：
-
-一个配置管理系统，能够维护预定义状态的远程节点(比如，确保指定的报被安装，指定的服务在运行)
-一个分布式远程执行系统，用来在远程节点（可以是单个节点，也可以是任意规则挑选出来的节点）上执行命令">
-<meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/20161107external-job-cache.png">
-<meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/20161107master-job-cache.png">
-<meta property="og:updated_time" content="2017-01-22T05:55:06.600Z">
+<meta property="og:description" content="引出一般来说，如果openstck镜像中安装了growpart(之前的版本叫做growroot),在创建虚拟机的时候就会实现自动扩容。但是今天碰到几个虚拟机没有实现自动扩容的情况，需要手动进行扩容，用到lvm的一些知识，这里记录一下。
+关于LVM的一些知识LVM利用Linux内核的device-mapper来实现存储系统的虚拟化（系统分区独立于底层硬件）。通过LVM，你可以实现存储空间的抽象化并在">
+<meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-10-lvm-500x290.jpg">
+<meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-030-10-lvm-1.png">
+<meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-2.png">
+<meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-3.png">
+<meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-4.png">
+<meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-df.png">
+<meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-6.png">
+<meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-7.png">
+<meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-8.png">
+<meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-9.png">
+<meta property="og:updated_time" content="2017-03-10T07:49:25.025Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="openstack系列-- 运维利器SaltStalk介绍">
-<meta name="twitter:description" content="目录结构：SaltStalk 是什么
-SaltStalk 安装 
-SaltStalk 配置 
-SaltStalk 使用
-SaltStalk 架构
-
-SaltStalk是什么salt官网给出的介绍简洁明了：
-
-一个配置管理系统，能够维护预定义状态的远程节点(比如，确保指定的报被安装，指定的服务在运行)
-一个分布式远程执行系统，用来在远程节点（可以是单个节点，也可以是任意规则挑选出来的节点）上执行命令">
-<meta name="twitter:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/20161107external-job-cache.png">
+<meta name="twitter:title" content="linux-- 利用LVM 对虚拟机进行手动扩容">
+<meta name="twitter:description" content="引出一般来说，如果openstck镜像中安装了growpart(之前的版本叫做growroot),在创建虚拟机的时候就会实现自动扩容。但是今天碰到几个虚拟机没有实现自动扩容的情况，需要手动进行扩容，用到lvm的一些知识，这里记录一下。
+关于LVM的一些知识LVM利用Linux内核的device-mapper来实现存储系统的虚拟化（系统分区独立于底层硬件）。通过LVM，你可以实现存储空间的抽象化并在">
+<meta name="twitter:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-10-lvm-500x290.jpg">
 
 
 
@@ -151,13 +135,13 @@ SaltStalk是什么salt官网给出的介绍简洁明了：
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2016/11/03/2016-11-3-intro-to-salt/"/>
+  <link rel="canonical" href="http://yoursite.com/2017/03/10/LVM-command/"/>
 
 
 
 
 
-  <title> openstack系列-- 运维利器SaltStalk介绍 | Solar </title>
+  <title> linux-- 利用LVM 对虚拟机进行手动扩容 | Solar </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -302,7 +286,7 @@ SaltStalk是什么salt官网给出的介绍简洁明了：
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/11/03/2016-11-3-intro-to-salt/">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/10/LVM-command/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -326,7 +310,7 @@ SaltStalk是什么salt官网给出的介绍简洁明了：
             
             
               
-                openstack系列-- 运维利器SaltStalk介绍
+                linux-- 利用LVM 对虚拟机进行手动扩容
               
             
           </h1>
@@ -341,8 +325,8 @@ SaltStalk是什么salt官网给出的介绍简洁明了：
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-11-03T13:06:25+08:00">
-                2016-11-03
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-10T11:13:46+08:00">
+                2017-03-10
               </time>
             
 
@@ -360,8 +344,8 @@ SaltStalk是什么salt官网给出的介绍简洁明了：
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a href="/2016/11/03/2016-11-3-intro-to-salt/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/11/03/2016-11-3-intro-to-salt/" itemprop="commentCount"></span>
+                <a href="/2017/03/10/LVM-command/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/03/10/LVM-command/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -387,53 +371,39 @@ SaltStalk是什么salt官网给出的介绍简洁明了：
       
 
       
-        <h2 id="目录结构："><a href="#目录结构：" class="headerlink" title="目录结构："></a>目录结构：</h2><p><a href="#A">SaltStalk 是什么</a></p>
-<p><a href="#B">SaltStalk 安装 </a></p>
-<p><a href="#C">SaltStalk 配置 </a></p>
-<p><a href="#D">SaltStalk 使用</a></p>
-<p><a href="#E">SaltStalk 架构</a></p>
-<p><a name="A"></a></p>
-<h2 id="SaltStalk是什么"><a href="#SaltStalk是什么" class="headerlink" title="SaltStalk是什么"></a>SaltStalk是什么</h2><p>salt官网给出的介绍简洁明了：</p>
+        <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>一般来说，如果openstck镜像中安装了growpart(之前的版本叫做growroot),在创建虚拟机的时候就会实现自动扩容。但是今天碰到几个虚拟机没有实现自动扩容的情况，需要手动进行扩容，用到lvm的一些知识，这里记录一下。</p>
+<h2 id="关于LVM的一些知识"><a href="#关于LVM的一些知识" class="headerlink" title="关于LVM的一些知识"></a>关于LVM的一些知识</h2><p>LVM利用Linux内核的device-mapper来实现存储系统的虚拟化（系统分区独立于底层硬件）。通过LVM，你可以实现存储空间的抽象化并在上面建立虚拟分区，可以更简便地扩大和缩小分区，可以增删分区时无需担心某个硬盘上没有足够的连续空间。</p>
+<p>简单来说：LVM是Linux环境中对磁盘分区进行管理的一种机制，是建立在硬盘和分区之上、文件系统之下的一个逻辑层，可提高磁盘分区管理的灵活性。</p>
+<p>LVM的基本组成块如下：</p>
 <ul>
-<li>一个配置管理系统，能够维护预定义状态的远程节点(比如，确保指定的报被安装，指定的服务在运行)</li>
-<li>一个分布式远程执行系统，用来在远程节点（可以是单个节点，也可以是任意规则挑选出来的节点）上执行命令和查询数据。开发其的目的是为远程执行提供最好的解决方案，并使远程执行变得更好，更快，更简单。</li>
+<li>物理卷Physical volume (PV)：可以在上面建立卷组的媒介，可以是硬盘分区，也可以是硬盘本身或者回环文件（loopback file）。物理卷包括一个特殊的header，其余部分被切割为一块块物理区域（physical extents）。 </li>
+<li>卷组Volume group (VG)：将一组物理卷收集为一个管理单元。</li>
+<li>逻辑卷Logical volume (LV)：虚拟分区，由物理区域（physical extents）组成。</li>
 </ul>
-<p>其实，除了saltstack,还有其他的同类型软件供我们选择，比如puppet、chef、ansible、fabric等,关于其中的区别以及优劣势可以参考这里，<a href="http://blog.takipi.com/deployment-management-tools-chef-vs-puppet-vs-ansible-vs-saltstack-vs-fabric/" target="_blank" rel="external">Ansible vs. Chef vs. Fabric vs. Puppet vs. SaltStack</a><br>稍微总结下：chef,puppet 是出现时间比较早的系统，对于比较重视成熟性和稳定性的公司来说比较合适。ansible与saltstack比较适合快速灵活的生产部署环境，且适合没有太多额外要求，生产环境操作系统一致的情况下。fabric比较适合规模比较小的环境，属于入门级别的配置管理系统。</p>
-<p><a name="B"></a></p>
-<h2 id="SaltStalk-安装"><a href="#SaltStalk-安装" class="headerlink" title="SaltStalk 安装"></a>SaltStalk 安装</h2><p>安装比较简单，<a href="http://docs.saltstack.cn/topics/installation/index.html" target="_blank" rel="external">check this</a>,不再赘述。</p>
-<p><a name="C"></a></p>
-<h2 id="SaltStalk-配置"><a href="#SaltStalk-配置" class="headerlink" title="SaltStalk 配置"></a>SaltStalk 配置</h2><p>saltstalk是典型的CS架构，主要分两种角色，master和minions,master负责minions的配置管理以及远程执行。一般来说，master的配置文件位于/etc/salt/master，minion的配置文件在相应机器的/etc/salt/minion,只需在minion配置文件中指定master指向即可运行。</p>
-<p><a href="http://docs.saltstack.cn/ref/configuration/master.html" target="_blank" rel="external">master的配置项</a>非常多，大致包括以下几项：</p>
-<ul>
-<li>主要配置：包括网络接口，提供服务的端口，master id,最大打开文件数，工作线程个数，返回端口，缓存目录，各种缓存配置（minions数据缓存，作业缓存等）</li>
-<li>master 安全相关配置：主要是针对PKI验证的一些配置。</li>
-<li>master模块管理相关配置</li>
-<li>master state system 相关配置</li>
-<li>pillar 相关配置</li>
-<li>日志相关配置</li>
-<li>windows软件源相关配置</li>
-</ul>
-<p><a href="http://docs.saltstack.cn/ref/configuration/minion.html" target="_blank" rel="external">minion的配置项</a>跟master大致类似，不再赘述。</p>
-<p>其他：</p>
-<ul>
-<li>新版saltstack 中minion有一个minion_blackout的配置，该选项设为true后，该minion不会执行除saltutil.refresh_pillar之外的其他所有命令。</li>
-<li>saltstack有一个访问控制系统对于非admin用户进行细粒度的访问控制。<a href="http://docs.saltstack.cn/topics/eauth/access_control.html" target="_blank" rel="external">check this</a></li>
-<li>job管理器：可以实现对minion job的发送信号，定时调度等</li>
-<li>job 返回数据管理：系统默认返回数据存储在Job cache（默认是在/var/cache/salt/master/jobs目录）中，还有其他两种存储模式：一种是External Job Cache，如下图</li>
-</ul>
-<p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/20161107external-job-cache.png" alt="External Job Cache"></p>
-<p>另一种是Master Job Cache，如下图：</p>
-<p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/20161107master-job-cache.png" alt="Master Job Cache"></p>
-<ul>
-<li>returner: 我们可以在master端执行远程指令时指定returner,这样minion返回的数据不仅会返回到master，也会返回到我们指定的returner。而且我们也可以按照要求实现一个returner，来替换我们的Default Job Cache。</li>
-</ul>
-<p><a name="D"></a></p>
-<h2 id="SaltStalk-使用"><a href="#SaltStalk-使用" class="headerlink" title="SaltStalk 使用"></a>SaltStalk 使用</h2><p><a name="E"></a></p>
-<h2 id="SaltStalk-架构"><a href="#SaltStalk-架构" class="headerlink" title="SaltStalk 架构"></a>SaltStalk 架构</h2><h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://www.v2ex.com/t/316723#reply21" target="_blank" rel="external">v2ex</a></p>
-<p><a href="http://stackoverflow.com/questions/2964391/preventing-multiple-process-instances-on-linux" target="_blank" rel="external">stackoverflow-Preventing multiple process instances on Linux</a></p>
-<p><a href="http://blog.jobbole.com/102538/" target="_blank" rel="external">Linux 编程中的文件锁之 flock</a></p>
-<p><a href="https://www.ibm.com/developerworks/cn/linux/l-cn-filelock/" target="_blank" rel="external">Linux 2.6 中的文件锁</a></p>
-<p><a href="https://wiki.python.org/moin/DbusExamples" target="_blank" rel="external">Python wiki</a></p>
+<p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-10-lvm-500x290.jpg" alt="lvm-pic"></p>
+<h2 id="对虚拟机进行手动扩容"><a href="#对虚拟机进行手动扩容" class="headerlink" title="对虚拟机进行手动扩容"></a>对虚拟机进行手动扩容</h2><p>注：本文测试为实验环境，直接利用workstation 开启虚拟机，扩展磁盘，最后实现手动扩展。</p>
+<p>首先，确认磁盘使用lvm以及确定磁盘大小：</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-030-10-lvm-1.png" alt="lvm-1"></p>
+<p>可以看到磁盘/dev/sda大小总共约为53G，/dev/sda2是已经加入卷组的一个物理卷。</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-2.png" alt="lvm-2"></p>
+<p>/dev/mapper/cl-root 与/dev/mapper/cl-swap 设备其实是逻辑卷。<br><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-3.png" alt="lvm-3"></p>
+<p>接下来在workstation面板进行磁盘扩展：</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-4.png" alt="lvm-4"></p>
+<p>查看磁盘情况：</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-df.png" alt="lvm-5"></p>
+<p>可以看到磁盘已经扩展为60G+了，但是磁盘分区还是两个且大小没变，而且挂载root的/dev/mapper/cl-root依然是50G,所以接下来我们需要做的就是将多出来的10G空间进行磁盘分区并最终扩展到逻辑卷dev/mapper/cl-root。</p>
+<p>首先磁盘分区并将该分区设置为LVM格式。</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-6.png" alt="lvm-6"></p>
+<p>重启机器，将/dev/sda3创建物理卷，并将该物理卷加入卷组。</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-7.png" alt="lvm-7"></p>
+<p>扩展逻辑卷并将对应的文件系统扩展，如果是ext3/4文件系统用resize2fs 命令。</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-8.png" alt="lvm-8"></p>
+<p>扩展成功。</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-9.png" alt="lvm-9"></p>
+<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://wiki.archlinux.org/index.php/LVM_" target="_blank" rel="external">LVM WIKI</a></p>
+<p><a href="https://wsgzao.github.io/post/lvm/" target="_blank" rel="external">LVM逻辑卷管理配置小结</a></p>
+<p><a href="http://dreamfire.blog.51cto.com/418026/1084729" target="_blank" rel="external">Linux LVM逻辑卷配置过程详解</a></p>
+<p><a href="https://www.rootusers.com/how-to-increase-the-size-of-a-linux-lvm-by-expanding-the-virtual-machine-disk/" target="_blank" rel="external">How to Increase the size of a Linux LVM by expanding the virtual machine disk</a></p>
 <p><strong><em>END</em></strong></p>
 
       
@@ -460,6 +430,10 @@ SaltStalk是什么salt官网给出的介绍简洁明了：
           
             <a href="/tags/openstack/" rel="tag"># openstack</a>
           
+            <a href="/tags/linux/" rel="tag"># linux</a>
+          
+            <a href="/tags/lvm/" rel="tag"># lvm</a>
+          
         </div>
       
 
@@ -467,8 +441,8 @@ SaltStalk是什么salt官网给出的介绍简洁明了：
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/11/01/2016-11-1-keep-one-instance-in-a-machine/" rel="next" title="linux shell系列-- 如何在系统中保证只有一个实例">
-                <i class="fa fa-chevron-left"></i> linux shell系列-- 如何在系统中保证只有一个实例
+              <a href="/2017/03/07/update-your-openstack-image/" rel="next" title="openstack-- 如何升级现有镜像">
+                <i class="fa fa-chevron-left"></i> openstack-- 如何升级现有镜像
               </a>
             
           </div>
@@ -476,10 +450,6 @@ SaltStalk是什么salt官网给出的介绍简洁明了：
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/11/10/make-nfs-as-cinder-backend/" rel="prev" title="openstack系列--设置nfs作为cinder backend">
-                openstack系列--设置nfs作为cinder backend <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -505,8 +475,8 @@ SaltStalk是什么salt官网给出的介绍简洁明了：
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/11/03/2016-11-3-intro-to-salt/"
-           data-title="openstack系列-- 运维利器SaltStalk介绍" data-url="http://yoursite.com/2016/11/03/2016-11-3-intro-to-salt/">
+      <div class="ds-thread" data-thread-key="2017/03/10/LVM-command/"
+           data-title="linux-- 利用LVM 对虚拟机进行手动扩容" data-url="http://yoursite.com/2017/03/10/LVM-command/">
       </div>
     
   </div>
@@ -610,7 +580,7 @@ SaltStalk是什么salt官网给出的介绍简洁明了：
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#目录结构："><span class="nav-number">1.</span> <span class="nav-text">目录结构：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SaltStalk是什么"><span class="nav-number">2.</span> <span class="nav-text">SaltStalk是什么</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SaltStalk-安装"><span class="nav-number">3.</span> <span class="nav-text">SaltStalk 安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SaltStalk-配置"><span class="nav-number">4.</span> <span class="nav-text">SaltStalk 配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SaltStalk-使用"><span class="nav-number">5.</span> <span class="nav-text">SaltStalk 使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SaltStalk-架构"><span class="nav-number">6.</span> <span class="nav-text">SaltStalk 架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文章"><span class="nav-number">7.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#引出"><span class="nav-number">1.</span> <span class="nav-text">引出</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关于LVM的一些知识"><span class="nav-number">2.</span> <span class="nav-text">关于LVM的一些知识</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#对虚拟机进行手动扩容"><span class="nav-number">3.</span> <span class="nav-text">对虚拟机进行手动扩容</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文章"><span class="nav-number">4.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
             
 
           </div>
