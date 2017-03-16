@@ -68,7 +68,7 @@
 <link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="security," />
+  <meta name="keywords" content="openstack,openvswitch," />
 
 
 
@@ -84,28 +84,27 @@
 
 
 
-<meta name="description" content="目录结构前言 
-花五分钟的时间加固 ubuntu server 
-其他
-
-前言逛v2ex的时候看到了一篇讨论 在服务器上做什么加固策略的帖子，想起自己之前看过的一篇文章，My First 5 Minutes On A Server; Or, Essential Security for Linux Servers，顺手写下这篇文章，权当记录，本篇的绝大部分内容都是出自这篇文章，强烈推荐，如果觉得T">
+<meta name="description" content="引出openvswitch,简称ovs, 是一个开源的分布式虚拟多层交换机，随着云计算的崛起，它逐渐成为网络虚拟化的基石。在openstack 中，默认也是采用ovs作为二层网络实现的组件。本篇博客即是对ovs安装，以及框架，常用命令的一个记录。
+在CentOS 7 上安裝 Open vSwitch确定linux核心版本,以安装对应版本OVS1$ uname -r
+根据下图查看需要安装哪一个版本，">
 <meta property="og:type" content="article">
-<meta property="og:title" content="安全系列 --简单加固 ubuntu 服务器">
-<meta property="og:url" content="http://yoursite.com/2016/09/16/secure-your-ubuntu-server/index.html">
+<meta property="og:title" content="openstack-- ovs 安装以及常用操作">
+<meta property="og:url" content="http://yoursite.com/2017/03/16/openvswitch-quick-start/index.html">
 <meta property="og:site_name" content="Solar">
-<meta property="og:description" content="目录结构前言 
-花五分钟的时间加固 ubuntu server 
-其他
-
-前言逛v2ex的时候看到了一篇讨论 在服务器上做什么加固策略的帖子，想起自己之前看过的一篇文章，My First 5 Minutes On A Server; Or, Essential Security for Linux Servers，顺手写下这篇文章，权当记录，本篇的绝大部分内容都是出自这篇文章，强烈推荐，如果觉得T">
-<meta property="og:updated_time" content="2017-01-22T05:55:06.553Z">
+<meta property="og:description" content="引出openvswitch,简称ovs, 是一个开源的分布式虚拟多层交换机，随着云计算的崛起，它逐渐成为网络虚拟化的基石。在openstack 中，默认也是采用ovs作为二层网络实现的组件。本篇博客即是对ovs安装，以及框架，常用命令的一个记录。
+在CentOS 7 上安裝 Open vSwitch确定linux核心版本,以安装对应版本OVS1$ uname -r
+根据下图查看需要安装哪一个版本，">
+<meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-16-ovs-kernal.png">
+<meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-16-openvswitch-arch.png">
+<meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-16-neutron-vxlan.png">
+<meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-16-openvswitch-openflow-match.png">
+<meta property="og:updated_time" content="2017-03-16T07:50:50.057Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="安全系列 --简单加固 ubuntu 服务器">
-<meta name="twitter:description" content="目录结构前言 
-花五分钟的时间加固 ubuntu server 
-其他
-
-前言逛v2ex的时候看到了一篇讨论 在服务器上做什么加固策略的帖子，想起自己之前看过的一篇文章，My First 5 Minutes On A Server; Or, Essential Security for Linux Servers，顺手写下这篇文章，权当记录，本篇的绝大部分内容都是出自这篇文章，强烈推荐，如果觉得T">
+<meta name="twitter:title" content="openstack-- ovs 安装以及常用操作">
+<meta name="twitter:description" content="引出openvswitch,简称ovs, 是一个开源的分布式虚拟多层交换机，随着云计算的崛起，它逐渐成为网络虚拟化的基石。在openstack 中，默认也是采用ovs作为二层网络实现的组件。本篇博客即是对ovs安装，以及框架，常用命令的一个记录。
+在CentOS 7 上安裝 Open vSwitch确定linux核心版本,以安装对应版本OVS1$ uname -r
+根据下图查看需要安装哪一个版本，">
+<meta name="twitter:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-16-ovs-kernal.png">
 
 
 
@@ -133,13 +132,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2016/09/16/secure-your-ubuntu-server/"/>
+  <link rel="canonical" href="http://yoursite.com/2017/03/16/openvswitch-quick-start/"/>
 
 
 
 
 
-  <title> 安全系列 --简单加固 ubuntu 服务器 | Solar </title>
+  <title> openstack-- ovs 安装以及常用操作 | Solar </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -284,7 +283,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/09/16/secure-your-ubuntu-server/">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/16/openvswitch-quick-start/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -308,7 +307,7 @@
             
             
               
-                安全系列 --简单加固 ubuntu 服务器
+                openstack-- ovs 安装以及常用操作
               
             
           </h1>
@@ -323,8 +322,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-09-16T15:01:55+08:00">
-                2016-09-16
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-16T14:10:32+08:00">
+                2017-03-16
               </time>
             
 
@@ -342,8 +341,8 @@
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a href="/2016/09/16/secure-your-ubuntu-server/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/09/16/secure-your-ubuntu-server/" itemprop="commentCount"></span>
+                <a href="/2017/03/16/openvswitch-quick-start/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/03/16/openvswitch-quick-start/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -369,51 +368,58 @@
       
 
       
-        <h2 id="目录结构"><a href="#目录结构" class="headerlink" title="目录结构"></a>目录结构</h2><p><a href="#A">前言 </a></p>
-<p><a href="#B">花五分钟的时间加固 ubuntu server </a></p>
-<p><a href="#C">其他</a></p>
-<p><a name="A"></a></p>
-<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>逛v2ex的时候看到了一篇讨论 <a href="https://www.v2ex.com/t/306519#reply22" target="_blank" rel="external">在服务器上做什么加固策略</a>的帖子，想起自己之前看过的一篇文章，<a href="https://plusbryan.com/my-first-5-minutes-on-a-server-or-essential-security-for-linux-servers" target="_blank" rel="external">My First 5 Minutes On A Server; Or, Essential Security for Linux Servers</a>，顺手写下这篇文章，权当记录，本篇的绝大部分内容都是出自这篇文章，强烈推荐，如果觉得TLDR,就接着往下翻吧。</p>
-<p>安全，在大部分程序员潜意识里总是处于一种low priority的状态（参看此<a href="https://www.zhihu.com/question/20306241" target="_blank" rel="external">知乎链接</a>）。比如，我们搭建一个web server，会在第一时间去想用什么去部署，去实现，实现之后可能还会考虑高可用，可扩展等因素。而安全却总是会在最后才出现在我们的脑海里，甚至于直到出现安全事故才去关注。其实，我们拿到一台Linux服务器，只需要花些时间做一些安全方面的考量，做一些简单的措施就可以抵挡很大一部分攻击，提高攻击门槛。</p>
-<p>那对于安全方面的措施，我比较推崇上文作者所说：简单有效。因为比较复杂的安全策略实施起来的增量收益可能会低于增加的大量人力物力资源。而且指不定还会引入其他的安全隐患。引用作者的话说：据我的经验来讲，大部分安全事故，要么是没有做足够的安全措施，要么是做了足够的安全措施，但没有更新维护导致出现漏洞。</p>
-<p>Simplicity is the heart of good security.</p>
-<p>下面就简单说下我们拿到一台服务器（或VPS）后需要做的一些安全加固措施。</p>
-<p><a name="B"></a></p>
-<h2 id="花五分钟的时间加固-ubuntu-server"><a href="#花五分钟的时间加固-ubuntu-server" class="headerlink" title="花五分钟的时间加固 ubuntu server"></a>花五分钟的时间加固 ubuntu server</h2><h3 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h3><p>本文中用的Linux发行版为 14.04。其他实验环境作者没有实践。<br>首先更改你的 root 密码为强类型密码。然后执行如下命令做一下升级：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">apt-get update</div><div class="line">apt-get upgrade</div></pre></td></tr></table></figure>
-<h3 id="尽量不要使用root用户"><a href="#尽量不要使用root用户" class="headerlink" title="尽量不要使用root用户"></a>尽量不要使用root用户</h3><p>新增一个用户，当需要root权限时再用sudo暂时提升权限。新建用户的密码也要是强类型密码。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">adduser example_user  <span class="comment">#新建 用户</span></div><div class="line">adduser example_user sudo  <span class="comment">#给新建用户添加sudo权限</span></div></pre></td></tr></table></figure>
-<h3 id="使用SSH密钥认证登录"><a href="#使用SSH密钥认证登录" class="headerlink" title="使用SSH密钥认证登录"></a>使用SSH密钥认证登录</h3><p>利用ssh登录到Linux服务器有很多种方案，比较常用的就是用户名密码登录和SSH密钥认证的方式。<br>相对用户名密码登陆方式，后者是一种更安全的方案，因为前者容易受到暴力破解的威胁，而后者用暴力破解的方法不太实际。<br>首先需要在客户端产生公约密钥对。Linux下是如下命令：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ssh-keygen -t rsa</div></pre></td></tr></table></figure>
-<p>如果客户端是windows，可以利用putty等客户端实现。</p>
-<p>创建完之后，我们会获取到两个文件，id_rsa.pub，和 id_rsa。也就是公钥文件和密钥文件。</p>
-<p>接下来将公钥内容复制到服务器.ssh 目录下authorized_keys文件中。</p>
-<h3 id="关闭SSH-密码服务器登陆"><a href="#关闭SSH-密码服务器登陆" class="headerlink" title="关闭SSH 密码服务器登陆"></a>关闭SSH 密码服务器登陆</h3><p>添加如下内容到 /etc/ssh/sshd_config 文件中。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">PermitRootLogin no</div><div class="line">PasswordAuthentication no</div><div class="line">AllowUsers deploy@(your-ip) deploy@(another-ip-if-any) # 添加允许登录IP</div></pre></td></tr></table></figure>
-<p>重启ssh服务</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">service ssh restart</div></pre></td></tr></table></figure>
-<h3 id="添加防火墙"><a href="#添加防火墙" class="headerlink" title="添加防火墙"></a>添加防火墙</h3><p>添加防火墙有很多种方法，最简单的就是利用ubuntu 提供的ufw。<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">ufw allow from &#123;your-ip&#125; to any port 22 <span class="comment">#限定IP的端口</span></div><div class="line">ufw allow 80 <span class="comment">#打开80端口</span></div><div class="line">ufw allow 443 <span class="comment">#打开443端口</span></div><div class="line">ufw <span class="built_in">enable</span></div></pre></td></tr></table></figure></p>
-<p> 当然要根据你的实际要求来打开对应的端口。除了ufw，还有iptables,ip6tables,以及最新的nftables等都可以实现防火墙。</p>
-<h3 id="安装Fail2ban"><a href="#安装Fail2ban" class="headerlink" title="安装Fail2ban"></a>安装Fail2ban</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">apt-get install fail2ban</div></pre></td></tr></table></figure>
-<p>Fail2ban 会在服务端扫描日志并根据一些策略屏蔽一些有可疑行为的用户（IP）。官方介绍说的比较清楚：</p>
-<blockquote>
-<p>Fail2ban scans log files (e.g. /var/log/apache/error_log) and bans IPs that show the malicious signs – too many password failures, seeking for exploits, etc. Generally Fail2Ban is then used to update firewall rules to reject the IP addresses for a specified amount of time, although any arbitrary other action (e.g. sending an email) could also be configured. Out of the box Fail2Ban comes with filters for various services (apache, courier, ssh, etc).<br> Fail2Ban is able to reduce the rate of incorrect authentications attempts however it cannot eliminate the risk that weak authentication presents. Configure services to use only two factor or public/private authentication mechanisms if you really want to protect services.</p>
-</blockquote>
-<h3 id="设置安全自动升级"><a href="#设置安全自动升级" class="headerlink" title="设置安全自动升级"></a>设置安全自动升级</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">apt-get install unattended-upgrades</div><div class="line"></div><div class="line">vim /etc/apt/apt.conf.d/10periodic</div></pre></td></tr></table></figure>
-<p>更新如下内容：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">APT::Periodic::Update-Package-Lists <span class="string">"1"</span>;</div><div class="line">APT::Periodic::Download-Upgradeable-Packages <span class="string">"1"</span>;</div><div class="line">APT::Periodic::AutocleanInterval <span class="string">"7"</span>;</div><div class="line">APT::Periodic::Unattended-Upgrade <span class="string">"1"</span>;</div></pre></td></tr></table></figure>
-<p>再更新下这个文件/etc/apt/apt.conf.d/50unattended-upgrades</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"> Unattended-Upgrade::Allowed-Origins &#123;</div><div class="line">        <span class="string">"Ubuntu lucid-security"</span>;</div><div class="line">//      <span class="string">"Ubuntu lucid-updates"</span>;</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
-<h3 id="安装Logwatch"><a href="#安装Logwatch" class="headerlink" title="安装Logwatch"></a>安装Logwatch</h3><p>Logwatch 是一个强大的日志解析和分析软件。它被设计用来给出一台服务器上所有的活动报告，可以以命令行的形式输出，或邮件发送。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">apt-get install logwatch</div><div class="line"></div><div class="line">vim /etc/cron.daily/00logwatch</div></pre></td></tr></table></figure>
-<p> 添加如下内容：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/usr/sbin/logwatch --output mail --mailto <span class="built_in">test</span>@gmail.com --detail high</div></pre></td></tr></table></figure>
-<p><a name="C"></a></p>
-<h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><p>其实原文在<a href="https://news.ycombinator.com/item?id=5316093" target="_blank" rel="external">hacking news</a> 上引发了一系列的讨论。比如有人就提出，我们拿到一台服务器的时候，第一件事不是加固，而是应该先安装配置管理工具（Puppet or Chef），利用配置管理工具才更有条理。其实lz认为还是看实际场景吧，配置管理工具确实方便，尤其是对于一些大型的项目，而对于只搭一个blog的vps，确实没有必要。</p>
-<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://plusbryan.com/my-first-5-minutes-on-a-server-or-essential-security-for-linux-servers" target="_blank" rel="external">My First 5 Minutes On A Server; Or, Essential Security for Linux Servers </a></p>
-<p><a href="https://linode.com/docs/security/securing-your-server" target="_blank" rel="external">Securing Your Server</a></p>
-<p><a href="https://news.ycombinator.com/item?id=5316093" target="_blank" rel="external">Hacking news</a></p>
-<p><a href="https://www.v2ex.com/t/306519#reply22" target="_blank" rel="external">v2ex</a></p>
+        <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>openvswitch,简称ovs, 是一个开源的分布式虚拟多层交换机，随着云计算的崛起，它逐渐成为网络虚拟化的基石。在openstack 中，默认也是采用ovs作为二层网络实现的组件。本篇博客即是对ovs安装，以及框架，常用命令的一个记录。</p>
+<h2 id="在CentOS-7-上安裝-Open-vSwitch"><a href="#在CentOS-7-上安裝-Open-vSwitch" class="headerlink" title="在CentOS 7 上安裝 Open vSwitch"></a>在CentOS 7 上安裝 Open vSwitch</h2><h3 id="确定linux核心版本-以安装对应版本OVS"><a href="#确定linux核心版本-以安装对应版本OVS" class="headerlink" title="确定linux核心版本,以安装对应版本OVS"></a>确定linux核心版本,以安装对应版本OVS</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ uname -r</div></pre></td></tr></table></figure>
+<p>根据下图查看需要安装哪一个版本，一般来说，如果kernel支持的话，最好下载2.5.1版，也就是目前的LTS(Long Term Support)版。<br><img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-16-ovs-kernal.png" alt="ovs-kernal"></p>
+<h3 id="安装-toolchain-以及一些依赖包"><a href="#安装-toolchain-以及一些依赖包" class="headerlink" title="安装 toolchain 以及一些依赖包"></a>安装 toolchain 以及一些依赖包</h3><p>目前ovs安装还是需要自己编译，所以需安装toolchain。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">$ yum groupinstall <span class="string">"Development Tools"</span></div><div class="line"></div><div class="line">$ yum install openssl-devel wget kernel-devel</div></pre></td></tr></table></figure>
+<h3 id="下载源文件并打包为rpm包"><a href="#下载源文件并打包为rpm包" class="headerlink" title="下载源文件并打包为rpm包"></a>下载源文件并打包为rpm包</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">$ wget http://openvswitch.org/releases/openvswitch-2.5.1.tar.gz  <span class="comment">#下载</span></div><div class="line"></div><div class="line">$ tar xzvf openvswitch-2.5.1.tar.gz  <span class="comment">#解压缩</span></div><div class="line"></div><div class="line">$ mkdir -p ~/rpmbuild/SOURCES &amp; cp openvswitch-2.5.1.tar.gz ~/rpmbuild/SOURCES/  <span class="comment">#创建一个打包目录并复制源文件</span></div><div class="line"></div><div class="line">$ sed <span class="string">'s/openvswitch-kmod, //g'</span> openvswitch-2.5.1/rhel/openvswitch.spec &gt; openvswitch-2.5.1/rhel/openvswitch_no_kmod.spec <span class="comment"># 修改spec文件</span></div><div class="line"></div><div class="line">$ rpmbuild -bb --nocheck ~/openvswitch-2.5.1/rhel/openvswitch_no_kmod.spec <span class="comment"># 打包</span></div></pre></td></tr></table></figure>
+<p>完成后我们在~/mbuild/RPMS/x86_64/目录下有两个rpm包，其中，openvswitch-2.5.1-1.x86_64.rpm就是我们需要的rpm包。</p>
+<h3 id="安装rpm包"><a href="#安装rpm包" class="headerlink" title="安装rpm包"></a>安装rpm包</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">$  yum localinstall /root/rpmbuild/RPMS/x86_64/openvswitch-2.5.1-1.x86_64.rpm</div><div class="line"></div><div class="line">$ ovs-vsctl -V <span class="comment">#查安装是否成功</span></div><div class="line"></div><div class="line">$ systemctl start openvswitch.service <span class="comment">#启动ovs service（即守护进程）</span></div><div class="line"></div><div class="line">$ chkconfig openvswitch on <span class="comment">#设置开机自启动</span></div></pre></td></tr></table></figure>
+<h2 id="OpenvSwitch的架构以及基本概念"><a href="#OpenvSwitch的架构以及基本概念" class="headerlink" title="OpenvSwitch的架构以及基本概念"></a>OpenvSwitch的架构以及基本概念</h2><h3 id="ovs架构"><a href="#ovs架构" class="headerlink" title="ovs架构"></a>ovs架构</h3><p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-16-openvswitch-arch.png" alt="ovs-arc"></p>
+<p>主要由三个组件组成：</p>
+<ul>
+<li>ovs-vswitchd ：ovs的守护进程。</li>
+<li>ovsdb-server ：ovs的轻量数据库服务。</li>
+<li>openvswitch_mod.ko ：ovs的内核模块，主要是利用datapath将flow的match结果缓存起来。</li>
+</ul>
+<h3 id="ovs-基本概念"><a href="#ovs-基本概念" class="headerlink" title="ovs 基本概念"></a>ovs 基本概念</h3><p>因为ovs最常用到的场景是neutron，所以这里以neutron vxlan为例子讲下，下图就是一个neutron vxlan的示意图：</p>
+<p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-16-neutron-vxlan.png" alt="neutron-vxlan"></p>
+<ul>
+<li>bridge: ovs中的网桥可以理解为现实世界中的物理交换机，作用就是根据一定流规则（如openflow），把从某个端口(port)收到的数据包转发到另一个或多个端口。图中br-int与br-tun就是两个bridge。</li>
+<li>port: ovs 中的port是收发数据包的单元,每个端口都附属于某一个bridge。图中qvoxxx，以及patch-tun,patch-int等都是port。</li>
+<li>interface: 接口是ovs与外部交换数据包的组件。一个接口就是操作系统的一块网卡，这块网卡可能是ovs生成的虚拟网卡，也可能是物理网卡挂载在ovs上，也可能是操作系统的虚拟网卡（TUN/TAP）挂载在ovs上。</li>
+<li><p>flowtable: 上文讲过，ovs会根据流表进行包的转发，最常用的就是openflow协议，下图为openflow的流表匹配顺序：首先按照从小到大的顺序匹配流表，表内按照优先级匹配表项，示例参见<a href="https://zhangchenchen.github.io/2017/02/12/neutron-layer2-3-realization-discovry/" target="_blank" rel="external">openstack– neutron 二/三层网络实现探究</a>。</p>
+<p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-16-openvswitch-openflow-match.png" alt="openflow-match"></p>
+</li>
+</ul>
+<h2 id="OpenvSwitch的常用命令"><a href="#OpenvSwitch的常用命令" class="headerlink" title="OpenvSwitch的常用命令"></a>OpenvSwitch的常用命令</h2><p>ovs的操作命令大致有如下四种：</p>
+<ul>
+<li>ovs-vsctl用于控制ovs db</li>
+<li>ovs-ofctl用于管理OpenFlow switch 的 flow</li>
+<li>ovs-dpctl用于管理ovs的datapath</li>
+<li>ovs-appctl用于查询和管理ovs daemon</li>
+</ul>
+<p>ovs的常用子命令如下,直接引用自<a href="http://fishcried.com/2016-02-09/openvswitch-ops-guide/" target="_blank" rel="external">OVS常用操作总结</a>：</p>
+<ul>
+<li>ovs-dpctl show -s</li>
+<li>ovs-ofctl show, dump-ports, dump-flows, add-flow, mod-flows, del-flows</li>
+<li>ovsdb-tools show-log -m</li>
+<li>ovs-vsctl<ul>
+<li>show 显示数据库内容</li>
+<li>关于桥的操作 add-br, list-br, del-br, br-exists.</li>
+<li>关于port的操作 list-ports, add-port, del-port, add-bond, port-to-br.</li>
+<li>关于interface的操作 list-ifaces, iface-to-br</li>
+<li>ovs-vsctl list/set/get/add/remove/clear/destroy table record column [value], 常见的表有bridge, controller,interface,mirror,netflow,open_vswitch,port,qos,queue,ssl,sflow.</li>
+</ul>
+</li>
+<li>ovs-appctl list-commands, fdb/show, qos/show</li>
+</ul>
+<h2 id="OpenvSwitch实践"><a href="#OpenvSwitch实践" class="headerlink" title="OpenvSwitch实践"></a>OpenvSwitch实践</h2><p>参考<a href="http://www.ibm.com/developerworks/cn/cloud/library/1401_zhaoyi_openswitch/index.html" target="_blank" rel="external">基于 Open vSwitch 的 OpenFlow 实践</a></p>
+<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://qbsuranalang.blogspot.com/2016/11/centos-7-open-vswitch.html" target="_blank" rel="external">CentOS 7 安裝 Open vSwitch</a></p>
+<p><a href="http://www.yet.org/2014/09/openvswitch-troubleshooting/" target="_blank" rel="external">Open vSwitch and OpenStack Neutron troubleshooting</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Open_vSwitch" target="_blank" rel="external">ovs wiki</a></p>
+<p><a href="http://www.rendoumi.com/open-vswitchde-ovs-vsctlming-ling-xiang-jie/" target="_blank" rel="external">Open vSwitch的ovs-vsctl命令详解</a></p>
 <p><strong><em>END</em></strong></p>
 
       
@@ -438,7 +444,9 @@
       
         <div class="post-tags">
           
-            <a href="/tags/security/" rel="tag"># security</a>
+            <a href="/tags/openstack/" rel="tag"># openstack</a>
+          
+            <a href="/tags/openvswitch/" rel="tag"># openvswitch</a>
           
         </div>
       
@@ -447,8 +455,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/09/06/openstack-cinder/" rel="next" title="openstack 系列 --cinder">
-                <i class="fa fa-chevron-left"></i> openstack 系列 --cinder
+              <a href="/2017/03/13/neutron-troubleshooting-common-problems/" rel="next" title="neutron-- 对neutron一些常见网络问题的troubleshooting">
+                <i class="fa fa-chevron-left"></i> neutron-- 对neutron一些常见网络问题的troubleshooting
               </a>
             
           </div>
@@ -456,10 +464,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/09/16/openstack-keystone/" rel="prev" title="openstack系列 --keystone">
-                openstack系列 --keystone <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -485,8 +489,8 @@
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/09/16/secure-your-ubuntu-server/"
-           data-title="安全系列 --简单加固 ubuntu 服务器" data-url="http://yoursite.com/2016/09/16/secure-your-ubuntu-server/">
+      <div class="ds-thread" data-thread-key="2017/03/16/openvswitch-quick-start/"
+           data-title="openstack-- ovs 安装以及常用操作" data-url="http://yoursite.com/2017/03/16/openvswitch-quick-start/">
       </div>
     
   </div>
@@ -590,7 +594,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#目录结构"><span class="nav-number">1.</span> <span class="nav-text">目录结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">2.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#花五分钟的时间加固-ubuntu-server"><span class="nav-number">3.</span> <span class="nav-text">花五分钟的时间加固 ubuntu server</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#准备"><span class="nav-number">3.1.</span> <span class="nav-text">准备</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#尽量不要使用root用户"><span class="nav-number">3.2.</span> <span class="nav-text">尽量不要使用root用户</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用SSH密钥认证登录"><span class="nav-number">3.3.</span> <span class="nav-text">使用SSH密钥认证登录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#关闭SSH-密码服务器登陆"><span class="nav-number">3.4.</span> <span class="nav-text">关闭SSH 密码服务器登陆</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#添加防火墙"><span class="nav-number">3.5.</span> <span class="nav-text">添加防火墙</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装Fail2ban"><span class="nav-number">3.6.</span> <span class="nav-text">安装Fail2ban</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#设置安全自动升级"><span class="nav-number">3.7.</span> <span class="nav-text">设置安全自动升级</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装Logwatch"><span class="nav-number">3.8.</span> <span class="nav-text">安装Logwatch</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#其他"><span class="nav-number">4.</span> <span class="nav-text">其他</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文章"><span class="nav-number">5.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#引出"><span class="nav-number">1.</span> <span class="nav-text">引出</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#在CentOS-7-上安裝-Open-vSwitch"><span class="nav-number">2.</span> <span class="nav-text">在CentOS 7 上安裝 Open vSwitch</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#确定linux核心版本-以安装对应版本OVS"><span class="nav-number">2.1.</span> <span class="nav-text">确定linux核心版本,以安装对应版本OVS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装-toolchain-以及一些依赖包"><span class="nav-number">2.2.</span> <span class="nav-text">安装 toolchain 以及一些依赖包</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#下载源文件并打包为rpm包"><span class="nav-number">2.3.</span> <span class="nav-text">下载源文件并打包为rpm包</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装rpm包"><span class="nav-number">2.4.</span> <span class="nav-text">安装rpm包</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#OpenvSwitch的架构以及基本概念"><span class="nav-number">3.</span> <span class="nav-text">OpenvSwitch的架构以及基本概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ovs架构"><span class="nav-number">3.1.</span> <span class="nav-text">ovs架构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ovs-基本概念"><span class="nav-number">3.2.</span> <span class="nav-text">ovs 基本概念</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#OpenvSwitch的常用命令"><span class="nav-number">4.</span> <span class="nav-text">OpenvSwitch的常用命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#OpenvSwitch实践"><span class="nav-number">5.</span> <span class="nav-text">OpenvSwitch实践</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文章"><span class="nav-number">6.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
             
 
           </div>
