@@ -270,6 +270,360 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/12/01/novaApi-sourcecode-explain/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="pekingzcc">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/avatar.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="Solar">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="Solar" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2016/12/01/novaApi-sourcecode-explain/" itemprop="url">
+                  openstack系列--novaApi 源代码解读
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-12-01T15:06:25+08:00">
+                2016-12-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2016/12/01/novaApi-sourcecode-explain/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/12/01/novaApi-sourcecode-explain/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="目录结构："><a href="#目录结构：" class="headerlink" title="目录结构："></a>目录结构：</h2><p><a href="#A">novaApi 介绍</a></p>
+<p><a href="#B">以nova list 为例解读代码 </a></p>
+<p><a name="A"></a></p>
+<h2 id="novaApi-介绍"><a href="#novaApi-介绍" class="headerlink" title="novaApi 介绍"></a>novaApi 介绍</h2><ul>
+<li>关于nova不再赘述，之前文章由介绍。</li>
+<li>之前说的novaclient的主要作用就是将命令行最终转化为restful请求去novaApi查找。</li>
+<li>novaApi的执行过程主要分为两个阶段：接收到restful请求后，根据PasteDeploy 将请求的路由到具体的WSGI Application ,之后Routers将请求路由到具体函数并执行。</li>
+<li>因为版本不同，代码也可能不同，该版本为Openstack Liberty</li>
+</ul>
+<p><a name="B"></a></p>
+<h2 id="以nova-list-为例解读代码"><a href="#以nova-list-为例解读代码" class="headerlink" title="以nova list 为例解读代码"></a>以nova list 为例解读代码</h2><ul>
+<li>首先看下novaapi的启动过程，进入nova项目的setup.cfg文件</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div></pre></td><td class="code"><pre><div class="line">console_scripts =</div><div class="line">    nova-all = nova.cmd.all:main <span class="comment"># nova 所有service的启动脚本，已弃用</span></div><div class="line">    nova-api = nova.cmd.api:main <span class="comment">#此处为Nova-api的启动脚本</span></div><div class="line">    nova-api-metadata = nova.cmd.api_metadata:main</div><div class="line">    nova-api-os-compute = nova.cmd.api_os_compute:main</div><div class="line">    nova-cells = nova.cmd.cells:main</div><div class="line">    nova-cert = nova.cmd.cert:main</div><div class="line">    nova-compute = nova.cmd.compute:main</div><div class="line">    nova-conductor = nova.cmd.conductor:main</div><div class="line">    nova-console = nova.cmd.console:main</div><div class="line">    nova-consoleauth = nova.cmd.consoleauth:main</div><div class="line">    nova-dhcpbridge = nova.cmd.dhcpbridge:main</div><div class="line">    nova-idmapshift = nova.cmd.idmapshift:main</div><div class="line">    nova-manage = nova.cmd.manage:main</div><div class="line">    nova-network = nova.cmd.network:main</div><div class="line">    nova-novncproxy = nova.cmd.novncproxy:main</div><div class="line">    nova-policy = nova.cmd.policy_check:main</div><div class="line">    nova-rootwrap = oslo_rootwrap.cmd:main</div><div class="line">    nova-rootwrap-daemon = oslo_rootwrap.cmd:daemon</div><div class="line">    nova-scheduler = nova.cmd.scheduler:main</div><div class="line">    nova-serialproxy = nova.cmd.serialproxy:main</div><div class="line">    nova-spicehtml5proxy = nova.cmd.spicehtml5proxy:main</div><div class="line">    nova-xvpvncproxy = nova.cmd.xvpvncproxy:main</div><div class="line">wsgi_scripts =</div><div class="line">    nova-placement-api = nova.api.openstack.placement.wsgi:init_application</div><div class="line"></div><div class="line">nova.api.v21.extensions =</div><div class="line">    admin_actions = nova.api.openstack.compute.admin_actions:AdminActions</div><div class="line">    admin_password = nova.api.openstack.compute.admin_password:AdminPassword</div><div class="line">    agents = nova.api.openstack.compute.agents:Agents</div><div class="line">    aggregates = nova.api.openstack.compute.aggregates:Aggregates</div><div class="line">    assisted_volume_snapshots = nova.api.openstack.compute.assisted_volume_snapshots:AssistedVolumeSnapshots</div><div class="line">    attach_interfaces = nova.api.openstack.compute.attach_interfaces:AttachInterfaces</div><div class="line">    availability_zone = nova.api.openstack.compute.availability_zone:AvailabilityZone</div><div class="line">    baremetal_nodes = nova.api.openstack.compute.baremetal_nodes:BareMetalNodes</div><div class="line">    block_device_mapping = nova.api.openstack.compute.block_device_mapping:BlockDeviceMapping</div></pre></td></tr></table></figure>
+<p>简单解释下console_scripts中值得注意的几个服务：</p>
+<ol>
+<li>nova-api:包括两种API服务：nova-api-metadata ,nova-api-os-compute。根据配置文件中的enable_apis确定启动哪种服务。</li>
+<li>nova-api-metadata:接受虚拟机的metadata相关的请求。只有采用nova-network部署时才使用。该工作目前已由neutron项目完成。</li>
+<li>nova-api-os-compute:主要的Openstack Compute API服务。</li>
+<li>nova-cells:主要适用于openstack增强横向扩展能力，<a href="http://forum.huawei.com/enterprise/thread-295547-1-1.html" target="_blank" rel="external">check this</a></li>
+<li>nova-rootwrap:在openstack运行时以root身份运行某些shell命令</li>
+</ol>
+<p>setup.cfg文件中nova.api.v21.extensions的字段中的每一项对应一个API，novaapi 启动时会用stevedore据此动态加载。</p>
+<ul>
+<li>首先进入main函数</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">main</span><span class="params">()</span>:</span></div><div class="line">    config.parse_args(sys.argv)</div><div class="line">    logging.setup(CONF, <span class="string">"nova"</span>)</div><div class="line">    utils.monkey_patch()</div><div class="line">    objects.register_all()</div><div class="line">    <span class="keyword">if</span> <span class="string">'osapi_compute'</span> <span class="keyword">in</span> CONF.enabled_apis:</div><div class="line">        <span class="comment"># NOTE(mriedem): This is needed for caching the nova-compute service</span></div><div class="line">        <span class="comment"># version which is looked up when a server create request is made with</span></div><div class="line">        <span class="comment"># network id of 'auto' or 'none'.</span></div><div class="line">        objects.Service.enable_min_version_cache()</div><div class="line">    log = logging.getLogger(__name__)</div><div class="line"></div><div class="line">    gmr.TextGuruMeditation.setup_autorun(version) <span class="comment"># 生成Guru report的相关代码</span></div><div class="line">    launcher = service.process_launcher() </div><div class="line">    started = <span class="number">0</span></div><div class="line">    <span class="keyword">for</span> api <span class="keyword">in</span> CONF.enabled_apis:  <span class="comment">#根据配置文件中的配置创建server</span></div><div class="line">        should_use_ssl = api <span class="keyword">in</span> CONF.enabled_ssl_apis</div><div class="line">        <span class="keyword">try</span>:</div><div class="line">            server = service.WSGIService(api, use_ssl=should_use_ssl) <span class="comment">#创建WSGI server ,创建过程中paste deploy参与进来，加载相应application</span></div><div class="line">            launcher.launch_service(server, workers=server.workers <span class="keyword">or</span> <span class="number">1</span>) <span class="comment">#根据配置文件中worker个数启动server</span></div><div class="line">            started += <span class="number">1</span></div><div class="line">        <span class="keyword">except</span> exception.PasteAppNotFound <span class="keyword">as</span> ex:</div><div class="line">            log.warning(</div><div class="line">                _LW(<span class="string">"%s. ``enabled_apis`` includes bad values. "</span></div><div class="line">                    <span class="string">"Fix to remove this warning."</span>), ex)</div><div class="line">                     ............................</div></pre></td></tr></table></figure>
+<p>看下service.WSGIService()创建时发生了什么：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">WSGIService</span><span class="params">(service.Service)</span>:</span></div><div class="line">    <span class="string">"""Provides ability to launch API from a 'paste' configuration."""</span></div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, name, loader=None, use_ssl=False, max_url_len=None)</span>:</span></div><div class="line">        <span class="string">"""Initialize, but do not start the WSGI server.</span></div><div class="line"></div><div class="line">        :param name: The name of the WSGI server given to the loader.</div><div class="line">        :param loader: Loads the WSGI application using the given name.</div><div class="line">        :returns: None</div><div class="line"></div><div class="line">        """</div><div class="line">        self.name = name</div><div class="line">        <span class="comment"># NOTE(danms): Name can be metadata, os_compute, or ec2, per</span></div><div class="line">        <span class="comment"># nova.service's enabled_apis</span></div><div class="line">        self.binary = <span class="string">'nova-%s'</span> % name</div><div class="line">        self.topic = <span class="keyword">None</span></div><div class="line">        self.manager = self._get_manager()</div><div class="line">        self.loader = loader <span class="keyword">or</span> wsgi.Loader() <span class="comment">#从paste配置文件加载api对应的wsgi application</span></div><div class="line">        self.app = self.loader.load_app(name)</div><div class="line">        <span class="comment"># inherit all compute_api worker counts from osapi_compute</span></div><div class="line">        <span class="keyword">if</span> name.startswith(<span class="string">'openstack_compute_api'</span>):</div><div class="line">            wname = <span class="string">'osapi_compute'</span></div><div class="line">        <span class="keyword">else</span>:</div><div class="line">            wname = name</div><div class="line">        self.host = getattr(CONF, <span class="string">'%s_listen'</span> % name, <span class="string">"0.0.0.0"</span>)</div><div class="line">        self.port = getattr(CONF, <span class="string">'%s_listen_port'</span> % name, <span class="number">0</span>)</div><div class="line">        self.workers = (getattr(CONF, <span class="string">'%s_workers'</span> % wname, <span class="keyword">None</span>) <span class="keyword">or</span></div><div class="line">                        processutils.get_worker_count())</div><div class="line">                        ............................</div><div class="line">        <span class="comment"># 指定IP，port监听socket，server的实现再用了eventlet进行封装，监听到http请求时，不会新建一个线程，而是用协程。</span></div><div class="line">         self.server = wsgi.Server(name,</div><div class="line">                                  self.app,</div><div class="line">                                  host=self.host,</div><div class="line">                                  port=self.port,</div><div class="line">                                  use_ssl=self.use_ssl,</div><div class="line">                                  max_url_len=max_url_len)</div><div class="line">        <span class="comment"># Pull back actual port used</span></div><div class="line">        self.port = self.server.port</div><div class="line">        self.backdoor_port = <span class="keyword">None</span></div><div class="line">        ................................</div></pre></td></tr></table></figure>
+<ul>
+<li>当路径为/v21/servers/detail请求过来时，WSGI server监听到请求，根据paste配置文件路由到特定的WSGI application。</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">[composite:openstack_compute_api_v21] </div><div class="line">use = call:nova.api.auth:pipeline_factory_v21 <span class="comment">#调用pipeline_factory_v21函数，根据nova配置文件中的auth_strategy决定使用noauth2或keystone</span></div><div class="line">noauth2 = compute_req_id faultwrap sizelimit noauth2 osapi_compute_app_v21</div><div class="line">keystone = compute_req_id faultwrap sizelimit authtoken keystonecontext osapi_compute_app_v21</div><div class="line"> ......................</div><div class="line"> [app:osapi_compute_app_v21]</div><div class="line">paste.app_factory = nova.api.openstack.compute:APIRouterV21.factory</div><div class="line"> ....................</div></pre></td></tr></table></figure>
+<p>据此，我们便找到最终调用的函数APIRouterV21.factory，第一阶段完成，进入第二阶段</p>
+<ul>
+<li>第二阶段主要是找到最终调用的函数，nova封装了route模块实现该路由功能。进入上次找到的路由函数APIRouterV21.factory。</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">APIRouterV21</span><span class="params">(base_wsgi.Router)</span>:</span> </div><div class="line">    <span class="string">"""Routes requests on the OpenStack v2.1 API to the appropriate controller</span></div><div class="line">    and method.</div><div class="line">    """</div><div class="line"><span class="meta">    @classmethod</span></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">factory</span><span class="params">(cls, global_config, **local_config)</span>:</span></div><div class="line">        <span class="string">"""Simple paste factory, :class:`nova.wsgi.Router` doesn't have one."""</span></div><div class="line">        <span class="keyword">return</span> cls()</div><div class="line"></div><div class="line"><span class="meta">    @staticmethod</span></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">api_extension_namespace</span><span class="params">()</span>:</span></div><div class="line">        <span class="keyword">return</span> <span class="string">'nova.api.v21.extensions'</span></div><div class="line">    <span class="comment">#该类主要实现利用stevedore加载位于setup.cfg中nova.api.v21.extensions下所有资源，并利用check_func()函数进行检查</span></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, init_only=None)</span>:</span></div><div class="line">        <span class="function"><span class="keyword">def</span> <span class="title">_check_load_extension</span><span class="params">(ext)</span>:</span></div><div class="line">            <span class="keyword">return</span> self._register_extension(ext)</div><div class="line"></div><div class="line">        self.api_extension_manager = stevedore.enabled.EnabledExtensionManager(</div><div class="line">            namespace=self.api_extension_namespace(),</div><div class="line">            check_func=_check_load_extension,</div><div class="line">            invoke_on_load=<span class="keyword">True</span>,</div><div class="line">            invoke_kwds=&#123;<span class="string">"extension_info"</span>: self.loaded_extension_info&#125;)</div><div class="line"></div><div class="line">        mapper = ProjectMapper()</div><div class="line"></div><div class="line">        self.resources = &#123;&#125;</div><div class="line"></div><div class="line">        <span class="comment"># NOTE(cyeoh) Core API support is rewritten as extensions</span></div><div class="line">        <span class="comment"># but conceptually still have core</span></div><div class="line">        <span class="comment">#这部分做的工作就是对所有封装的资源进行注册（对资源的属性进行一些扩展），并使用mapper对象建立路由规则（与***controllers类建立）。</span></div><div class="line">        <span class="keyword">if</span> list(self.api_extension_manager):</div><div class="line">            <span class="comment"># NOTE(cyeoh): Stevedore raises an exception if there are</span></div><div class="line">            <span class="comment"># no plugins detected. I wonder if this is a bug.</span></div><div class="line">            self._register_resources_check_inherits(mapper)</div><div class="line">            self.api_extension_manager.map(self._register_controllers)</div><div class="line"></div><div class="line">        LOG.info(_LI(<span class="string">"Loaded extensions: %s"</span>),</div><div class="line">                 sorted(self.loaded_extension_info.get_extensions().keys()))</div><div class="line">        super(APIRouterV21, self).__init__(mapper)</div><div class="line">        <span class="comment">#打印出该mapper对象便可找到路由关系</span></div><div class="line">        .....................</div></pre></td></tr></table></figure>
+<p> nova中每种资源都被封装成一个nova.api.openstack.wsgi.Resource资源，并封装为一个WSGI application。</p>
+<ul>
+<li>最后APIRouterV21将mapper传给父类Router做最后的工作.</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">Router</span><span class="params">(object)</span>:</span></div><div class="line">    <span class="string">"""WSGI middleware that maps incoming requests to WSGI apps."""</span></div><div class="line">    <span class="comment">#使用routes模块将mapper与_dispatch()关联起来</span></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, mapper)</span>:</span></div><div class="line">        <span class="string">"""Create a router for the given routes.Mapper.</span></div><div class="line"></div><div class="line">        Each route in `mapper` must specify a 'controller', which is a</div><div class="line">        WSGI app to call.  You'll probably want to specify an 'action' as</div><div class="line">        well and have your controller be an object that can route</div><div class="line">        the request to the action-specific method.</div><div class="line">        """</div><div class="line">        self.map = mapper</div><div class="line">        self._router = routes.middleware.RoutesMiddleware(self._dispatch,</div><div class="line">                                                          self.map)</div><div class="line">    <span class="comment">#根据mapper将请求路由到适当的WSGI应用，即资源上。</span></div><div class="line"><span class="meta">    @webob.dec.wsgify(RequestClass=Request)</span></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__call__</span><span class="params">(self, req)</span>:</span></div><div class="line">        <span class="string">"""Route the incoming request to a controller based on self.map.</span></div><div class="line">        </div><div class="line">        If no match, return a 404.</div><div class="line">         </div><div class="line">        """</div><div class="line">        <span class="keyword">return</span> self._router</div><div class="line"></div><div class="line"><span class="meta">    @staticmethod</span></div><div class="line"><span class="meta">    @webob.dec.wsgify(RequestClass=Request)</span></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">_dispatch</span><span class="params">(req)</span>:</span></div><div class="line">        <span class="string">"""Dispatch the request to the appropriate controller.</span></div><div class="line"></div><div class="line">        Called by self._router after matching the incoming request to a route</div><div class="line">        and putting the information into req.environ.  Either returns 404</div><div class="line">        or the routed WSGI app's response.</div><div class="line"></div><div class="line">        """</div><div class="line">        match = req.environ[<span class="string">'wsgiorg.routing_args'</span>][<span class="number">1</span>]</div><div class="line">        <span class="keyword">if</span> <span class="keyword">not</span> match:</div><div class="line">            <span class="keyword">return</span> webob.exc.HTTPNotFound()</div><div class="line">        app = match[<span class="string">'controller'</span>]</div><div class="line">        <span class="keyword">return</span> app</div></pre></td></tr></table></figure>
+<p>至此，所有阶段便完成了，GET /v21/servers/detail最终会调用的函数是setup.cfg中的server对应的controller的detail函数。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@extensions.expected_errors((400, 403))</span></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">detail</span><span class="params">(self, req)</span>:</span></div><div class="line">        <span class="string">"""Returns a list of server details for a given user."""</span></div><div class="line">        context = req.environ[<span class="string">'nova.context'</span>]</div><div class="line">        context.can(server_policies.SERVERS % <span class="string">'detail'</span>)</div><div class="line">        <span class="keyword">try</span>:</div><div class="line">            servers = self._get_servers(req, is_detail=<span class="keyword">True</span>) <span class="comment">#调用下面的_get_servers函数</span></div><div class="line">        <span class="keyword">except</span> exception.Invalid <span class="keyword">as</span> err:</div><div class="line">            <span class="keyword">raise</span> exc.HTTPBadRequest(explanation=err.format_message())</div><div class="line">        <span class="keyword">return</span> servers</div><div class="line">        ..............</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">_get_servers</span><span class="params">(self, req, is_detail)</span>:</span></div><div class="line">        <span class="string">"""Returns a list of servers, based on any search options specified."""</span></div><div class="line"></div><div class="line">        search_opts = &#123;&#125;</div><div class="line">        search_opts.update(req.GET)</div><div class="line"></div><div class="line">        context = req.environ[<span class="string">'nova.context'</span>]</div><div class="line">        remove_invalid_options(context, search_opts,</div><div class="line">                self._get_server_search_options(req))</div><div class="line"></div><div class="line">        <span class="comment"># Verify search by 'status' contains a valid status.</span></div><div class="line">        <span class="comment"># Convert it to filter by vm_state or task_state for compute_api.</span></div><div class="line">        <span class="comment"># For non-admin user, vm_state and task_state are filtered through</span></div><div class="line">        <span class="comment"># remove_invalid_options function, based on value of status field.</span></div><div class="line">        <span class="comment"># Set value to vm_state and task_state to make search simple.</span></div><div class="line">        search_opts.pop(<span class="string">'status'</span>, <span class="keyword">None</span>)</div><div class="line">        ............</div><div class="line">        <span class="comment">#最终调用函数在这里compute_api.get_all()</span></div><div class="line">         <span class="keyword">try</span>:</div><div class="line">            instance_list = self.compute_api.get_all(elevated <span class="keyword">or</span> context,</div><div class="line">                    search_opts=search_opts, limit=limit, marker=marker,</div><div class="line">                    expected_attrs=expected_attrs,</div><div class="line">                    sort_keys=sort_keys, sort_dirs=sort_dirs)</div><div class="line">        <span class="keyword">except</span> exception.MarkerNotFound:</div><div class="line">            msg = _(<span class="string">'marker [%s] not found'</span>) % marker</div><div class="line">            <span class="keyword">raise</span> exc.HTTPBadRequest(explanation=msg)</div><div class="line">        <span class="keyword">except</span> exception.FlavorNotFound:</div><div class="line">            LOG.debug(<span class="string">"Flavor '%s' could not be found "</span>,</div><div class="line">                      search_opts[<span class="string">'flavor'</span>])</div><div class="line">            instance_list = objects.InstanceList()</div></pre></td></tr></table></figure>
+<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://book.douban.com/subject/26374647/" target="_blank" rel="external">openstack 设计与实现</a></p>
+<p><strong><em>END</em></strong></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/11/30/novaclient-sourcecode-explain/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="pekingzcc">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/avatar.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="Solar">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="Solar" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2016/11/30/novaclient-sourcecode-explain/" itemprop="url">
+                  openstack系列--novaClient 源代码解读
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-11-30T13:06:25+08:00">
+                2016-11-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2016/11/30/novaclient-sourcecode-explain/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/11/30/novaclient-sourcecode-explain/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="目录结构："><a href="#目录结构：" class="headerlink" title="目录结构："></a>目录结构：</h2><p><a href="#A">novaclient 介绍</a></p>
+<p><a href="#B">以nova list 为例解读代码 </a></p>
+<p><a name="A"></a></p>
+<h2 id="novaclient-介绍"><a href="#novaclient-介绍" class="headerlink" title="novaclient 介绍"></a>novaclient 介绍</h2><ul>
+<li>novaclient是Python写的nova API服务的客户端.</li>
+<li>提供了两种使用形式：命令行形式和Python API形式（命令行形式其实最终也是调用的Python API）。</li>
+<li>novaclient 本身不是类似于nova-api这种的service，没有一个守护进程在运行，而是在我们输入命令的之后根据入口main函数去相应的执行。</li>
+<li>因为版本不同，代码也可能不同，该版本为Openstack Liberty</li>
+</ul>
+<p><a name="B"></a></p>
+<h2 id="以nova-list-为例解读代码"><a href="#以nova-list-为例解读代码" class="headerlink" title="以nova list 为例解读代码"></a>以nova list 为例解读代码</h2><ul>
+<li><p>进入novaclient的根目录，找到setup.cfg文件，找到入口函数</p>
+<p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/20161130-setup.cfg.png" alt="novaclientsetup"><br>其实我们也可以在安装了novaclient的机器中执行 which nova 找到对应入口。</p>
+</li>
+<li><p>进入novaclient.shell 的main函数，截取部分代码如下：</p>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">main</span><span class="params">()</span>:</span></div><div class="line">    <span class="keyword">try</span>:</div><div class="line">        argv = [encodeutils.safe_decode(a) <span class="keyword">for</span> a <span class="keyword">in</span> sys.argv[<span class="number">1</span>:]]</div><div class="line">        OpenStackComputeShell().main(argv) <span class="comment">#重点在这个函数</span></div><div class="line">    <span class="keyword">except</span> Exception <span class="keyword">as</span> exc:</div><div class="line">        logger.debug(exc, exc_info=<span class="number">1</span>)</div><div class="line">        <span class="keyword">if</span> six.PY2:</div><div class="line">            message = encodeutils.safe_encode(six.text_type(exc))</div><div class="line">        <span class="keyword">else</span>:</div><div class="line">            message = encodeutils.exception_to_unicode(exc)</div><div class="line">        print(<span class="string">"ERROR (%(type)s): %(msg)s"</span> % &#123;</div><div class="line">              <span class="string">'type'</span>: exc.__class__.__name__,</div><div class="line">              <span class="string">'msg'</span>: message&#125;,</div><div class="line">              file=sys.stderr)</div><div class="line">        sys.exit(<span class="number">1</span>)</div><div class="line">    <span class="keyword">except</span> KeyboardInterrupt:</div><div class="line">        print(_(<span class="string">"... terminating nova client"</span>), file=sys.stderr)</div><div class="line">        sys.exit(<span class="number">130</span>)</div><div class="line"></div><div class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</div><div class="line">    main()</div></pre></td></tr></table></figure>
+<ul>
+<li>找到OpenStackComputeShell().main函数,</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">main</span><span class="params">(self, argv)</span>:</span></div><div class="line">       <span class="comment"># Parse args once to find version and debug settings</span></div><div class="line">       parser = self.get_base_parser(argv)</div><div class="line">       (args, args_list) = parser.parse_known_args(argv)</div><div class="line"></div><div class="line">       self.setup_debugging(args.debug)</div><div class="line">       self.extensions = []</div><div class="line">       do_help = (<span class="string">'help'</span> <span class="keyword">in</span> argv) <span class="keyword">or</span> (</div><div class="line">           <span class="string">'--help'</span> <span class="keyword">in</span> argv) <span class="keyword">or</span> (<span class="string">'-h'</span> <span class="keyword">in</span> argv) <span class="keyword">or</span> <span class="keyword">not</span> argv</div><div class="line"></div><div class="line">       <span class="comment"># bash-completion should not require authentication</span></div><div class="line">       skip_auth = do_help <span class="keyword">or</span> (</div><div class="line">           <span class="string">'bash-completion'</span> <span class="keyword">in</span> argv)</div><div class="line"></div><div class="line">       <span class="keyword">if</span> <span class="keyword">not</span> args.os_compute_api_version:</div><div class="line">           api_version = api_versions.get_api_version(</div><div class="line">               DEFAULT_MAJOR_OS_COMPUTE_API_VERSION)</div><div class="line">       <span class="keyword">else</span>:</div><div class="line">           api_version = api_versions.get_api_version(</div><div class="line">               args.os_compute_api_version)</div><div class="line">           .........................</div></pre></td></tr></table></figure>
+<p>这个函数很长，大体做的工作如下：</p>
+<p>1,解析命令行，判定是否需要做认证操作（如help命令不需要）</p>
+<p>2,需要做认证操作的话，判定认证方法（一般为keystone）</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> use_session:</div><div class="line">              <span class="comment"># Not using Nova auth plugin, so use keystone</span></div><div class="line">              <span class="keyword">with</span> utils.record_time(self.times, args.timings,</div><div class="line">                                     <span class="string">'auth_url'</span>, args.os_auth_url):</div><div class="line">                  keystone_session = (</div><div class="line">                      loading.load_session_from_argparse_arguments(args))</div><div class="line">                  keystone_auth = (</div><div class="line">                      loading.load_auth_from_argparse_arguments(args))</div><div class="line">          <span class="keyword">else</span>:</div><div class="line">              <span class="comment"># set password for auth plugins</span></div><div class="line">              os_password = args.os_password</div></pre></td></tr></table></figure>
+<p>3,创建一个Client用于确定API版本</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># This client is just used to discover api version. Version API needn't</span></div><div class="line"><span class="comment"># microversion, so we just pass version 2 at here.</span></div><div class="line">self.cs = client.Client(</div><div class="line">    api_versions.APIVersion(<span class="string">"2.0"</span>),</div><div class="line">    os_username, os_password, os_project_name,</div><div class="line">    tenant_id=os_project_id, user_id=os_user_id,</div><div class="line">    auth_url=os_auth_url, insecure=insecure,</div><div class="line">    region_name=os_region_name, endpoint_type=endpoint_type,</div><div class="line">    extensions=self.extensions, service_type=service_type,</div><div class="line">    service_name=service_name, auth_token=auth_token,</div><div class="line">    volume_service_name=volume_service_name,</div><div class="line">    timings=args.timings, bypass_url=bypass_url,</div><div class="line">    os_cache=os_cache, http_log_debug=args.debug,</div><div class="line">    cacert=cacert, timeout=timeout,</div><div class="line">    session=keystone_session, auth=keystone_auth,</div><div class="line">    logger=self.client_logger)</div><div class="line"><span class="keyword">if</span> <span class="keyword">not</span> skip_auth:</div><div class="line">    <span class="keyword">if</span> <span class="keyword">not</span> api_version.is_latest():</div><div class="line">        <span class="keyword">if</span> api_version &gt; api_versions.APIVersion(<span class="string">"2.0"</span>):</div><div class="line">            <span class="keyword">if</span> <span class="keyword">not</span> api_version.matches(novaclient.API_MIN_VERSION,</div><div class="line">                                       novaclient.API_MAX_VERSION):</div><div class="line">                <span class="keyword">raise</span> exc.CommandError(</div><div class="line">                    _(<span class="string">"The specified version isn't supported by "</span></div><div class="line">                      <span class="string">"client. The valid version range is '%(min)s' "</span></div><div class="line">                      <span class="string">"to '%(max)s'"</span>) % &#123;</div><div class="line">                        <span class="string">"min"</span>: novaclient.API_MIN_VERSION.get_string(),</div><div class="line">                        <span class="string">"max"</span>: novaclient.API_MAX_VERSION.get_string()&#125;</div><div class="line">                )</div><div class="line">    api_version = api_versions.discover_version(self.cs, api_version)</div></pre></td></tr></table></figure>
+<p>4,根据发现的API版本创建一个client </p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># Recreate client object with discovered version.</span></div><div class="line">self.cs = client.Client(</div><div class="line">    api_version,</div><div class="line">    os_username, os_password, os_project_name,</div><div class="line">    tenant_id=os_project_id, user_id=os_user_id,</div><div class="line">    auth_url=os_auth_url, insecure=insecure,</div><div class="line">    region_name=os_region_name, endpoint_type=endpoint_type,</div><div class="line">    extensions=self.extensions, service_type=service_type,</div><div class="line">    service_name=service_name, auth_token=auth_token,</div><div class="line">    volume_service_name=volume_service_name,</div><div class="line">    timings=args.timings, bypass_url=bypass_url,</div><div class="line">    os_cache=os_cache, http_log_debug=args.debug,</div><div class="line">    cacert=cacert, timeout=timeout,</div><div class="line">    session=keystone_session, auth=keystone_auth)</div></pre></td></tr></table></figure>
+<p>5,根据args调用指定版本API</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">args.func(self.cs, args)</div></pre></td></tr></table></figure>
+<p>6,看下最终调用的V2版本下的shell.py(此处为do_list()函数)</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line"><span class="meta"> @utils.arg(</span></div><div class="line">    <span class="string">'--not-tags-any'</span>,</div><div class="line">    dest=<span class="string">'not-tags-any'</span>,</div><div class="line">    metavar=<span class="string">'&lt;not-tags-any&gt;'</span>,</div><div class="line">    default=<span class="keyword">None</span>,</div><div class="line">    help=_(<span class="string">"Only the servers that do not have at least one of the given tags"</span></div><div class="line">           <span class="string">"will be included in the list result. Boolean expression in this "</span></div><div class="line">           <span class="string">"case is 'NOT(t1 OR t2)'. Tags must be separated by commas: "</span></div><div class="line">           <span class="string">"--not-tags-any &lt;tag1,tag2&gt;"</span>),</div><div class="line">    start_version=<span class="string">"2.26"</span>)</div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">do_list</span><span class="params">(cs, args)</span>:</span></div><div class="line">    <span class="string">"""List active servers."""</span></div><div class="line">    imageid = <span class="keyword">None</span></div><div class="line">    flavorid = <span class="keyword">None</span></div><div class="line">    <span class="keyword">if</span> args.image:</div><div class="line">        imageid = _find_image(cs, args.image).id</div><div class="line">    <span class="keyword">if</span> args.flavor:</div><div class="line">        flavorid = _find_flavor(cs, args.flavor).id</div><div class="line">    <span class="comment"># search by tenant or user only works with all_tenants</span></div><div class="line">    <span class="keyword">if</span> args.tenant <span class="keyword">or</span> args.user:</div><div class="line">        args.all_tenants = <span class="number">1</span></div><div class="line">        .......................</div></pre></td></tr></table></figure>
+<p>比较重要的语句如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">servers = cs.servers.list(detailed=detailed,</div><div class="line">                              search_opts=search_opts,</div><div class="line">                              sort_keys=sort_keys,</div><div class="line">                              sort_dirs=sort_dirs,</div><div class="line">                              marker=args.marker,</div><div class="line">                              limit=args.limit)</div><div class="line">        .......................</div></pre></td></tr></table></figure>
+<p>7,调用v2 下client中的servers 中的list方法，</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">password = kwargs.pop(<span class="string">'password'</span>, api_key)</div><div class="line">self.projectid = project_id</div><div class="line">self.tenant_id = tenant_id</div><div class="line">self.user_id = user_id</div><div class="line">self.flavors = flavors.FlavorManager(self)</div><div class="line">self.flavor_access = flavor_access.FlavorAccessManager(self)</div><div class="line">self.images = images.ImageManager(self)</div><div class="line">self.glance = images.GlanceManager(self)</div><div class="line">self.limits = limits.LimitsManager(self)</div><div class="line">self.servers = servers.ServerManager(self) <span class="comment"># 调用此处的servers</span></div><div class="line">self.versions = versions.VersionManager(self)</div><div class="line">.......................</div></pre></td></tr></table></figure>
+<p>8,终于到最后一步</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">list</span><span class="params">(self, detailed=True, search_opts=None, marker=None, limit=None,</span></span></div><div class="line">            sort_keys=None, sort_dirs=None):</div><div class="line">     </div><div class="line">       <span class="keyword">if</span> search_opts <span class="keyword">is</span> <span class="keyword">None</span>:</div><div class="line">           search_opts = &#123;&#125;</div><div class="line"></div><div class="line">       qparams = &#123;&#125;</div><div class="line"></div><div class="line">       <span class="keyword">for</span> opt, val <span class="keyword">in</span> six.iteritems(search_opts):</div><div class="line">           <span class="keyword">if</span> val:</div><div class="line">               <span class="keyword">if</span> isinstance(val, six.text_type):</div><div class="line">                   val = val.encode(<span class="string">'utf-8'</span>)</div><div class="line">               qparams[opt] = val</div><div class="line"></div><div class="line">       detail = <span class="string">""</span></div><div class="line">       <span class="keyword">if</span> detailed:</div><div class="line">           detail = <span class="string">"/detail"</span></div><div class="line"></div><div class="line">       result = base.ListWithMeta([], <span class="keyword">None</span>)</div><div class="line">       <span class="keyword">while</span> <span class="keyword">True</span>:</div><div class="line">           <span class="keyword">if</span> marker:</div><div class="line">               qparams[<span class="string">'marker'</span>] = marker</div><div class="line"></div><div class="line">           <span class="keyword">if</span> limit <span class="keyword">and</span> limit != <span class="number">-1</span>:</div><div class="line">               qparams[<span class="string">'limit'</span>] = limit</div><div class="line"></div><div class="line">           <span class="comment"># Transform the dict to a sequence of two-element tuples in fixed</span></div><div class="line">           <span class="comment"># order, then the encoded string will be consistent in Python 2&amp;3.</span></div><div class="line">           <span class="keyword">if</span> qparams <span class="keyword">or</span> sort_keys <span class="keyword">or</span> sort_dirs:</div><div class="line">               <span class="comment"># sort keys and directions are unique since the same parameter</span></div><div class="line">               <span class="comment"># key is repeated for each associated value</span></div><div class="line">               <span class="comment"># (ie, &amp;sort_key=key1&amp;sort_key=key2&amp;sort_key=key3)</span></div><div class="line">               items = list(qparams.items())</div><div class="line">               <span class="keyword">if</span> sort_keys:</div><div class="line">                   items.extend((<span class="string">'sort_key'</span>, sort_key)</div><div class="line">                                <span class="keyword">for</span> sort_key <span class="keyword">in</span> sort_keys)</div><div class="line">               <span class="keyword">if</span> sort_dirs:</div><div class="line">                   items.extend((<span class="string">'sort_dir'</span>, sort_dir)</div><div class="line">                                <span class="keyword">for</span> sort_dir <span class="keyword">in</span> sort_dirs)</div><div class="line">               new_qparams = sorted(items, key=<span class="keyword">lambda</span> x: x[<span class="number">0</span>])</div><div class="line">               query_string = <span class="string">"?%s"</span> % parse.urlencode(new_qparams)</div><div class="line">           <span class="keyword">else</span>:</div><div class="line">               query_string = <span class="string">""</span></div><div class="line"></div><div class="line">           servers = self._list(<span class="string">"/servers%s%s"</span> % (detail, query_string),</div><div class="line">                                <span class="string">"servers"</span>) <span class="comment">#重点在这</span></div><div class="line">           result.extend(servers)</div><div class="line">           result.append_request_ids(servers.request_ids)</div><div class="line"></div><div class="line">           <span class="keyword">if</span> <span class="keyword">not</span> servers <span class="keyword">or</span> limit != <span class="number">-1</span>:</div><div class="line">               <span class="keyword">break</span></div><div class="line">           marker = result[<span class="number">-1</span>].id</div><div class="line">       <span class="keyword">return</span> result</div></pre></td></tr></table></figure>
+<p>找到最终调用的_list方法如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">_list</span><span class="params">(self, url, response_key, obj_class=None, body=None)</span>:</span></div><div class="line">        <span class="keyword">if</span> body:</div><div class="line">            resp, body = self.api.client.post(url, body=body)</div><div class="line">        <span class="keyword">else</span>:</div><div class="line">            resp, body = self.api.client.get(url)</div><div class="line"></div><div class="line">        .......................</div></pre></td></tr></table></figure>
+<p>即最终通过restful api 去查找对应的数据,此处路径为（/servers/detail ）<br>self.api.client是novaclient.client.SessionClient类的对象，但是在SessionClient类中没有找到get函数，在其父类adapter.LegacyJsonAdapter中发现该函数，而adapter文件是在keystoneclient中，所以self.api.client.get(url)调用的是keystoneclient/adapter.py中的LegacyJsonAdapter类的get()函数,最终找到Adapter类中的get()函数。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">get</span><span class="params">(self, url, **kwargs)</span>:</span></div><div class="line">       <span class="keyword">return</span> self.request(url, <span class="string">'GET'</span>, **kwargs)</div></pre></td></tr></table></figure>
+<p>之后会调用sessionClient的request()函数。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">request</span><span class="params">(self, url, method, **kwargs)</span>:</span></div><div class="line">    kwargs.setdefault(<span class="string">'headers'</span>, kwargs.get(<span class="string">'headers'</span>, &#123;&#125;))</div><div class="line">    api_versions.update_headers(kwargs[<span class="string">"headers"</span>], self.api_version)</div><div class="line">    <span class="comment"># NOTE(jamielennox): The standard call raises errors from</span></div><div class="line">    <span class="comment"># keystoneauth1, where we need to raise the novaclient errors.</span></div><div class="line">    raise_exc = kwargs.pop(<span class="string">'raise_exc'</span>, <span class="keyword">True</span>)</div><div class="line">    <span class="keyword">with</span> utils.record_time(self.times, self.timings, method, url):</div><div class="line">        resp, body = super(SessionClient, self).request(url,</div><div class="line">                                                        method,</div><div class="line">                                                        raise_exc=<span class="keyword">False</span>,</div><div class="line">                                                        **kwargs) <span class="comment"># 该函数</span></div><div class="line"></div><div class="line">    <span class="comment"># if service name is None then use service_type for logging</span></div><div class="line">    service = self.service_name <span class="keyword">or</span> self.service_type</div><div class="line">    _log_request_id(self.logger, resp, service)</div><div class="line"></div><div class="line">    <span class="comment"># TODO(andreykurilin): uncomment this line, when we will be able to</span></div><div class="line">    <span class="comment">#   check only nova-related calls</span></div><div class="line">    <span class="comment"># api_versions.check_headers(resp, self.api_version)</span></div><div class="line">    <span class="keyword">if</span> raise_exc <span class="keyword">and</span> resp.status_code &gt;= <span class="number">400</span>:</div><div class="line">        <span class="keyword">raise</span> exceptions.from_response(resp, body, url, method)</div><div class="line"></div><div class="line">    <span class="keyword">return</span> resp, body</div></pre></td></tr></table></figure>
+<p>调用adapter.LegacyJsonAdapter类中的request方法</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">LegacyJsonAdapter</span><span class="params">(Adapter)</span>:</span></div><div class="line">    <span class="string">"""Make something that looks like an old HTTPClient.</span></div><div class="line"></div><div class="line">    A common case when using an adapter is that we want an interface similar to</div><div class="line">    the HTTPClients of old which returned the body as JSON as well.</div><div class="line"></div><div class="line">    You probably don't want this if you are starting from scratch.</div><div class="line">    """</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">request</span><span class="params">(self, *args, **kwargs)</span>:</span></div><div class="line">        headers = kwargs.setdefault(<span class="string">'headers'</span>, &#123;&#125;)</div><div class="line">        headers.setdefault(<span class="string">'Accept'</span>, <span class="string">'application/json'</span>)</div><div class="line"></div><div class="line">        <span class="keyword">try</span>:</div><div class="line">            kwargs[<span class="string">'json'</span>] = kwargs.pop(<span class="string">'body'</span>)</div><div class="line">        <span class="keyword">except</span> KeyError:  <span class="comment"># nosec(cjschaef): kwargs doesn't contain a 'body'</span></div><div class="line">            <span class="comment"># key, while 'json' is an optional argument for Session.request</span></div><div class="line">            <span class="keyword">pass</span></div><div class="line"></div><div class="line">        resp = super(LegacyJsonAdapter, self).request(*args, **kwargs)</div><div class="line"></div><div class="line">        body = <span class="keyword">None</span></div><div class="line">        <span class="keyword">if</span> resp.text:</div><div class="line">            <span class="keyword">try</span>:</div><div class="line">                body = jsonutils.loads(resp.text)</div><div class="line">            <span class="keyword">except</span> ValueError:  <span class="comment"># nosec(cjschaef): return None for body as</span></div><div class="line">                <span class="comment"># expected</span></div><div class="line">                <span class="keyword">pass</span></div><div class="line"></div><div class="line">        <span class="keyword">return</span> resp, body</div></pre></td></tr></table></figure>
+<p>不往下看了，再往下代码比较复杂。</p>
+<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://www.lolo99.com/2016/09/23/openstack-L%E7%89%88%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%E4%B9%8Bnovaclient-2/" target="_blank" rel="external">openstack-L版源码解析之novaclient</a><br><a href="https://github.com/openstack/python-novaclient" target="_blank" rel="external">pythonnovaclient</a></p>
+<p><strong><em>END</em></strong></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
   <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/11/20/linux-log/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1653,359 +2007,6 @@ On termination (typically registered via atexit):
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/09/26/python-yield-and coroutine/">
-
-  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
-    <meta itemprop="name" content="pekingzcc">
-    <meta itemprop="description" content="">
-    <meta itemprop="image" content="/images/avatar.jpg">
-  </span>
-
-  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-    <meta itemprop="name" content="Solar">
-    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
-      <img style="display:none;" itemprop="url image" alt="Solar" src="">
-    </span>
-  </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/09/26/python-yield-and coroutine/" itemprop="url">
-                  python系列--Python中的生成器以及协程的相关知识
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-09-26T14:24:25+08:00">
-                2016-09-26
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2016/09/26/python-yield-and coroutine/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/09/26/python-yield-and coroutine/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="目录结构："><a href="#目录结构：" class="headerlink" title="目录结构："></a>目录结构：</h2><p><a href="#A">迭代器与生成器 </a></p>
-<p><a href="#B">yield, send 关键字解析 </a></p>
-<p><a href="#C">协程的一些知识</a></p>
-<p><a name="A"></a></p>
-<h2 id="迭代器与生成器"><a href="#迭代器与生成器" class="headerlink" title="迭代器与生成器"></a>迭代器与生成器</h2><p>在说生成器之前我们得先讨论一下迭代器的概念。</p>
-<p>我们知道，对于一个可迭代的对象，我们可以通过 for <em> in </em> 的语句来进行迭代输出。这个可迭代的对象可以是一个list，string，文件等。其实我们深入这个可迭代的对象会发现，这些可迭代对象都实现了两个函数：<strong>iter</strong>() 和 next()。在我们调用list等这些可迭代对象的时候，需要把整个list数据全部读到内存里。这样就存在一个问题：list数据量小还可以，一旦变得特别大，内存就有可能被占满而导致运行缓慢甚至崩溃。这个时候我们想到，能不能只把我们需要的那个数据读入内存，调用next()的时候再把下一个数据读入内存呢。这就是生成器了。</p>
-<p>一般来说，含有 yield 语句的函数就可叫做生成器。</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">g</span><span class="params">()</span>:</span></div><div class="line">    <span class="keyword">yield</span> <span class="number">0</span></div><div class="line">    <span class="keyword">yield</span> <span class="number">1</span></div><div class="line">    <span class="keyword">yield</span> <span class="number">2</span></div><div class="line">ge = g()</div><div class="line">type(ge) <span class="comment">#ge 的类型为 'generator'</span></div><div class="line">dir(ge) <span class="comment">#列出ge包含的函数我们发现有__iter__() 和 next()</span></div><div class="line">ge.next()</div><div class="line">ge.next()</div><div class="line">ge.next()</div></pre></td></tr></table></figure>
-<p>生成器也是一种迭代器，但我们只可以读取它一次，因为它并非把所有数据都存入内存中，而是实时地生成数据。上述例子当我们再次读取ge.next()后就会报错。</p>
-<p>此处再略提一下生成器推导式：<br>我们知道Python中有各种集合的推导式，如下：</p>
-<ul>
-<li>列表推导式：my_list = [ f(x) for x in sequence if cond(x) ]</li>
-<li>字典推导式：my_dict = { k(x): v(x) for x in sequence if cond(x) }</li>
-<li>集合推导式：my_set = { f(x) for x in sequence if cond(x) }</li>
-</ul>
-<p>相应的，我们也可以用推导式来生成生成器，跟列表推导式类似，只需要将[]改为()：<br>my_generator = ( f(x) for x in sequence if cond(x) )</p>
-<p><a name="B"></a></p>
-<h2 id="yield-send-关键字解析"><a href="#yield-send-关键字解析" class="headerlink" title="yield, send 关键字解析"></a>yield, send 关键字解析</h2><p>由上文可以看到，yield关键字是理解生成器的关键。那么yield什么意思呢？我们来详细解释一下。<br>yield 关键字有点类似我们平常写程序用到的return。但是程序运行到return的时候就会返回，运行完毕。而运行到yield的时候也会返回，但会保存上下文之后再返回，等到下次再次唤醒该程序的时候恢复上下文，继续从此运行，直到碰到下一次yield。</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">mygenerator = (x*x <span class="keyword">for</span> x <span class="keyword">in</span> range(<span class="number">3</span>))</div><div class="line"><span class="keyword">for</span> i <span class="keyword">in</span> mygenerator :</div><div class="line">   print(i) <span class="comment">#输出0,1,4</span></div></pre></td></tr></table></figure>
-<p>首先我们创建了一个生成器mygenerator，注意，此时程序并不执行，只是创建了一个生成器。接着是一个for循环,fou循环其实就是执行了一个next()函数，此时进入生成器获取第一个i就是0乘以0，也就是0。返回并输出。再次循环，进入生成器，以此类推。这个例子可能不是特别直接，只是说明一下运行的逻辑顺序，下文中我们有一个更为直接的实例。</p>
-<p>我们先看一下send()函数再将两个函数放在一个例子中说明一下。</p>
-<p>在调用生成器时，除了next()方法，我们还可以用send()方法唤醒生成器，而且send(args),在唤醒生成器的同时会把参数 args传给指定的数据。如下例：</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">f</span><span class="params">()</span>:</span>     <span class="comment">#定义一个生成器函数</span></div><div class="line">     <span class="keyword">while</span> <span class="keyword">True</span>:</div><div class="line">         val = <span class="keyword">yield</span> <span class="comment"># val接受send()传过来的的参数并赋值</span></div><div class="line">         <span class="keyword">yield</span> val*<span class="number">10</span> </div><div class="line"></div><div class="line">g = f() <span class="comment">#新建一个生成器</span></div><div class="line">g.next() <span class="comment">#触发生成器，生成器执行到val=yield ，保存上下文退出，等待传值</span></div><div class="line">g.send(<span class="number">1</span>) <span class="comment"># 触发生成器，生成器继续执行，赋值val = 1，执行到yield val*10，保存上下文，,返回10，退出。</span></div><div class="line"></div><div class="line">g.next() <span class="comment">#同上</span></div><div class="line">g.send(<span class="number">10</span>)</div><div class="line"></div><div class="line">g.next()</div><div class="line">g.send(<span class="number">0.5</span>)</div></pre></td></tr></table></figure>
-<p>注意，我们在用send()之前必须保证生成器已经执行到yield,也就是说生成器已经被触发过一次，我们可以用send(none)来实现。其实，next()跟send(none)效果是一样的。</p>
-<p>接下来我们看一个比较复杂的例子：</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#!/usr/bin/env python</span></div><div class="line"><span class="comment"># -*- coding: utf-8 -*-</span></div><div class="line"><span class="comment"># @Date    : 2016-09-22 16:40:36</span></div><div class="line"><span class="comment"># @Author  : Zhang Chen (pekingzcc@gmail.com)</span></div><div class="line"><span class="comment"># @Link    : zhangchenchen.github.io</span></div><div class="line"></div><div class="line"><span class="keyword">import</span> os</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">countdown</span><span class="params">(n)</span>:</span></div><div class="line">    <span class="keyword">print</span> <span class="string">"Into genaration :counting down from"</span>, n</div><div class="line">    <span class="keyword">while</span> n &gt;= <span class="number">0</span>:</div><div class="line">        <span class="keyword">print</span> <span class="string">"Genaration: ###loops from here###"</span></div><div class="line">        newvalue = (<span class="keyword">yield</span> n)</div><div class="line">        <span class="keyword">print</span> <span class="string">"Gerenation: newvalue is"</span>,newvalue</div><div class="line">        <span class="comment"># If a new value got sent in, reset n with it</span></div><div class="line">        <span class="keyword">if</span> newvalue <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</div><div class="line">            n = newvalue</div><div class="line">        <span class="keyword">else</span>:</div><div class="line">            n -= <span class="number">1</span></div><div class="line"><span class="keyword">if</span> __name__==<span class="string">'__main__'</span>:</div><div class="line">    c = countdown(<span class="number">5</span>)</div><div class="line">    <span class="keyword">print</span> <span class="string">"Main function begin from here "</span></div><div class="line">    <span class="keyword">for</span> x <span class="keyword">in</span> c:</div><div class="line">         <span class="keyword">print</span> <span class="string">"Main function: x is"</span>, x</div><div class="line">         <span class="keyword">if</span> x == <span class="number">5</span>:</div><div class="line">            c.send(<span class="number">3</span>)</div></pre></td></tr></table></figure>
-<p>这个例子看明白了，yield与send的用法就理解的差不多了。<br>我们首先看一下执行结果：</p>
-<p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/20160926python-yield.png" alt="python-yield"></p>
-<p>接下来分析一下：我们从main 函数开始，先创建了一个生成器（此时并未执行），接着输出main函数开始的语句。接着进入for循环，注意，遇到for循环就相当于执行了一次next(),所以进入生成器输出“Into genaration :counting down from 5”，继续运行，进入生成器的for循环，输出“Genaration: ###loops from here###”，继续往下，碰到yield n ，保存上下文，退出并返回n(此时是5)到main函数，主函数输出“Main function: x is 5”，进入条件语句，c.send(5)触发生成器，再次进入生成器，赋值newvalue为3，接着输出“Gerenation: newvalue is 3” ，赋值n = newvalue =3 ,继续循环输出“Genaration: ###loops from here###”，碰到yield n ,返回main函数，注意，此时main函数又进入到for循环，所以再次进入生成器，但是没有send()数据传过来，也可以理解为send(none),所以输出“Gerenation: newvalue is none”,接着执行n-1 ,n变为2。继续循环，输出“Genaration: ###loops from here###”。。。。。</p>
-<p><a name="C"></a></p>
-<h2 id="协程的一些知识"><a href="#协程的一些知识" class="headerlink" title="协程的一些知识"></a>协程的一些知识</h2><p>在了解协程之前，我们需要先从进程，线程说起。我们知道，进程的出现是为了并发，在一台机器上同时运行多个程序（当然，内部实现可能是多CPU并行，也有可能是单CPU时间分片，但在外部看来就是多个程序一起运行），进程的切换需要陷入内核，由OS来进行切换。一切换进程得反复进入内核，置换掉一大堆状态，这样，进程数一高，就会吃掉很多的系统资源。为了解决这个问题，就出现了线程的概念。</p>
-<p>一个进程里可以有多个线程，这样就能处理多个逻辑，当某个线程阻塞的时候，可以切换线程到另一个线程。因为线程是共享附属进程的资源的，它们件的切换相对要比进程间的切换消耗的资源要少很多。但之后，问题又来了，操作系统为了程序运行的高效性每个线程都有自己缓存Cache等等数据，操作系统还需要做这些数据的恢复操作，所以线程多了之后，它们之间的切换也非常耗性能。</p>
-<p>协程的概念就来了，既然线程切换费资源，那我们干脆自己做逻辑流的切换，不用交给OS处理。注意，这里经常提到的是切换，具体到应用场景就是IO密集型场景。在cpu密集型的场景中协程的意义就没有那么大了。在IO处理时，我们有同步，异步两种处理方式，关于IO模型，可以<a href="http://www.jianshu.com/p/55eb83d60ab1" target="_blank" rel="external">check this</a> 。在异步处理IO时，我们需要写回调函数来实现异步，这种写法是比较反人类的，可读性比较差。协程可以很好解决这个问题。比如 把一个IO操作 写成一个协程。当触发IO操作的时候就自动让出CPU给其他协程。协程的切换很轻，消耗资源少。协程通过这种对异步IO的封装既保留了性能也保证了代码的 容易编写和可读性。</p>
-<p>其实协程不是一个新生的事物，它在很早之前就出现了，只不过最近因为在一些动态语言的世界里大放异彩。对其历史感兴趣的<a href="http://blog.youxu.info/2014/12/04/coroutine/" target="_blank" rel="external">check this</a>。</p>
-<p>再简单说一下Python中的协程，其实Python中的协程跟yield关键字是分不开的。只要含有yield的函数都可以认为是一个协程，利用协程实现的生产者消费者如下：</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> random</div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">get_data</span><span class="params">()</span>:</span></div><div class="line">    <span class="string">"""返回0到9之间的3个随机数，模拟异步操作"""</span></div><div class="line">    <span class="keyword">return</span> random.sample(range(<span class="number">10</span>), <span class="number">3</span>)</div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">consume</span><span class="params">()</span>:</span></div><div class="line">    <span class="string">"""显示每次传入的整数列表的动态平均值"""</span></div><div class="line">    running_sum = <span class="number">0</span></div><div class="line">    data_items_seen = <span class="number">0</span></div><div class="line">    </div><div class="line">    <span class="keyword">while</span> <span class="keyword">True</span>:</div><div class="line">        print(<span class="string">'Waiting to consume'</span>)</div><div class="line">        data = <span class="keyword">yield</span></div><div class="line">        data_items_seen += len(data)</div><div class="line">        running_sum += sum(data)</div><div class="line">        print(<span class="string">'Consumed, the running average is &#123;&#125;'</span>.format(running_sum / float(data_items_seen)))</div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">produce</span><span class="params">(consumer)</span>:</span></div><div class="line">    <span class="string">"""产生序列集合，传递给消费函数（consumer）"""</span></div><div class="line">    <span class="keyword">while</span> <span class="keyword">True</span>:</div><div class="line">        data = get_data()</div><div class="line">        print(<span class="string">'Produced &#123;&#125;'</span>.format(data))</div><div class="line">        consumer.send(data)</div><div class="line">        <span class="keyword">yield</span></div><div class="line"> </div><div class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</div><div class="line">    consumer = consume()</div><div class="line">    consumer.send(<span class="keyword">None</span>) </div><div class="line">    producer = produce(consumer)</div><div class="line"> </div><div class="line">    <span class="keyword">for</span> _ <span class="keyword">in</span> range(<span class="number">10</span>):</div><div class="line">        print(<span class="string">'Producing...'</span>)</div><div class="line">        next(producer)</div></pre></td></tr></table></figure>
-<p>利用协程的Python库比较常见的是Greenlet库，它是以C扩展模块形式接入Python的轻量级协程，将一些原本同步运行的网络库以mockey_patch的方式进行了重写。Greenlets全部运行在主程序操作系统进程的内部，它们被协作式地调度。</p>
-<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://www.dabeaz.com/coroutines/Coroutines.pdf" target="_blank" rel="external">A Curious Course on Coroutines and Concurrency</a></p>
-<p><a href="https://www.oschina.net/translate/improve-your-python-yield-and-generators-explained" target="_blank" rel="external">提高你的Python: 解释‘yield’和‘Generators（生成器）</a></p>
-<p><a href="http://pyzh.readthedocs.io/en/latest/the-python-yield-keyword-explained.html" target="_blank" rel="external">(译)Python关键字yield的解释(stackoverflow)</a></p>
-<p><a href="https://segmentfault.com/a/1190000001813992" target="_blank" rel="external">Python 中的进程、线程、协程、同步、异步、回调</a></p>
-<p><a href="http://codingpy.com/article/what-is-generator-comprehension/" target="_blank" rel="external">什么是Python中的生成器推导式？</a></p>
-<p><a href="http://wiki.jikexueyuan.com/project/start-learning-python/215.html" target="_blank" rel="external">生成器</a></p>
-<p><a href="http://manjusaka.itscoder.com/2016/09/11/something-about-yield-in-python/" target="_blank" rel="external">聊聊 Python 中生成器和协程那点事儿</a></p>
-<p><a href="http://www.bogotobogo.com/python/python_function_with_generator_send_method_yield_keyword_iterator_next.php" target="_blank" rel="external">GENERATOR.SEND() WITH YIELD</a></p>
-<p><a href="http://blog.kazaff.me/2016/05/29/%E4%BA%86%E8%A7%A3%E5%8D%8F%E7%A8%8B(coroutine" target="_blank" rel="external">了解协程（Coroutine）</a>/)</p>
-<p><a href="https://www.zhihu.com/question/20511233" target="_blank" rel="external">协程的好处是什么？</a></p>
-<p><a href="https://www.zhihu.com/question/32218874/answer/55469714" target="_blank" rel="external">为什么觉得协程是趋势？</a></p>
-<p><a href="http://blog.youxu.info/2014/12/04/coroutine/" target="_blank" rel="external">编程珠玑番外篇-Q 协程的历史，现在和未来</a></p>
-<p><a href="http://www.jackyshen.com/2015/05/21/async-operations-in-form-of-sync-programming-with-python-yielding/" target="_blank" rel="external">利用python yielding创建协程将异步编程同步化</a></p>
-<p><strong><em>END</em></strong></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/09/16/secure-your-ubuntu-server/">
-
-  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
-    <meta itemprop="name" content="pekingzcc">
-    <meta itemprop="description" content="">
-    <meta itemprop="image" content="/images/avatar.jpg">
-  </span>
-
-  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-    <meta itemprop="name" content="Solar">
-    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
-      <img style="display:none;" itemprop="url image" alt="Solar" src="">
-    </span>
-  </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/09/16/secure-your-ubuntu-server/" itemprop="url">
-                  安全系列 --简单加固 ubuntu 服务器
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-09-16T15:01:55+08:00">
-                2016-09-16
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2016/09/16/secure-your-ubuntu-server/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/09/16/secure-your-ubuntu-server/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="目录结构"><a href="#目录结构" class="headerlink" title="目录结构"></a>目录结构</h2><p><a href="#A">前言 </a></p>
-<p><a href="#B">花五分钟的时间加固 ubuntu server </a></p>
-<p><a href="#C">其他</a></p>
-<p><a name="A"></a></p>
-<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>逛v2ex的时候看到了一篇讨论 <a href="https://www.v2ex.com/t/306519#reply22" target="_blank" rel="external">在服务器上做什么加固策略</a>的帖子，想起自己之前看过的一篇文章，<a href="https://plusbryan.com/my-first-5-minutes-on-a-server-or-essential-security-for-linux-servers" target="_blank" rel="external">My First 5 Minutes On A Server; Or, Essential Security for Linux Servers</a>，顺手写下这篇文章，权当记录，本篇的绝大部分内容都是出自这篇文章，强烈推荐，如果觉得TLDR,就接着往下翻吧。</p>
-<p>安全，在大部分程序员潜意识里总是处于一种low priority的状态（参看此<a href="https://www.zhihu.com/question/20306241" target="_blank" rel="external">知乎链接</a>）。比如，我们搭建一个web server，会在第一时间去想用什么去部署，去实现，实现之后可能还会考虑高可用，可扩展等因素。而安全却总是会在最后才出现在我们的脑海里，甚至于直到出现安全事故才去关注。其实，我们拿到一台Linux服务器，只需要花些时间做一些安全方面的考量，做一些简单的措施就可以抵挡很大一部分攻击，提高攻击门槛。</p>
-<p>那对于安全方面的措施，我比较推崇上文作者所说：简单有效。因为比较复杂的安全策略实施起来的增量收益可能会低于增加的大量人力物力资源。而且指不定还会引入其他的安全隐患。引用作者的话说：据我的经验来讲，大部分安全事故，要么是没有做足够的安全措施，要么是做了足够的安全措施，但没有更新维护导致出现漏洞。</p>
-<p>Simplicity is the heart of good security.</p>
-<p>下面就简单说下我们拿到一台服务器（或VPS）后需要做的一些安全加固措施。</p>
-<p><a name="B"></a></p>
-<h2 id="花五分钟的时间加固-ubuntu-server"><a href="#花五分钟的时间加固-ubuntu-server" class="headerlink" title="花五分钟的时间加固 ubuntu server"></a>花五分钟的时间加固 ubuntu server</h2><h3 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h3><p>本文中用的Linux发行版为 14.04。其他实验环境作者没有实践。<br>首先更改你的 root 密码为强类型密码。然后执行如下命令做一下升级：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">apt-get update</div><div class="line">apt-get upgrade</div></pre></td></tr></table></figure>
-<h3 id="尽量不要使用root用户"><a href="#尽量不要使用root用户" class="headerlink" title="尽量不要使用root用户"></a>尽量不要使用root用户</h3><p>新增一个用户，当需要root权限时再用sudo暂时提升权限。新建用户的密码也要是强类型密码。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">adduser example_user  <span class="comment">#新建 用户</span></div><div class="line">adduser example_user sudo  <span class="comment">#给新建用户添加sudo权限</span></div></pre></td></tr></table></figure>
-<h3 id="使用SSH密钥认证登录"><a href="#使用SSH密钥认证登录" class="headerlink" title="使用SSH密钥认证登录"></a>使用SSH密钥认证登录</h3><p>利用ssh登录到Linux服务器有很多种方案，比较常用的就是用户名密码登录和SSH密钥认证的方式。<br>相对用户名密码登陆方式，后者是一种更安全的方案，因为前者容易受到暴力破解的威胁，而后者用暴力破解的方法不太实际。<br>首先需要在客户端产生公约密钥对。Linux下是如下命令：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ssh-keygen -t rsa</div></pre></td></tr></table></figure>
-<p>如果客户端是windows，可以利用putty等客户端实现。</p>
-<p>创建完之后，我们会获取到两个文件，id_rsa.pub，和 id_rsa。也就是公钥文件和密钥文件。</p>
-<p>接下来将公钥内容复制到服务器.ssh 目录下authorized_keys文件中。</p>
-<h3 id="关闭SSH-密码服务器登陆"><a href="#关闭SSH-密码服务器登陆" class="headerlink" title="关闭SSH 密码服务器登陆"></a>关闭SSH 密码服务器登陆</h3><p>添加如下内容到 /etc/ssh/sshd_config 文件中。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">PermitRootLogin no</div><div class="line">PasswordAuthentication no</div><div class="line">AllowUsers deploy@(your-ip) deploy@(another-ip-if-any) # 添加允许登录IP</div></pre></td></tr></table></figure>
-<p>重启ssh服务</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">service ssh restart</div></pre></td></tr></table></figure>
-<h3 id="添加防火墙"><a href="#添加防火墙" class="headerlink" title="添加防火墙"></a>添加防火墙</h3><p>添加防火墙有很多种方法，最简单的就是利用ubuntu 提供的ufw。<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">ufw allow from &#123;your-ip&#125; to any port 22 <span class="comment">#限定IP的端口</span></div><div class="line">ufw allow 80 <span class="comment">#打开80端口</span></div><div class="line">ufw allow 443 <span class="comment">#打开443端口</span></div><div class="line">ufw <span class="built_in">enable</span></div></pre></td></tr></table></figure></p>
-<p> 当然要根据你的实际要求来打开对应的端口。除了ufw，还有iptables,ip6tables,以及最新的nftables等都可以实现防火墙。</p>
-<h3 id="安装Fail2ban"><a href="#安装Fail2ban" class="headerlink" title="安装Fail2ban"></a>安装Fail2ban</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">apt-get install fail2ban</div></pre></td></tr></table></figure>
-<p>Fail2ban 会在服务端扫描日志并根据一些策略屏蔽一些有可疑行为的用户（IP）。官方介绍说的比较清楚：</p>
-<blockquote>
-<p>Fail2ban scans log files (e.g. /var/log/apache/error_log) and bans IPs that show the malicious signs – too many password failures, seeking for exploits, etc. Generally Fail2Ban is then used to update firewall rules to reject the IP addresses for a specified amount of time, although any arbitrary other action (e.g. sending an email) could also be configured. Out of the box Fail2Ban comes with filters for various services (apache, courier, ssh, etc).<br> Fail2Ban is able to reduce the rate of incorrect authentications attempts however it cannot eliminate the risk that weak authentication presents. Configure services to use only two factor or public/private authentication mechanisms if you really want to protect services.</p>
-</blockquote>
-<h3 id="设置安全自动升级"><a href="#设置安全自动升级" class="headerlink" title="设置安全自动升级"></a>设置安全自动升级</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">apt-get install unattended-upgrades</div><div class="line"></div><div class="line">vim /etc/apt/apt.conf.d/10periodic</div></pre></td></tr></table></figure>
-<p>更新如下内容：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">APT::Periodic::Update-Package-Lists <span class="string">"1"</span>;</div><div class="line">APT::Periodic::Download-Upgradeable-Packages <span class="string">"1"</span>;</div><div class="line">APT::Periodic::AutocleanInterval <span class="string">"7"</span>;</div><div class="line">APT::Periodic::Unattended-Upgrade <span class="string">"1"</span>;</div></pre></td></tr></table></figure>
-<p>再更新下这个文件/etc/apt/apt.conf.d/50unattended-upgrades</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"> Unattended-Upgrade::Allowed-Origins &#123;</div><div class="line">        <span class="string">"Ubuntu lucid-security"</span>;</div><div class="line">//      <span class="string">"Ubuntu lucid-updates"</span>;</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
-<h3 id="安装Logwatch"><a href="#安装Logwatch" class="headerlink" title="安装Logwatch"></a>安装Logwatch</h3><p>Logwatch 是一个强大的日志解析和分析软件。它被设计用来给出一台服务器上所有的活动报告，可以以命令行的形式输出，或邮件发送。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">apt-get install logwatch</div><div class="line"></div><div class="line">vim /etc/cron.daily/00logwatch</div></pre></td></tr></table></figure>
-<p> 添加如下内容：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/usr/sbin/logwatch --output mail --mailto <span class="built_in">test</span>@gmail.com --detail high</div></pre></td></tr></table></figure>
-<p><a name="C"></a></p>
-<h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><p>其实原文在<a href="https://news.ycombinator.com/item?id=5316093" target="_blank" rel="external">hacking news</a> 上引发了一系列的讨论。比如有人就提出，我们拿到一台服务器的时候，第一件事不是加固，而是应该先安装配置管理工具（Puppet or Chef），利用配置管理工具才更有条理。其实lz认为还是看实际场景吧，配置管理工具确实方便，尤其是对于一些大型的项目，而对于只搭一个blog的vps，确实没有必要。</p>
-<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://plusbryan.com/my-first-5-minutes-on-a-server-or-essential-security-for-linux-servers" target="_blank" rel="external">My First 5 Minutes On A Server; Or, Essential Security for Linux Servers </a></p>
-<p><a href="https://linode.com/docs/security/securing-your-server" target="_blank" rel="external">Securing Your Server</a></p>
-<p><a href="https://news.ycombinator.com/item?id=5316093" target="_blank" rel="external">Hacking news</a></p>
-<p><a href="https://www.v2ex.com/t/306519#reply22" target="_blank" rel="external">v2ex</a></p>
-<p><strong><em>END</em></strong></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2053,7 +2054,7 @@ On termination (typically registered via atexit):
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">57</span>
+                <span class="site-state-item-count">59</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2064,7 +2065,7 @@ On termination (typically registered via atexit):
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-count">14</span>
                 <span class="site-state-item-name">tags</span>
               </a>
             </div>
