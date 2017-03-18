@@ -94,7 +94,7 @@
 <meta property="og:description" content="引出初衷是自己搭建一套ceph的实验集群，按照官方的quick start,按理说应该是分分钟的事，因为GFW的原因，搞得忙活了一上午，再加上心情烦躁,中间出现了各种差错，这里记录一下。
 系统预检并安装ceph-deploy准备集群系统，网络设置，SSH无密码登录等设置略过，详细参考PREFLIGHT CHECKLIST
 这里有一个地方需要注意的是：centos7 在修改HOSTNAME 的时候命">
-<meta property="og:updated_time" content="2017-02-28T09:11:24.214Z">
+<meta property="og:updated_time" content="2017-03-18T11:18:04.590Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="ceph-- 使用国内yum源搭建ceph集群">
 <meta name="twitter:description" content="引出初衷是自己搭建一套ceph的实验集群，按照官方的quick start,按理说应该是分分钟的事，因为GFW的原因，搞得忙活了一上午，再加上心情烦躁,中间出现了各种差错，这里记录一下。
@@ -386,6 +386,8 @@
 <h2 id="一个尚未解决的顽疾"><a href="#一个尚未解决的顽疾" class="headerlink" title="一个尚未解决的顽疾"></a>一个尚未解决的顽疾</h2><p>在公司使用国内源安装ceph的时候，出现了一个这样的错误：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">http://mirrors.163.com/ceph/rpm-jewel/el7/x86_64/ceph-mds-10.2.5-0.el7.x86_64.rpm: [Errno -1] Package does not match intended download. Suggestion: run yum --enablerepo=ceph clean metadata</div></pre></td></tr></table></figure>
 <p>Package does not match intended 这个错误在我安装其他软件的时候也出现过，用尽了各种办法也没有解决该问题，但我在家里的时候却没有出现过该问题。所以推测是公司网络用了类似缓存的机制。</p>
+<h2 id="更新-2017-3-18"><a href="#更新-2017-3-18" class="headerlink" title="更新-2017-3-18"></a>更新-2017-3-18</h2><p>找到了解决上述问题的方法，就是先直接wget下来rpm包，然后用yum localinstall 或者rpm -ivh 安装,如果出现两个包互相依赖的情况，就两个包同时安装。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">wget http://mirrors.163.com/ceph/rpm-jewel/el7/x86_64/ceph-mds-10.2.5-0.el7.x86_64.rpm</div><div class="line"></div><div class="line">yum localinstall ceph-mds-10.2.5-0.el7.x86_64.rpm</div></pre></td></tr></table></figure>
 <h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://docs.ceph.com/docs/master/start/quick-start-preflight/" target="_blank" rel="external">PREFLIGHT CHECKLIST</a></p>
 <p><a href="http://docs.ceph.com/docs/master/start/quick-ceph-deploy/" target="_blank" rel="external">STORAGE CLUSTER QUICK START</a></p>
 <p><a href="http://ceph.org.cn/2016/09/02/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8%E5%9B%BD%E5%86%85%E6%BA%90%E9%83%A8%E7%BD%B2ceph%EF%BC%9F/" target="_blank" rel="external">如何使用国内源部署Ceph？</a></p>
@@ -567,7 +569,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#引出"><span class="nav-number">1.</span> <span class="nav-text">引出</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#系统预检并安装ceph-deploy"><span class="nav-number">2.</span> <span class="nav-text">系统预检并安装ceph-deploy</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#更换国内-YUM-源"><span class="nav-number">2.1.</span> <span class="nav-text">更换国内 YUM 源</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安装并配置ceph-cluster"><span class="nav-number">3.</span> <span class="nav-text">安装并配置ceph cluster</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一个尚未解决的顽疾"><span class="nav-number">4.</span> <span class="nav-text">一个尚未解决的顽疾</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文章"><span class="nav-number">5.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#引出"><span class="nav-number">1.</span> <span class="nav-text">引出</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#系统预检并安装ceph-deploy"><span class="nav-number">2.</span> <span class="nav-text">系统预检并安装ceph-deploy</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#更换国内-YUM-源"><span class="nav-number">2.1.</span> <span class="nav-text">更换国内 YUM 源</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安装并配置ceph-cluster"><span class="nav-number">3.</span> <span class="nav-text">安装并配置ceph cluster</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一个尚未解决的顽疾"><span class="nav-number">4.</span> <span class="nav-text">一个尚未解决的顽疾</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#更新-2017-3-18"><span class="nav-number">5.</span> <span class="nav-text">更新-2017-3-18</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文章"><span class="nav-number">6.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
             
 
           </div>

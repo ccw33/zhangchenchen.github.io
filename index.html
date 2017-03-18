@@ -296,7 +296,7 @@
               
                 
                 <a class="post-title-link" href="/2017/03/16/openvswitch-quick-start/" itemprop="url">
-                  openstack-- ovs 安装以及常用操作
+                  openstack-- Open vSwitch 安装以及常用操作
                 </a>
               
             
@@ -412,6 +412,7 @@
 <p><a href="http://www.yet.org/2014/09/openvswitch-troubleshooting/" target="_blank" rel="external">Open vSwitch and OpenStack Neutron troubleshooting</a></p>
 <p><a href="https://en.wikipedia.org/wiki/Open_vSwitch" target="_blank" rel="external">ovs wiki</a></p>
 <p><a href="http://www.rendoumi.com/open-vswitchde-ovs-vsctlming-ling-xiang-jie/" target="_blank" rel="external">Open vSwitch的ovs-vsctl命令详解</a></p>
+<p><a href="http://fishcried.com/2016-02-09/openvswitch-ops-guide/" target="_blank" rel="external">OVS常用操作总结</a></p>
 <p><strong><em>END</em></strong></p>
 
           
@@ -1251,6 +1252,8 @@
 <h2 id="一个尚未解决的顽疾"><a href="#一个尚未解决的顽疾" class="headerlink" title="一个尚未解决的顽疾"></a>一个尚未解决的顽疾</h2><p>在公司使用国内源安装ceph的时候，出现了一个这样的错误：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">http://mirrors.163.com/ceph/rpm-jewel/el7/x86_64/ceph-mds-10.2.5-0.el7.x86_64.rpm: [Errno -1] Package does not match intended download. Suggestion: run yum --enablerepo=ceph clean metadata</div></pre></td></tr></table></figure>
 <p>Package does not match intended 这个错误在我安装其他软件的时候也出现过，用尽了各种办法也没有解决该问题，但我在家里的时候却没有出现过该问题。所以推测是公司网络用了类似缓存的机制。</p>
+<h2 id="更新-2017-3-18"><a href="#更新-2017-3-18" class="headerlink" title="更新-2017-3-18"></a>更新-2017-3-18</h2><p>找到了解决上述问题的方法，就是先直接wget下来rpm包，然后用yum localinstall 或者rpm -ivh 安装,如果出现两个包互相依赖的情况，就两个包同时安装。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">wget http://mirrors.163.com/ceph/rpm-jewel/el7/x86_64/ceph-mds-10.2.5-0.el7.x86_64.rpm</div><div class="line"></div><div class="line">yum localinstall ceph-mds-10.2.5-0.el7.x86_64.rpm</div></pre></td></tr></table></figure>
 <h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://docs.ceph.com/docs/master/start/quick-start-preflight/" target="_blank" rel="external">PREFLIGHT CHECKLIST</a></p>
 <p><a href="http://docs.ceph.com/docs/master/start/quick-ceph-deploy/" target="_blank" rel="external">STORAGE CLUSTER QUICK START</a></p>
 <p><a href="http://ceph.org.cn/2016/09/02/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8%E5%9B%BD%E5%86%85%E6%BA%90%E9%83%A8%E7%BD%B2ceph%EF%BC%9F/" target="_blank" rel="external">如何使用国内源部署Ceph？</a></p>
