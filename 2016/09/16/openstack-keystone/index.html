@@ -351,7 +351,7 @@ keystone 是什么keystone 是 openstack 的认证服务模块（identy service�
                   <i class="fa fa-comment-o"></i>
                 </span>
                 <a href="/2016/09/16/openstack-keystone/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/09/16/openstack-keystone/" itemprop="commentCount"></span>
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/09/16/openstack-keystone/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -454,8 +454,8 @@ keystone 是什么keystone 是 openstack 的认证服务模块（identy service�
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/09/06/openstack-cinder/" rel="next" title="openstack 系列 --cinder">
-                <i class="fa fa-chevron-left"></i> openstack 系列 --cinder
+              <a href="/2016/09/16/secure-your-ubuntu-server/" rel="next" title="安全系列 --简单加固 ubuntu 服务器">
+                <i class="fa fa-chevron-left"></i> 安全系列 --简单加固 ubuntu 服务器
               </a>
             
           </div>
@@ -464,8 +464,8 @@ keystone 是什么keystone 是 openstack 的认证服务模块（identy service�
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2016/09/16/secure-your-ubuntu-server/" rel="prev" title="安全系列 --简单加固 ubuntu 服务器">
-                安全系列 --简单加固 ubuntu 服务器 <i class="fa fa-chevron-right"></i>
+              <a href="/2016/09/26/python-yield-and coroutine/" rel="prev" title="python系列--Python中的生成器以及协程的相关知识">
+                python系列--Python中的生成器以及协程的相关知识 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -492,8 +492,11 @@ keystone 是什么keystone 是 openstack 的认证服务模块（identy service�
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/09/16/openstack-keystone/"
-           data-title="openstack系列 --keystone" data-url="http://yoursite.com/2016/09/16/openstack-keystone/">
+      <div id="disqus_thread">
+        <noscript>
+          Please enable JavaScript to view the
+          <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a>
+        </noscript>
       </div>
     
   </div>
@@ -716,32 +719,38 @@ keystone 是什么keystone 是 openstack 的认证服务模块（identy service�
 
   
 
-  
-    
-  
 
-  <script type="text/javascript">
-    var duoshuoQuery = {short_name:"zhangchenchen"};
-    (function() {
-      var ds = document.createElement('script');
-      ds.type = 'text/javascript';ds.async = true;
-      ds.id = 'duoshuo-script';
-      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
-      ds.charset = 'UTF-8';
-      (document.getElementsByTagName('head')[0]
-      || document.getElementsByTagName('body')[0]).appendChild(ds);
-    })();
-  </script>
 
   
-    
-    
-    <script src="/lib/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
-    <script src="/js/src/hook-duoshuo.js"></script>
+
+    <script type="text/javascript">
+      var disqus_shortname = 'pekingzcc';
+      var disqus_identifier = '2016/09/16/openstack-keystone/';
+
+      var disqus_title = "openstack系列 --keystone";
+
+
+      function run_disqus_script(disqus_script) {
+        var dsq = document.createElement('script');
+        dsq.type = 'text/javascript';
+        dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      }
+
+      run_disqus_script('count.js');
+
+      
+        var disqus_config = function () {
+            this.page.url = disqus_url;
+            this.page.identifier = disqus_identifier;
+            this.page.title = disqus_title;
+        };
+        run_disqus_script('embed.js');
+      
+
+    </script>
   
-
-
-
 
 
 
