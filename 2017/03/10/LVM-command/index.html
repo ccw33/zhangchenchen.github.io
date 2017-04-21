@@ -102,7 +102,7 @@
 <meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-7.png">
 <meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-8.png">
 <meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-9.png">
-<meta property="og:updated_time" content="2017-03-10T08:14:28.659Z">
+<meta property="og:updated_time" content="2017-04-07T01:16:32.977Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="linux-- 利用LVM 对虚拟机进行手动扩容">
 <meta name="twitter:description" content="引出一般来说，如果openstck镜像中安装了growpart(之前的版本叫做growroot),在创建虚拟机的时候就会实现自动扩容。但是今天碰到几个虚拟机没有实现自动扩容的情况，需要手动进行扩容，用到lvm的一些知识，这里记录一下。
@@ -394,7 +394,7 @@
 <p>可以看到磁盘已经扩展为60G+了，但是磁盘分区还是两个且大小没变，而且挂载root的/dev/mapper/cl-root依然是50G,所以接下来我们需要做的就是将多出来的10G空间进行磁盘分区并最终扩展到逻辑卷dev/mapper/cl-root。</p>
 <p>首先磁盘分区并将该分区设置为LVM格式。</p>
 <p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-6.png" alt="lvm-6"></p>
-<p>重启机器，将/dev/sda3创建物理卷，并将该物理卷加入卷组。</p>
+<p>重启机器（或者不重启，执行 partprobe 命令让内核更新分区表），将/dev/sda3创建物理卷，并将该物理卷加入卷组。</p>
 <p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-7.png" alt="lvm-7"></p>
 <p>扩展逻辑卷并将对应的文件系统扩展，如果是ext3/4文件系统用resize2fs 命令。</p>
 <p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-8.png" alt="lvm-8"></p>
@@ -530,7 +530,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">60</span>
+                <span class="site-state-item-count">61</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -541,7 +541,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">17</span>
+                <span class="site-state-item-count">18</span>
                 <span class="site-state-item-name">tags</span>
               </a>
             </div>
