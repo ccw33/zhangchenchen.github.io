@@ -96,7 +96,9 @@ Active/Passive HA: 即A/P模式，中文主备模式，通常会有一个主节�
 Active/Passive HA: 即A/P模式，中文主备模式，通常会有一个主节点来提供服务，备用节点会同步/异步与主节点进行数据同步。当主节点故障时，备用节点会">
 <meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-04-21-openstack-con-ha.jpg">
 <meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-04-21-flow.jpg">
-<meta property="og:updated_time" content="2017-04-21T11:23:14.240Z">
+<meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-04-15galera-update-certification-timeout.png">
+<meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-04-15-net-con.jpg">
+<meta property="og:updated_time" content="2017-04-22T10:33:52.270Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="openstack-- 关于openstack HA 的一些记录">
 <meta name="twitter:description" content="概念所谓HA(High Availability),高可用，就是指在本地系统的某个组件出现故障的情况下，系统依然可访问,应用的能力。而为了达到这种目的，我们一般采用节点冗余的方法组成集群来提供服务。通常来说，可以分为两种冗余的方式：
@@ -393,10 +395,39 @@ Active/Passive HA: 即A/P模式，中文主备模式，通常会有一个主节�
 <p>从一个请求的角度大致时序如下：</p>
 <p><img src="http://oeptotikb.bkt.clouddn.com/2017-04-21-flow.jpg" alt="flow"></p>
 <p>这里在重点说一下rabbitmq 与mysql用的HA方案：</p>
-<h3 id="rabbitmq-的HA"><a href="#rabbitmq-的HA" class="headerlink" title="rabbitmq 的HA"></a>rabbitmq 的HA</h3><h3 id="mysql-的HA"><a href="#mysql-的HA" class="headerlink" title="mysql 的HA"></a>mysql 的HA</h3><h2 id="网络控制节点-HA"><a href="#网络控制节点-HA" class="headerlink" title="网络控制节点 HA"></a>网络控制节点 HA</h2><h2 id="存储控制节点-HA"><a href="#存储控制节点-HA" class="headerlink" title="存储控制节点 HA"></a>存储控制节点 HA</h2><h2 id="计算节点-HA"><a href="#计算节点-HA" class="headerlink" title="计算节点 HA"></a>计算节点 HA</h2><h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://docs.openstack.org/ha-guide/intro-ha.html" target="_blank" rel="external">openstack doc</a></p>
+<h3 id="rabbitmq-的HA"><a href="#rabbitmq-的HA" class="headerlink" title="rabbitmq 的HA"></a>rabbitmq 的HA</h3><p>首先了解下rabbitmq集群的消息传递模式，rabbitmq的集群有两种模式，如下：</p>
+<ul>
+<li><p>普通模式：默认的集群模式，以两个节点（rabbit01、rabbit02）为例来进行说明。对于Queue来说，消息实体只存在于其中一个节点rabbit01（或者rabbit02），rabbit01和rabbit02两个节点仅有相同的元数据，即队列的结构。当消息进入rabbit01节点的Queue后，consumer从rabbit02节点消费时，RabbitMQ会临时在rabbit01、rabbit02间进行消息传输，把A中的消息实体取出并经过B发送给consumer。所以consumer应尽量连接每一个节点，从中取消息。即对于同一个逻辑队列，要在多个节点建立物理Queue。否则无论consumer连rabbit01或rabbit02，出口总在rabbit01，会产生瓶颈。当rabbit01节点故障后，rabbit02节点无法取到rabbit01节点中还未消费的消息实体。如果做了消息持久化，那么得等rabbit01节点恢复，然后才可被消费；如果没有持久化的话，就会产生消息丢失的现象。该模式只是起到单纯的扩展作用（如增加queue的存储空间等），并没有达到HA 的效果。</p>
+</li>
+<li><p>镜像模式：将需要消费的队列变为镜像队列，存在于多个节点，这样就可以实现RabbitMQ的HA高可用性。作用就是消息实体会主动在镜像节点之间实现同步，而不是像普通模式那样，在consumer消费数据时临时读取。缺点就是，集群内部的同步通讯会占用大量的网络带宽。</p>
+</li>
+</ul>
+<p>rabbitmq的 A/P方案可以采用Pacemaker + （DRBD 或者其它可靠的共享 NAS/SNA 存储） + （CoroSync 或者 Heartbeat 或者 OpenAIS）来实现，安装配置可以参考<a href="http://www.cnblogs.com/sammyliu/p/4730517.html" target="_blank" rel="external">理解 OpenStack 高可用（HA）（5）：RabbitMQ HA</a>.</p>
+<p>openstack 官方推荐采用 rabbitmq 镜像模式实现A/A, 虽然是A/A，但是rabbitmq 镜像模式集群中还是有master/slave的概念,这个概念是针对queue的，通常创建queue的节点为该queue 的master节点，其他节点为slave节点。通常是一个master,多个slave ，master节点失效后，会自动选出另一个master。<br>对于消息的发布，producer可以连接任意节点，如果该节点不是master，则会转发给master，master会向其他slave节点发送该消息，后进行消息本地化处理，并组播复制消息到其他节点存储；对于consumer，可以选择任意一个节点进行连接，消费的请求会转发给master,为保证消息的可靠性，consumer需要进行ack确认，master收到ack后，才会删除消息，ack消息会同步(默认异步)到其他各个节点，进行slave节点删除消息。<br>可以看到虽然起到了H/A的效果，但是并没有达到减轻负载的作用，所以rabbitmq mirror 不支持负载均衡。<br>关于这部分详细讲解可以参考<a href="https://www.rabbitmq.com/ha.html" target="_blank" rel="external">Highly Available (Mirrored) Queues</a></p>
+<p>openstack rabbitmq H/A 的具体安装配置参考<a href="https://docs.openstack.org/ha-guide/shared-messaging.html#install-rabbitmq" target="_blank" rel="external">Messaging service for high availability</a></p>
+<h3 id="mysql-的HA"><a href="#mysql-的HA" class="headerlink" title="mysql 的HA"></a>mysql 的HA</h3><p>mysql 的HA 方案有很多，这里只讨论openstack 官方推荐的mariadb galara 集群。Galera Cluster 是一套在innodb存储引擎上面实现multi-master及数据实时同步的系统架构，业务层面无需做读写分离工作，数据库读写压力都能按照既定的规则分发到各个节点上去。在数据方面完全兼容 MariaDB 和 MySQL。 特点如下：</p>
+<ul>
+<li>1）同步复制，（&gt;=3）奇数个节点 </li>
+<li>2）Active-active的多主拓扑结构</li>
+<li>3）集群任意节点可以读和写</li>
+<li>4）自动身份控制,失败节点自动脱离集群</li>
+<li>5）自动节点接入</li>
+<li>6）真正的基于”行”级别和ID检查的并行复制</li>
+<li>7）无单点故障,易扩展</li>
+</ul>
+<p>openstack doc 中提到在用HAproxy做galara cluster 的负载均衡时，因为该集群不支持跨节点对表加锁，也就是说如果OpenStack 某组件有两个会话分布在两个节点上同时写入某一条数据，会出现其中一个会话遇到死锁的情况。可以参考<a href="http://www.joinfu.com/2015/01/understanding-reservations-concurrency-locking-in-nova/" target="_blank" rel="external">Understanding reservations, concurrency, and locking in Nova</a>,讲解的比较清晰。</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-04-15galera-update-certification-timeout.png" alt="galera-lock"></p>
+<p>解决方案上文作者就提出了一种方式，楼主看了下最新版代码已经没有with_lockmode(‘update’) 语句。</p>
+<p>安装配置参考<a href="https://docs.openstack.org/ha-guide/shared-database.html" target="_blank" rel="external">Database (Galera Cluster) for high availability</a></p>
+<h2 id="网络控制节点-HA"><a href="#网络控制节点-HA" class="headerlink" title="网络控制节点 HA"></a>网络控制节点 HA</h2><p>这里说的网络控制节点是为了方便描述，并不是neutron的所有服务都在该节点，看下图，</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-04-15-net-con.jpg" alt="network-controller-node"></p>
+<p>可以认为neutron-service在控制节点，L3 agent,DHCP agent, Metadata agent,L2 agent等所在节点为网络控制节点，接下来就是针对具体的服务讨论HA 的方案，通常来说，我们只需考虑L3 agent,DHCP agent 这两个服务的HA即可，L2 agent只在所在的网络或者计算节点上提供服务，不需要HA。neutron-metadata-agent需要和 neutron-ns-metadata-proxy 通过soket 通信，可以在所有 neutron network 节点上都运行该 agent，只有 virtual router 所在的L3 Agent 上的 neutron-metadata-agent 才起作用，别的都standby。</p>
+<h3 id="L3-agent-HA"><a href="#L3-agent-HA" class="headerlink" title="L3 agent HA"></a>L3 agent HA</h3><h3 id="DHCP-agent-HA"><a href="#DHCP-agent-HA" class="headerlink" title="DHCP agent HA"></a>DHCP agent HA</h3><h2 id="存储控制节点-HA"><a href="#存储控制节点-HA" class="headerlink" title="存储控制节点 HA"></a>存储控制节点 HA</h2><h2 id="计算节点-HA"><a href="#计算节点-HA" class="headerlink" title="计算节点 HA"></a>计算节点 HA</h2><h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://docs.openstack.org/ha-guide/intro-ha.html" target="_blank" rel="external">openstack doc</a></p>
 <p><a href="http://www.cnblogs.com/sammyliu/p/4741967.html" target="_blank" rel="external">世民谈云计算</a></p>
 <p><a href="http://www.joinfu.com/2015/01/understanding-reservations-concurrency-locking-in-nova/" target="_blank" rel="external">Understanding reservations, concurrency, and locking in Nova</a></p>
 <p><a href="http://docs.ocselected.org/openstack-manuals/kilo/fuel-docs/contents.html#" target="_blank" rel="external">Fuel openstack HA guide</a></p>
+<p><a href="http://blog.csdn.net/woogeyu/article/details/51119101" target="_blank" rel="external">RabbitMQ分布式集群架构和高可用性（HA）</a></p>
+<p><a href="https://www.rabbitmq.com/ha.html" target="_blank" rel="external">Highly Available (Mirrored) Queues</a></p>
 <p><strong><em>END</em></strong></p>
 
       
@@ -574,7 +605,7 @@ Active/Passive HA: 即A/P模式，中文主备模式，通常会有一个主节�
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#概念"><span class="nav-number">1.</span> <span class="nav-text">概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关于openstack-的HA"><span class="nav-number">2.</span> <span class="nav-text">关于openstack 的HA</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#云控制节点-HA"><span class="nav-number">3.</span> <span class="nav-text">云控制节点 HA</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#rabbitmq-的HA"><span class="nav-number">3.1.</span> <span class="nav-text">rabbitmq 的HA</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#mysql-的HA"><span class="nav-number">3.2.</span> <span class="nav-text">mysql 的HA</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#网络控制节点-HA"><span class="nav-number">4.</span> <span class="nav-text">网络控制节点 HA</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#存储控制节点-HA"><span class="nav-number">5.</span> <span class="nav-text">存储控制节点 HA</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#计算节点-HA"><span class="nav-number">6.</span> <span class="nav-text">计算节点 HA</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文章"><span class="nav-number">7.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#概念"><span class="nav-number">1.</span> <span class="nav-text">概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关于openstack-的HA"><span class="nav-number">2.</span> <span class="nav-text">关于openstack 的HA</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#云控制节点-HA"><span class="nav-number">3.</span> <span class="nav-text">云控制节点 HA</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#rabbitmq-的HA"><span class="nav-number">3.1.</span> <span class="nav-text">rabbitmq 的HA</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#mysql-的HA"><span class="nav-number">3.2.</span> <span class="nav-text">mysql 的HA</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#网络控制节点-HA"><span class="nav-number">4.</span> <span class="nav-text">网络控制节点 HA</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#L3-agent-HA"><span class="nav-number">4.1.</span> <span class="nav-text">L3 agent HA</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DHCP-agent-HA"><span class="nav-number">4.2.</span> <span class="nav-text">DHCP agent HA</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#存储控制节点-HA"><span class="nav-number">5.</span> <span class="nav-text">存储控制节点 HA</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#计算节点-HA"><span class="nav-number">6.</span> <span class="nav-text">计算节点 HA</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文章"><span class="nav-number">7.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
             
 
           </div>
