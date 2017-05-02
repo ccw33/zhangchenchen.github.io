@@ -414,7 +414,19 @@
 <h2 id="网络控制节点-HA"><a href="#网络控制节点-HA" class="headerlink" title="网络控制节点 HA"></a>网络控制节点 HA</h2><p>这里说的网络控制节点是为了方便描述，并不是neutron的所有服务都在该节点，看下图，</p>
 <p><img src="http://oeptotikb.bkt.clouddn.com/2017-04-15-net-con.jpg" alt="network-controller-node"></p>
 <p>可以认为neutron-service在控制节点，L3 agent,DHCP agent, Metadata agent,L2 agent等所在节点为网络控制节点，接下来就是针对具体的服务讨论HA 的方案，通常来说，我们只需考虑L3 agent,DHCP agent 这两个服务的HA即可，L2 agent只在所在的网络或者计算节点上提供服务，不需要HA。neutron-metadata-agent需要和 neutron-ns-metadata-proxy 通过soket 通信，可以在所有 neutron network 节点上都运行该 agent，只有 virtual router 所在的L3 Agent 上的 neutron-metadata-agent 才起作用，别的都standby。</p>
-<h3 id="L3-agent-HA"><a href="#L3-agent-HA" class="headerlink" title="L3 agent HA"></a>L3 agent HA</h3><h3 id="DHCP-agent-HA"><a href="#DHCP-agent-HA" class="headerlink" title="DHCP agent HA"></a>DHCP agent HA</h3><h2 id="存储控制节点-HA"><a href="#存储控制节点-HA" class="headerlink" title="存储控制节点 HA"></a>存储控制节点 HA</h2><h2 id="计算节点-HA"><a href="#计算节点-HA" class="headerlink" title="计算节点 HA"></a>计算节点 HA</h2><h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://docs.openstack.org/ha-guide/intro-ha.html" target="_blank" rel="external">openstack doc</a></p>
+<h3 id="L3-agent-HA"><a href="#L3-agent-HA" class="headerlink" title="L3 agent HA"></a>L3 agent HA</h3><p>L3 agent 的HA ,官方给出的方案有两种，一种是利用VRRP协议（虚拟路由冗余协议）实现，另一种是DVR(分布式虚拟路由)实现。<br>关于VRRP协议，可以参考<a href="http://www.cnblogs.com/sammyliu/p/4692081.html" target="_blank" rel="external">Neutron L3 Agent HA 之 虚拟路由冗余协议（VRRP）</a>, 具体配置以及网络的连接情况直接参考官方给的<a href="https://docs.openstack.org/newton/networking-guide/deploy-ovs-ha-vrrp.html" target="_blank" rel="external">guide</a></p>
+<p>同样，关于DVR的资料参考<a href="http://www.cnblogs.com/sammyliu/p/4713562.html" target="_blank" rel="external">Neutron 分布式虚拟路由（Neutron Distributed Virtual Routing）</a>,以及官方<a href="https://docs.openstack.org/newton/networking-guide/config-dvr-ha-snat.html" target="_blank" rel="external">guide</a></p>
+<h3 id="DHCP-agent-HA"><a href="#DHCP-agent-HA" class="headerlink" title="DHCP agent HA"></a>DHCP agent HA</h3><p>DHCP协议本身支持多个DHCP服务器，只需修改配置，为每个租户网络创建多个DHCP agent,即可实现HA。</p>
+<h2 id="存储控制节点-HA"><a href="#存储控制节点-HA" class="headerlink" title="存储控制节点 HA"></a>存储控制节点 HA</h2><p>cinder-volume的HA A/A方案目前还未实现，只能采取pacemaker 实现H/A，不过，随着openstack  Tooz 项目的开发完善，cinder-volume的A/A方案也渐渐明朗，就是采用openstack  Tooz  项目实现的分布式锁来实现。详细信息参考<a href="http://int32bit.me/2017/03/16/cinder-volume%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0AA%E9%AB%98%E5%8F%AF%E7%94%A8/" target="_blank" rel="external">cinder-volume如何实现AA高可用</a></p>
+<h2 id="计算节点-HA"><a href="#计算节点-HA" class="headerlink" title="计算节点 HA"></a>计算节点 HA</h2><p>包括计算节点和虚拟机的HA,社区从2016年9月开始一直致力于一个虚拟机HA的统一方案，<br>详细参考<a href="http://specs.openstack.org/openstack/openstack-user-stories/user-stories/proposed/ha_vm.html" target="_blank" rel="external">igh Availability for Virtual Machines</a>.目前还是处于开发阶段。</p>
+<p>业界目前使用的方案大致有以下几种：</p>
+<ul>
+<li>controller节点与compute节点通信（ping等），检查nova 服务运行状态，对于有问题的节点进行简单粗暴的evacuate.</li>
+<li>Pacemaker-remote： 突破Corosync的集群规模限制，参考<a href="https://github.com/beekhof/osp-ha-deploy/blob/master/ha-openstack.md" target="_blank" rel="external">RDO的方案</a></li>
+<li>集中式检查</li>
+<li>分布式健康检查，参考<a href="http://www.infoq.com/cn/articles/OpenStack-awcloud-HA" target="_blank" rel="external">分布式健康检查：实现OpenStack计算节点高可用</a></li>
+</ul>
+<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://docs.openstack.org/ha-guide/intro-ha.html" target="_blank" rel="external">openstack doc</a></p>
 <p><a href="http://www.cnblogs.com/sammyliu/p/4741967.html" target="_blank" rel="external">世民谈云计算</a></p>
 <p><a href="http://www.joinfu.com/2015/01/understanding-reservations-concurrency-locking-in-nova/" target="_blank" rel="external">Understanding reservations, concurrency, and locking in Nova</a></p>
 <p><a href="http://docs.ocselected.org/openstack-manuals/kilo/fuel-docs/contents.html#" target="_blank" rel="external">Fuel openstack HA guide</a></p>

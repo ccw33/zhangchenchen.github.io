@@ -110,7 +110,7 @@ tips:在制作镜像的时候最好先知晓镜像所要满足的要求，比如
 
 Disk partitions and resize root partition on boot (cloud-init)
 No hard-coded M">
-<meta property="og:updated_time" content="2017-03-09T13:21:27.901Z">
+<meta property="og:updated_time" content="2017-05-02T02:32:26.335Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="openstack 系列--利用Vmware workstation手动制作 openstack centos镜像简记">
 <meta name="twitter:description" content="目录结构：准备工作 
@@ -485,7 +485,7 @@ No hard-coded M">
 <ul>
 <li>完善镜像的必要属性</li>
 </ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">glance image-update --name=<span class="string">"centos-7.2-64bit"</span> --disk-format=raw --container-format=bare</div><div class="line"></div><div class="line"><span class="comment"># 配置qemu-ga，该步骤是必须的，否则libvert启动虚拟机时不会生成qemu-ga配置项，导致虚拟机内部的qemu-ga由于找不到对应的虚拟串行字符设备而启动失败，提示找不到channel</span></div><div class="line">glance image-update --property hw_qemu_guest_agent=yes <span class="variable">$IMAGE_ID</span></div></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">glance image-update --name=<span class="string">"centos-7.2-64bit"</span> --disk-format=raw --container-format=bare <span class="variable">$IMAGE_ID</span></div><div class="line"></div><div class="line"><span class="comment"># 配置qemu-ga，该步骤是必须的，否则libvert启动虚拟机时不会生成qemu-ga配置项，导致虚拟机内部的qemu-ga由于找不到对应的虚拟串行字符设备而启动失败，提示找不到channel</span></div><div class="line">glance image-update --property hw_qemu_guest_agent=yes <span class="variable">$IMAGE_ID</span></div></pre></td></tr></table></figure>
 <ul>
 <li>设置镜像的location url<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">glance location-add --url rbd://<span class="variable">$FS_ROOT</span>/glance_images/<span class="variable">$IMAGE_ID</span>/snap <span class="variable">$IMAGE_ID</span><span class="comment">#这里的$FS_ROOT 可以通过查看ceph -s 中的cluster.</span></div></pre></td></tr></table></figure>
 </li>
