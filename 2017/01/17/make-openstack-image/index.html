@@ -110,7 +110,7 @@ tips:在制作镜像的时候最好先知晓镜像所要满足的要求，比如
 
 Disk partitions and resize root partition on boot (cloud-init)
 No hard-coded M">
-<meta property="og:updated_time" content="2017-05-02T02:32:26.335Z">
+<meta property="og:updated_time" content="2017-05-03T01:17:25.965Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="openstack 系列--利用Vmware workstation手动制作 openstack centos镜像简记">
 <meta name="twitter:description" content="目录结构：准备工作 
@@ -421,7 +421,7 @@ No hard-coded M">
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">cd</span> /image</div><div class="line">qemu-img create <span class="_">-f</span> qcow2 centos.qcow2 5G</div><div class="line">chown qemu:qemu /image/centos.qcow2 -R</div></pre></td></tr></table></figure>
 </li>
 <li><p>创建并启动虚拟机</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">sudo virt-install --virt-type kvm --name centos7 --ram 1024 \  <span class="comment"># name 是自己取得</span></div><div class="line"> --disk centos.qcow2,format=qcow2 \      <span class="comment">#disk参数为上面创建的磁盘</span></div><div class="line"> --network network=default \             <span class="comment"># 默认KVM虚拟机网络为nat</span></div><div class="line"> --graphics vnc,listen=0.0.0.0 --noautoconsole \</div><div class="line"> --os-type=linux --os-variant=rhel7 \</div><div class="line"> --cdrom=/image/CentOS-7-x86_64-Minimal-1511.iso  <span class="comment">#下载的镜像</span></div></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">sudo virt-install --virt-type kvm --name centos7 --ram 1024 \  <span class="comment"># name 是自己取得</span></div><div class="line"> --disk centos.qcow2,format=qcow2 \      <span class="comment">#disk参数为上面创建的磁盘</span></div><div class="line"> --network network=default \             <span class="comment"># 采用KVM虚拟机网络为nat，其实更建议用bridge模式，删除本行，默认即为bridge模式，不过bridge模式需要自己手动配置宿主机网桥</span></div><div class="line"> --graphics vnc,listen=0.0.0.0 --noautoconsole \</div><div class="line"> --os-type=linux --os-variant=rhel7 \</div><div class="line"> --cdrom=/image/CentOS-7-x86_64-Minimal-1511.iso  <span class="comment">#下载的镜像</span></div></pre></td></tr></table></figure>
 </li>
 <li><p>用“virsh list” 命令查看虚拟机是否启动，如果没有启动的话用“virsh start $NAME” 启动。</p>
 </li>
