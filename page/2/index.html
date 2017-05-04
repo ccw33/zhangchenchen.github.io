@@ -1078,8 +1078,13 @@
 <p><a name="C"></a></p>
 <h2 id="采用-libvirt-set-admin-password"><a href="#采用-libvirt-set-admin-password" class="headerlink" title="采用 libvirt-set-admin-password"></a>采用 libvirt-set-admin-password</h2><ul>
 <li>Openstack L 版本新加入的功能，直接使用 “nova set-password “(或早期版本client的”nova root-password”) 就可以，之前的版本该命令不支持Libvirt,仅支持XEN。</li>
-<li>适用条件：Openstack Libvirt+ 版本，宿主机libvirt版本1.2.16+，虚拟机镜像安装2.3+ 版本的qemu-guest-agent，等等，限制条件比较多，详见<a href="http://niusmallnan.com/_build/html/_templates/openstack/inject_passwd.html#id2" target="_blank" rel="external">虚拟机系统密码的修改方案¶</a><br><a name="D"></a></li>
+<li>适用条件：Openstack Libvirt+ 版本，宿主机libvirt版本1.2.16+，虚拟机镜像安装2.3+ 版本的qemu-guest-agent，详见<a href="http://niusmallnan.com/_build/html/_templates/openstack/inject_passwd.html#id2" target="_blank" rel="external">虚拟机系统密码的修改方案¶</a> </li>
+<li><p>博主试验了linux 几个主要版本（debian,ubuntu，centos）,只要满足以上的限制条件，都能修改成功，不过官网提供的cloud 版本镜像大都没有安装 qemu-guest-agent，或者版本太低，需要自己安装并制作成镜像。</p>
+</li>
+<li><p>关于qemu-guest-agent ，可以参考<a href="http://blog.csdn.net/zzh_gaoxingjiuhao/article/details/52638863" target="_blank" rel="external">nova 通过 qemu-guest-agent 修改用户密码</a></p>
+</li>
 </ul>
+<p><a name="D"></a></p>
 <h2 id="采用-nova-image-create-nova-rebuild的方式"><a href="#采用-nova-image-create-nova-rebuild的方式" class="headerlink" title="采用 nova image-create / nova rebuild的方式"></a>采用 nova image-create / nova rebuild的方式</h2><ul>
 <li>如果虚拟机是根据user-data来设定初始密码的，那么cloud-init只在第一次创建虚拟机执行一次，以后不会执行（reboot也不会执行）。那么我们也只能再次launch一下，方法如下。</li>
 <li><p>首先对当前虚拟机做一次snapshot.</p>
@@ -1295,7 +1300,7 @@
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">grub2-mkconfig -o /boot/grub2/grub.cfg</div></pre></td></tr></table></figure>
 <p>ubuntu 的话执行 update-grub。</p>
 <ul>
-<li>手动安装qemu-guest-agent(L 版的动态修改密码需要用到)：</li>
+<li>手动安装qemu-guest-agent(版本必须是2.3+，L 版的动态修改密码需要用到)：</li>
 </ul>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">yum install -y qemu-guest-agent</div></pre></td></tr></table></figure>
 <p>配置qemu-ga，修改/etc/sysconfig/qemu-ga，配置内容为:</p>
