@@ -91,7 +91,9 @@
 <meta property="og:site_name" content="Solar">
 <meta property="og:description" content="配置首先如果想要实现 ceph backend cinder的增量备份的话，要保证cinder-volume 与 cinder-backup 的backend 都是ceph，涉及到具体实践的话就是openstack 与 ceph  integration 的 配置，ceph官网有详实的步骤 BLOCK DEVICES AND OPENSTACK ,当然，中文版的一搜也一大把openstack的gl">
 <meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-05-09-cinder-backup.png">
-<meta property="og:updated_time" content="2017-05-09T13:01:29.822Z">
+<meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/backup_workflow.png">
+<meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-05-10-backup-detail.jpg">
+<meta property="og:updated_time" content="2017-05-10T05:31:41.134Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="openstack-- cinder-backup 利用ceph实现增量备份">
 <meta name="twitter:description" content="配置首先如果想要实现 ceph backend cinder的增量备份的话，要保证cinder-volume 与 cinder-backup 的backend 都是ceph，涉及到具体实践的话就是openstack 与 ceph  integration 的 配置，ceph官网有详实的步骤 BLOCK DEVICES AND OPENSTACK ,当然，中文版的一搜也一大把openstack的gl">
@@ -369,7 +371,27 @@
 <p>其实不用加incremental tag也是可以的。</p>
 <p>可以利用删除backup 来证明一下，增量备份都会有一个 parent backup（父备份），就是基于父备份来做增量备份，通常来说，就是我们刚开始做的那个全量备份。在删除父备份之前，必须先把所有它的子备份删除，才可以成功删除父备份。示例如下：</p>
 <p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-05-09-cinder-backup.png" alt="cinder-backup"></p>
-<h2 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h2><h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://docs.ceph.com/docs/master/rbd/rbd-openstack/" target="_blank" rel="external">BLOCK DEVICES AND OPENSTACK</a></p>
+<h2 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h2><p>关于备份的具体流程可以参考这张图：</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/backup_workflow.png" alt="backup-workflow"></p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-05-10-backup-detail.jpg" alt="detail-backup"></p>
+<p>熟悉ceph的话，应该知道ceph rbd的export-diff，import-diff 功能：</p>
+<ul>
+<li>export-diff ：将某个 rbd image 在两个不同时刻的数据状态比较不同后导出补丁文件。</li>
+<li>import-diff :将某个补丁文件合并到某个 rbd image 中。</li>
+</ul>
+<p>ceph 增量备份就是基于这两个基本功能，详细命令示例可以参考<a href="http://www.zphj1987.com/2016/06/22/rbd%E7%9A%84%E5%A2%9E%E9%87%8F%E5%A4%87%E4%BB%BD%E5%92%8C%E6%81%A2%E5%A4%8D/" target="_blank" rel="external">rbd的增量备份和恢复</a></p>
+<h3 id="首次备份"><a href="#首次备份" class="headerlink" title="首次备份"></a>首次备份</h3><ul>
+<li>在用作备份的ceph集群中新建一个base image，与源 volume 大小一致，name 的形式为 “volume-VOLUMD_UUID.backup.base”</li>
+<li>源 rbd image 新建一个快照，name形式为 backup.BACKUP_ID.snap.TIMESTRAMP</li>
+<li>源rbd image 上使用 export-diff 命令导出从刚开始创建时到上一步快照时的差异数据，其实就是现在整个rbd的数据，然后通过管道将差量数据导入刚刚在备份集群上新创建的base image中</li>
+</ul>
+<h3 id="再次备份"><a href="#再次备份" class="headerlink" title="再次备份"></a>再次备份</h3><ul>
+<li>在要备份的源volume 中找到满足 r”^backup.([a-z0-9-]+?).snap.(.+)$” 的最近一次快照。</li>
+<li>源volume 创建一个新的快照，name 形式为 backup.BACKUP_ID.snap.TIMESTRAMP。</li>
+<li>源rbd image 上使用 export-diff 命令导出与最近的一次快照比较的差量数据，然后通过管道将差量数据导入到备份集群的rbd image中</li>
+</ul>
+<p>恢复时相反，只需要从备份集群找出对应的快照并导出差量数据，导入到原volume即可</p>
+<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://docs.ceph.com/docs/master/rbd/rbd-openstack/" target="_blank" rel="external">BLOCK DEVICES AND OPENSTACK</a></p>
 <p><a href="http://www.cnblogs.com/pycode/p/6494885.html" target="_blank" rel="external">openstack的glance、nova、cinder使用ceph做后端存储</a></p>
 <p><a href="https://docs.openstack.org/ocata/config-reference/block-storage/backup/ceph-backup-driver.html" target="_blank" rel="external">Ceph backup driver</a></p>
 <p><a href="http://int32bit.me/2017/03/30/cinder%E7%A3%81%E7%9B%98%E5%A4%87%E4%BB%BD%E5%8E%9F%E7%90%86%E5%92%8C%E5%AE%9E%E8%B7%B5/" target="_blank" rel="external">Cinder磁盘备份原理与实践</a></p>
@@ -554,7 +576,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#配置"><span class="nav-number">1.</span> <span class="nav-text">配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用"><span class="nav-number">2.</span> <span class="nav-text">使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实现原理"><span class="nav-number">3.</span> <span class="nav-text">实现原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文章"><span class="nav-number">4.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#配置"><span class="nav-number">1.</span> <span class="nav-text">配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用"><span class="nav-number">2.</span> <span class="nav-text">使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实现原理"><span class="nav-number">3.</span> <span class="nav-text">实现原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#首次备份"><span class="nav-number">3.1.</span> <span class="nav-text">首次备份</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#再次备份"><span class="nav-number">3.2.</span> <span class="nav-text">再次备份</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文章"><span class="nav-number">4.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
             
 
           </div>
