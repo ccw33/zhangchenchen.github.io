@@ -68,7 +68,7 @@
 <link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="python,threadpool," />
+  <meta name="keywords" content="ceph,snapshot," />
 
 
 
@@ -87,14 +87,14 @@
 <meta name="description" content="引出首先需要了解的是threadpool 的用途，他更适合于用到一些大量的短任务合集，而非一些时间长的任务，换句话说，适合大量的CPU密集型短任务，那些消耗时间较长的IO密集型长任务适合用协程去解决。
 目前，python 标准库（特指python2.X）中的threadpool模块是在 multiprocessing.pool.threadpool，或者multiprocessing.dummy.">
 <meta property="og:type" content="article">
-<meta property="og:title" content="python-- python threadpool 的前世今生">
-<meta property="og:url" content="http://yoursite.com/2017/05/18/python-thread-pool/index.html">
+<meta property="og:title" content="ceph-- ceph rbd快照的实现原理">
+<meta property="og:url" content="http://yoursite.com/2017/06/05/ceph-rbd-snapshot/index.html">
 <meta property="og:site_name" content="Solar">
 <meta property="og:description" content="引出首先需要了解的是threadpool 的用途，他更适合于用到一些大量的短任务合集，而非一些时间长的任务，换句话说，适合大量的CPU密集型短任务，那些消耗时间较长的IO密集型长任务适合用协程去解决。
 目前，python 标准库（特指python2.X）中的threadpool模块是在 multiprocessing.pool.threadpool，或者multiprocessing.dummy.">
-<meta property="og:updated_time" content="2017-05-18T04:19:07.445Z">
+<meta property="og:updated_time" content="2017-06-05T07:24:17.171Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="python-- python threadpool 的前世今生">
+<meta name="twitter:title" content="ceph-- ceph rbd快照的实现原理">
 <meta name="twitter:description" content="引出首先需要了解的是threadpool 的用途，他更适合于用到一些大量的短任务合集，而非一些时间长的任务，换句话说，适合大量的CPU密集型短任务，那些消耗时间较长的IO密集型长任务适合用协程去解决。
 目前，python 标准库（特指python2.X）中的threadpool模块是在 multiprocessing.pool.threadpool，或者multiprocessing.dummy.">
 
@@ -124,13 +124,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2017/05/18/python-thread-pool/"/>
+  <link rel="canonical" href="http://yoursite.com/2017/06/05/ceph-rbd-snapshot/"/>
 
 
 
 
 
-  <title> python-- python threadpool 的前世今生 | Solar </title>
+  <title> ceph-- ceph rbd快照的实现原理 | Solar </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -275,7 +275,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/05/18/python-thread-pool/">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/06/05/ceph-rbd-snapshot/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -299,7 +299,7 @@
             
             
               
-                python-- python threadpool 的前世今生
+                ceph-- ceph rbd快照的实现原理
               
             
           </h1>
@@ -314,8 +314,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-05-18T10:21:32+08:00">
-                2017-05-18
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-06-05T15:21:32+08:00">
+                2017-06-05
               </time>
             
 
@@ -333,8 +333,8 @@
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a href="/2017/05/18/python-thread-pool/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/05/18/python-thread-pool/" itemprop="commentCount"></span>
+                <a href="/2017/06/05/ceph-rbd-snapshot/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/06/05/ceph-rbd-snapshot/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -398,9 +398,9 @@
       
         <div class="post-tags">
           
-            <a href="/tags/python/" rel="tag"># python</a>
+            <a href="/tags/ceph/" rel="tag"># ceph</a>
           
-            <a href="/tags/threadpool/" rel="tag"># threadpool</a>
+            <a href="/tags/snapshot/" rel="tag"># snapshot</a>
           
         </div>
       
@@ -409,8 +409,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2017/05/09/openstack-cinder-incremental-backup-with-ceph/" rel="next" title="openstack-- cinder-backup 利用ceph实现增量备份">
-                <i class="fa fa-chevron-left"></i> openstack-- cinder-backup 利用ceph实现增量备份
+              <a href="/2017/05/18/python-thread-pool/" rel="next" title="python-- python threadpool 的前世今生">
+                <i class="fa fa-chevron-left"></i> python-- python threadpool 的前世今生
               </a>
             
           </div>
@@ -418,10 +418,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2017/06/05/ceph-rbd-snapshot/" rel="prev" title="ceph-- ceph rbd快照的实现原理">
-                ceph-- ceph rbd快照的实现原理 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -680,9 +676,9 @@
 
     <script type="text/javascript">
       var disqus_shortname = 'pekingzcc';
-      var disqus_identifier = '2017/05/18/python-thread-pool/';
+      var disqus_identifier = '2017/06/05/ceph-rbd-snapshot/';
 
-      var disqus_title = "python-- python threadpool 的前世今生";
+      var disqus_title = "ceph-- ceph rbd快照的实现原理";
 
 
       function run_disqus_script(disqus_script) {
