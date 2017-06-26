@@ -88,7 +88,7 @@
 目前，python 标准库（特指python2.X）中的threadpool模块是在 multiprocessing.pool.threadpool，或者multiprocessing.dummy.">
 <meta property="og:type" content="article">
 <meta property="og:title" content="python-- python threadpool 的前世今生">
-<meta property="og:url" content="http://yoursite.com/2017/05/18/python-thread-pool/index.html">
+<meta property="og:url" content="https://zhangchenchen.github.io/2017/05/18/python-thread-pool/index.html">
 <meta property="og:site_name" content="Solar">
 <meta property="og:description" content="引出首先需要了解的是threadpool 的用途，他更适合于用到一些大量的短任务合集，而非一些时间长的任务，换句话说，适合大量的CPU密集型短任务，那些消耗时间较长的IO密集型长任务适合用协程去解决。
 目前，python 标准库（特指python2.X）中的threadpool模块是在 multiprocessing.pool.threadpool，或者multiprocessing.dummy.">
@@ -124,7 +124,7 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2017/05/18/python-thread-pool/"/>
+  <link rel="canonical" href="https://zhangchenchen.github.io/2017/05/18/python-thread-pool/"/>
 
 
 
@@ -275,7 +275,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/05/18/python-thread-pool/">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/05/18/python-thread-pool/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -360,7 +360,7 @@
       
 
       
-        <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>首先需要了解的是threadpool 的用途，他更适合于用到一些大量的短任务合集，而非一些时间长的任务，换句话说，适合大量的CPU密集型短任务，那些消耗时间较长的IO密集型长任务适合用<a href="https://zhangchenchen.github.io/2016/09/26/python-yield-and%20coroutine/" target="_blank" rel="external">协程</a>去解决。</p>
+        <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>首先需要了解的是threadpool 的用途，他更适合于用到一些大量的短任务合集，而非一些时间长的任务，换句话说，适合大量的CPU密集型短任务，那些消耗时间较长的IO密集型长任务适合用<a href="https://zhangchenchen.github.io/2016/09/26/python-yield-and%20coroutine/">协程</a>去解决。</p>
 <p>目前，python 标准库（特指python2.X）中的threadpool模块是在 multiprocessing.pool.threadpool，或者multiprocessing.dummy.ThreadPool（dummy模块是针对threading 多线程的进一步封装）。该模块有个缺点就是在所有线程执行完之前无法强制退出。实现原理大同小异：实例化pool的时候会创建指定数目的线程，把task 传给一个task-queue，线程会读取task-queue 的task，没有就阻塞，读取到后就执行，并将结果交给一个result-queue。</p>
 <p>除了标准库中的threadpool，还有一些使用比较多的threadpool，以下展开。</p>
 <h2 id="pip-中的-ThreadPool"><a href="#pip-中的-ThreadPool" class="headerlink" title="pip 中的 ThreadPool"></a>pip 中的 ThreadPool</h2><p>安装简单：pip install threadpool<br>使用如下：</p>
@@ -498,7 +498,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">66</span>
+                <span class="site-state-item-count">67</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -509,7 +509,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">22</span>
+                <span class="site-state-item-count">24</span>
                 <span class="site-state-item-name">tags</span>
               </a>
             </div>

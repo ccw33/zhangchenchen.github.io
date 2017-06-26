@@ -87,17 +87,17 @@
 <meta name="description" content="引出公司有个测试云平台的虚拟机密码初始化出现了问题，根据之前的经验可能跟这篇问题一样,没想到花费了将近一天的时间才将问题解决，发现最终是跟neutron 分布式虚拟路由有关，这里记录一下。
 问题是这样的：nova boot的时候传入 user-data（user-data中含有需要修改的密码），instance起来的时候会执行cloud-init，然后会使用EC2的datasource方式（即“1">
 <meta property="og:type" content="article">
-<meta property="og:title" content="neutron-- neutron 分布式虚拟路由（DVR）">
-<meta property="og:url" content="http://yoursite.com/2017/06/20/neutron-dvr/index.html">
+<meta property="og:title" content="openstack-- neutron 分布式虚拟路由（DVR）">
+<meta property="og:url" content="https://zhangchenchen.github.io/2017/06/20/neutron-dvr/index.html">
 <meta property="og:site_name" content="Solar">
 <meta property="og:description" content="引出公司有个测试云平台的虚拟机密码初始化出现了问题，根据之前的经验可能跟这篇问题一样,没想到花费了将近一天的时间才将问题解决，发现最终是跟neutron 分布式虚拟路由有关，这里记录一下。
 问题是这样的：nova boot的时候传入 user-data（user-data中含有需要修改的密码），instance起来的时候会执行cloud-init，然后会使用EC2的datasource方式（即“1">
 <meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/neutron-arc-1.png">
 <meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-06-20neutro-arc-2.png">
 <meta property="og:image" content="https://docs.openstack.org/newton/networking-guide/_images/deploy-ovs-ha-dvr-compconn1.png">
-<meta property="og:updated_time" content="2017-06-20T09:00:22.967Z">
+<meta property="og:updated_time" content="2017-06-26T00:40:14.985Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="neutron-- neutron 分布式虚拟路由（DVR）">
+<meta name="twitter:title" content="openstack-- neutron 分布式虚拟路由（DVR）">
 <meta name="twitter:description" content="引出公司有个测试云平台的虚拟机密码初始化出现了问题，根据之前的经验可能跟这篇问题一样,没想到花费了将近一天的时间才将问题解决，发现最终是跟neutron 分布式虚拟路由有关，这里记录一下。
 问题是这样的：nova boot的时候传入 user-data（user-data中含有需要修改的密码），instance起来的时候会执行cloud-init，然后会使用EC2的datasource方式（即“1">
 <meta name="twitter:image" content="http://oeptotikb.bkt.clouddn.com/neutron-arc-1.png">
@@ -128,13 +128,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2017/06/20/neutron-dvr/"/>
+  <link rel="canonical" href="https://zhangchenchen.github.io/2017/06/20/neutron-dvr/"/>
 
 
 
 
 
-  <title> neutron-- neutron 分布式虚拟路由（DVR） | Solar </title>
+  <title> openstack-- neutron 分布式虚拟路由（DVR） | Solar </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -279,7 +279,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/06/20/neutron-dvr/">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/06/20/neutron-dvr/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -303,7 +303,7 @@
             
             
               
-                neutron-- neutron 分布式虚拟路由（DVR）
+                openstack-- neutron 分布式虚拟路由（DVR）
               
             
           </h1>
@@ -364,7 +364,7 @@
       
 
       
-        <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>公司有个测试云平台的虚拟机密码初始化出现了问题，根据之前的经验可能跟<a href="https://zhangchenchen.github.io/2017/02/17/openstack-instance-metadata-discovery/" target="_blank" rel="external">这篇</a>问题一样,没想到花费了将近一天的时间才将问题解决，发现最终是跟neutron 分布式虚拟路由有关，这里记录一下。</p>
+        <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>公司有个测试云平台的虚拟机密码初始化出现了问题，根据之前的经验可能跟<a href="https://zhangchenchen.github.io/2017/02/17/openstack-instance-metadata-discovery/">这篇</a>问题一样,没想到花费了将近一天的时间才将问题解决，发现最终是跟neutron 分布式虚拟路由有关，这里记录一下。</p>
 <p>问题是这样的：nova boot的时候传入 user-data（user-data中含有需要修改的密码），instance起来的时候会执行cloud-init，然后会使用EC2的datasource方式（即“169.254.169.254”）去获取user-data，然而发现密码没有更改，查看日志发现,发现获取user-data时，报错如下</p>
 <blockquote>
 <p>Calling ‘<a href="http://169.254.169.254/2009-04-04/meta-data/instance-id" target="_blank" rel="external">http://169.254.169.254/2009-04-04/meta-data/instance-id</a>‘ failed [0/120s]: bad status code [500]</p>
@@ -373,10 +373,10 @@
 <h2 id="问题发现"><a href="#问题发现" class="headerlink" title="问题发现"></a>问题发现</h2><ul>
 <li>第一步想到的就是重启下相关服务，将neutron-metada-agent,neutron-l3-agent,nova-api重启后发现问题依旧。</li>
 <li>查看相关日志，没有找到有关报错信息，而且奇怪的是网络节点对应的neutron-ns-metadata-proxy-xxxxxxxxx.log都没有处理请求的日志，说明请求可能没有走到这里。</li>
-<li>只能按照请求的处理步骤一步步排查，首先确定虚拟机所在的网络是有路由器相连的，所以metadata请求是走的路由器的namespace，相关知识参考<a href="https://zhangchenchen.github.io/2017/02/17/openstack-instance-metadata-discovery/" target="_blank" rel="external">openstack– openstack instance metadata 服务机制探索</a>,网络节点对应路由器的namespace中一切正常，9697 端口的重定向，以及监听9697端口的neutron-metadata-ns-proxy进程也正常。没办法，在该路由器的namespace中对应端口抓包试试，虚拟机中发送169.254.169.254，却一点反应没有，断定请求压根就没有走到该路由器的namespace。只能返回去虚拟机实例中抓包试试，使用traceroute命令发现请求是发到对应网关的，而对应网关就应该在路由器的namespace中啊，到这里基本就蒙逼了。</li>
+<li>只能按照请求的处理步骤一步步排查，首先确定虚拟机所在的网络是有路由器相连的，所以metadata请求是走的路由器的namespace，相关知识参考<a href="https://zhangchenchen.github.io/2017/02/17/openstack-instance-metadata-discovery/">openstack– openstack instance metadata 服务机制探索</a>,网络节点对应路由器的namespace中一切正常，9697 端口的重定向，以及监听9697端口的neutron-metadata-ns-proxy进程也正常。没办法，在该路由器的namespace中对应端口抓包试试，虚拟机中发送169.254.169.254，却一点反应没有，断定请求压根就没有走到该路由器的namespace。只能返回去虚拟机实例中抓包试试，使用traceroute命令发现请求是发到对应网关的，而对应网关就应该在路由器的namespace中啊，到这里基本就蒙逼了。</li>
 <li>在经过一番徒劳无功的试错后，终于找到了一点线索。我在查看neutron agent状态的时候，发现neutron-l3-agent不只是在网络节点，计算节点也存在neutron-l3-agent，立马想到neutron-l3-agent会在本地计算节点也创建虚拟路由器，所以获取metadata的请求就发送到本地计算节点的路由器 namespace，果然，本地计算节点也有一个路由器，抓包发现确实是发送到了这里，而且该节点对应网络的neutron-ns-metadata-proxy-xxxxxxxxx.log发现了 socket.error报错信息，说明neutron-ns-metadata-proxy通过 unix domian socket 转发给 neutron-metadata-agent的时候出现了问题。本能的想是不是配置错误导致的，查看l3-agent的配置文件时发现有个配置项：agent_mode = dvr ，赶紧搜了一下，终于找到了进入的正确姿势。</li>
 </ul>
-<h2 id="neutron-分布式虚拟路由（DVR）"><a href="#neutron-分布式虚拟路由（DVR）" class="headerlink" title="neutron 分布式虚拟路由（DVR）"></a>neutron 分布式虚拟路由（DVR）</h2><h3 id="整体架构"><a href="#整体架构" class="headerlink" title="整体架构"></a>整体架构</h3><p>neutron 的DVR 是属于openstack HA的一部分，主要解决虚拟路由器的HA（即neutron-l3-agent的HA）。之前写过一篇<a href="https://zhangchenchen.github.io/2017/04/14/openstack-ha/" target="_blank" rel="external">记录openstack的HA</a>,但没有仔细研究过neutron DVR。</p>
+<h2 id="neutron-分布式虚拟路由（DVR）"><a href="#neutron-分布式虚拟路由（DVR）" class="headerlink" title="neutron 分布式虚拟路由（DVR）"></a>neutron 分布式虚拟路由（DVR）</h2><h3 id="整体架构"><a href="#整体架构" class="headerlink" title="整体架构"></a>整体架构</h3><p>neutron 的DVR 是属于openstack HA的一部分，主要解决虚拟路由器的HA（即neutron-l3-agent的HA）。之前写过一篇<a href="https://zhangchenchen.github.io/2017/04/14/openstack-ha/">记录openstack的HA</a>,但没有仔细研究过neutron DVR。</p>
 <p>在没有使用dvr时，我们的整体架构大致是这样的：</p>
 <p><img src="http://oeptotikb.bkt.clouddn.com/neutron-arc-1.png" alt="neutron-arc1"></p>
 <p>计算节点只需要安装L2 Agent就可以，而使用dvr模式后：</p>
@@ -462,6 +462,10 @@
 
           <div class="post-nav-prev post-nav-item">
             
+              <a href="/2017/06/26/cobbler-test-with-virtualbox/" rel="prev" title="Devops-- 借助virtualbox 初次实践 cobbler">
+                Devops-- 借助virtualbox 初次实践 cobbler <i class="fa fa-chevron-right"></i>
+              </a>
+            
           </div>
         </div>
       
@@ -537,7 +541,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">66</span>
+                <span class="site-state-item-count">67</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -548,7 +552,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">22</span>
+                <span class="site-state-item-count">24</span>
                 <span class="site-state-item-name">tags</span>
               </a>
             </div>
@@ -721,7 +725,7 @@
       var disqus_shortname = 'pekingzcc';
       var disqus_identifier = '2017/06/20/neutron-dvr/';
 
-      var disqus_title = "neutron-- neutron 分布式虚拟路由（DVR）";
+      var disqus_title = "openstack-- neutron 分布式虚拟路由（DVR）";
 
 
       function run_disqus_script(disqus_script) {

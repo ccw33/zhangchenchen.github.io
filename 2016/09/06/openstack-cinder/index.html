@@ -88,7 +88,7 @@
 所以以后我会在写文章的时候先把问题具象化，从自己问题的角度出">
 <meta property="og:type" content="article">
 <meta property="og:title" content="openstack 系列 --cinder">
-<meta property="og:url" content="http://yoursite.com/2016/09/06/openstack-cinder/index.html">
+<meta property="og:url" content="https://zhangchenchen.github.io/2016/09/06/openstack-cinder/index.html">
 <meta property="og:site_name" content="Solar">
 <meta property="og:description" content="目录结构在学习一个新东西的时候，我们其实默认是带着问题去学习的。但当我们真正在卷帙繁多的互联网或者书籍里获取信息时。之前的问题往往就淡化了，反而更多的是跟着资料所给的思路去学习。这样有好处也有坏处，好处是我们不用费心去思考，而坏处也是如此，不用思考带来的后果就是这些信息虽然当时我们理解了，但很难在我们的脑海中建立知识图谱，比较容易遗忘。
 所以以后我会在写文章的时候先把问题具象化，从自己问题的角度出">
@@ -131,7 +131,7 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2016/09/06/openstack-cinder/"/>
+  <link rel="canonical" href="https://zhangchenchen.github.io/2016/09/06/openstack-cinder/"/>
 
 
 
@@ -282,7 +282,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/09/06/openstack-cinder/">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2016/09/06/openstack-cinder/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -374,7 +374,7 @@
 <p><a href="#B">cinder如何实现 </a></p>
 <p><a href="#C">cinder的具体功能</a></p>
 <p><a name="A"></a></p>
-<h2 id="cinder是干什么用的"><a href="#cinder是干什么用的" class="headerlink" title="cinder是干什么用的"></a>cinder是干什么用的</h2><p>openstack中创建虚拟机的时候是附带一块硬盘的，但这块硬盘随着虚拟机的destroy也相应的删除了。所以，openstack推出了两种应付持久存储的解决方案，一个是之前我们提过的对象存储swift，一个就是现在我们讲的块存储cinder。<br>块存储,对象存储的概念我们<a href="http://zhangchenchen.github.io/2016/09/02/openstack-swift/" target="_blank" rel="external">之前</a>已介绍过，不再赘述。<br><img src="http://7xrnwq.com1.z0.glb.clouddn.com/20160907openstack-storage-compare.jpg" alt="存储对比"><br>需要说明的是，cinder并不是新开发的一个块设备存储系统，它更像是一个资源管理系统，对不同的存储后端进行封装，以统一的API形式向虚拟机提供持久块存储资源。对于不同的存储后端，它采用插件的形式，结合不同的后端存储的驱动提供块存储服务。</p>
+<h2 id="cinder是干什么用的"><a href="#cinder是干什么用的" class="headerlink" title="cinder是干什么用的"></a>cinder是干什么用的</h2><p>openstack中创建虚拟机的时候是附带一块硬盘的，但这块硬盘随着虚拟机的destroy也相应的删除了。所以，openstack推出了两种应付持久存储的解决方案，一个是之前我们提过的对象存储swift，一个就是现在我们讲的块存储cinder。<br>块存储,对象存储的概念我们<a href="http://zhangchenchen.github.io/2016/09/02/openstack-swift/">之前</a>已介绍过，不再赘述。<br><img src="http://7xrnwq.com1.z0.glb.clouddn.com/20160907openstack-storage-compare.jpg" alt="存储对比"><br>需要说明的是，cinder并不是新开发的一个块设备存储系统，它更像是一个资源管理系统，对不同的存储后端进行封装，以统一的API形式向虚拟机提供持久块存储资源。对于不同的存储后端，它采用插件的形式，结合不同的后端存储的驱动提供块存储服务。</p>
 <p><a name="B"></a></p>
 <h2 id="cinder如何实现"><a href="#cinder如何实现" class="headerlink" title="cinder如何实现"></a>cinder如何实现</h2><p>首先看一下cinder的主要组件：<br><img src="http://7xrnwq.com1.z0.glb.clouddn.com/20160907-openstack-cinder-part.jpg" alt="cinder architecture"><br>简单介绍下这几个组件：</p>
 <ul>
@@ -524,7 +524,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">66</span>
+                <span class="site-state-item-count">67</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -535,7 +535,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">22</span>
+                <span class="site-state-item-count">24</span>
                 <span class="site-state-item-name">tags</span>
               </a>
             </div>

@@ -86,7 +86,7 @@
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="Solar">
-<meta property="og:url" content="http://yoursite.com/index.html">
+<meta property="og:url" content="https://zhangchenchen.github.io/index.html">
 <meta property="og:site_name" content="Solar">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Solar">
@@ -117,7 +117,7 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/"/>
+  <link rel="canonical" href="https://zhangchenchen.github.io/"/>
 
 
 
@@ -270,7 +270,174 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/06/20/neutron-dvr/">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/06/26/cobbler-test-with-virtualbox/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="pekingzcc">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/avatar.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="Solar">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="Solar" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/06/26/cobbler-test-with-virtualbox/" itemprop="url">
+                  Devops-- 借助virtualbox 初次实践 cobbler
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-06-26T00:16:11+08:00">
+                2017-06-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/06/26/cobbler-test-with-virtualbox/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/06/26/cobbler-test-with-virtualbox/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="Cobbler-简介"><a href="#Cobbler-简介" class="headerlink" title="Cobbler 简介"></a>Cobbler 简介</h2><p>Cobbler 是由Python 语言开发，实现在网络安装环境中快速的安装linux 系统。<br>在没有出现Cobbler之前，我们通常是通过使用Kickstart 来进行自动化安装操作系统，但是kickstart 并未实现完全的自动化，我们依然需要安装配置各种服务（DHCP,TFTP,HTTP等），编写kickstart 脚本（即ks.cfg文件）等等。<br>Cobbler可以看做是在kickstart项目上的一层封装，融合了DHCP,TFTP，PXE等一系列服务，提供了CLI和web两种管理形式，使得网络安装操作系统更加方便，同时也提供了API接口方便二次开发。</p>
+<h2 id="Cobbler-原理概述"><a href="#Cobbler-原理概述" class="headerlink" title="Cobbler 原理概述"></a>Cobbler 原理概述</h2><p>Cobbler 是典型的CS架构，我们只需要在服务端做好相应的安装配置，客户端设置PXE网络启动即可。整体的运作流程如下，图片来自<a href="https://wsgzao.github.io/post/cobbler/" target="_blank" rel="external">Cobbler自动化安装配置实践</a>:</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-06-25-cobbler-process.jpeg" alt="cobbler-process"></p>
+<h2 id="Cobbler-实践"><a href="#Cobbler-实践" class="headerlink" title="Cobbler 实践"></a>Cobbler 实践</h2><p>本次试验借助 VirtualBox 实现：</p>
+<h3 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h3><ul>
+<li>下载 centos7-minimal 镜像，并使用该镜像开启一个虚拟机guest#1</li>
+<li>注意网络配置 两个网卡，一个是bridge模式，便于利用xshell等工具连接，一个是设为内部网络。</li>
+<li>安装完毕后，设置第二个网卡的静态IP，不要与第一个网卡的网络重复，之后会用第二个网卡所在的局域网进行网络安装。</li>
+</ul>
+<h3 id="Cobbler-安装"><a href="#Cobbler-安装" class="headerlink" title="Cobbler 安装"></a>Cobbler 安装</h3><p>参照 官网<a href="https://cobbler.github.io/manuals/2.6.0/2/2/2_-_RHEL_and_CentOS.html" target="_blank" rel="external">Red Hat Entperise Linux</a></p>
+<p>注：安装需要用到 epel源，因为是Centos，只需 yum install epel-release 即可。</p>
+<h3 id="Cobbler-配置"><a href="#Cobbler-配置" class="headerlink" title="Cobbler 配置"></a>Cobbler 配置</h3><p>参考官网<a href="https://cobbler.github.io/manuals/quickstart/" target="_blank" rel="external">Cobbler Quickstart Guide</a></p>
+<p>注：</p>
+<ul>
+<li>利用cobbler check 查看配置错误，有些地方并非必须修改。</li>
+<li>server 与 next-server设置为第二块网卡的ip</li>
+</ul>
+<h3 id="Cobbler-使用"><a href="#Cobbler-使用" class="headerlink" title="Cobbler 使用"></a>Cobbler 使用</h3><ul>
+<li>利用lrzsz命令上传 centos7-minimal 镜像至虚拟机guest#1.</li>
+<li><p>本地挂载镜像</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">mount -o loop ./CentOS-7-x86_64-Minimal-1611.iso /mnt</div></pre></td></tr></table></figure>
+</li>
+<li><p>导入镜像</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">cobbler import --name=centos7 --arch=x86_64 --path=/mnt</div></pre></td></tr></table></figure>
+</li>
+<li><p>执行 cobbler sync命令</p>
+</li>
+<li>virtualbox 开启另一个虚拟机，一个网卡，设置为内部网络，adaptor type 为PC-Net III （为了PXE boot）。设置启动方式为网络启动优先。</li>
+</ul>
+<h3 id="遇到的问题"><a href="#遇到的问题" class="headerlink" title="遇到的问题"></a>遇到的问题</h3><ul>
+<li>TFTP Timed out : guest#1的TFTP Server 没有启动造成。</li>
+<li>failed to start switch root：<a href="https://www.centos.org/forums/viewtopic.php?t=57419" target="_blank" rel="external">dracut cant locate /dev/root</a></li>
+</ul>
+<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://cobbler.github.io/" target="_blank" rel="external">Cobbler doc</a></p>
+<p><a href="https://zh.wikipedia.org/wiki/Cobbler_(%E8%BD%AF%E4%BB%B6" target="_blank" rel="external">cobbler wiki</a>)</p>
+<p><a href="https://wsgzao.github.io/post/cobbler/" target="_blank" rel="external">Cobbler自动化安装配置实践</a></p>
+<p><a href="http://cuchadanfan.blog.51cto.com/9940284/1698348" target="_blank" rel="external">自动化运维工具Cobbler</a></p>
+<p><a href="http://www.webscalability.com/blog/2013/03/testing-out-cobbler-with-virtuabox/" target="_blank" rel="external">Testing out cobbler with virtuabox</a></p>
+<p> <strong><em>END</em></strong></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/06/20/neutron-dvr/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -296,7 +463,7 @@
               
                 
                 <a class="post-title-link" href="/2017/06/20/neutron-dvr/" itemprop="url">
-                  neutron-- neutron 分布式虚拟路由（DVR）
+                  openstack-- neutron 分布式虚拟路由（DVR）
                 </a>
               
             
@@ -360,7 +527,7 @@
       
         
           
-            <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>公司有个测试云平台的虚拟机密码初始化出现了问题，根据之前的经验可能跟<a href="https://zhangchenchen.github.io/2017/02/17/openstack-instance-metadata-discovery/" target="_blank" rel="external">这篇</a>问题一样,没想到花费了将近一天的时间才将问题解决，发现最终是跟neutron 分布式虚拟路由有关，这里记录一下。</p>
+            <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>公司有个测试云平台的虚拟机密码初始化出现了问题，根据之前的经验可能跟<a href="https://zhangchenchen.github.io/2017/02/17/openstack-instance-metadata-discovery/">这篇</a>问题一样,没想到花费了将近一天的时间才将问题解决，发现最终是跟neutron 分布式虚拟路由有关，这里记录一下。</p>
 <p>问题是这样的：nova boot的时候传入 user-data（user-data中含有需要修改的密码），instance起来的时候会执行cloud-init，然后会使用EC2的datasource方式（即“169.254.169.254”）去获取user-data，然而发现密码没有更改，查看日志发现,发现获取user-data时，报错如下</p>
 <blockquote>
 <p>Calling ‘<a href="http://169.254.169.254/2009-04-04/meta-data/instance-id" target="_blank" rel="external">http://169.254.169.254/2009-04-04/meta-data/instance-id</a>‘ failed [0/120s]: bad status code [500]</p>
@@ -369,10 +536,10 @@
 <h2 id="问题发现"><a href="#问题发现" class="headerlink" title="问题发现"></a>问题发现</h2><ul>
 <li>第一步想到的就是重启下相关服务，将neutron-metada-agent,neutron-l3-agent,nova-api重启后发现问题依旧。</li>
 <li>查看相关日志，没有找到有关报错信息，而且奇怪的是网络节点对应的neutron-ns-metadata-proxy-xxxxxxxxx.log都没有处理请求的日志，说明请求可能没有走到这里。</li>
-<li>只能按照请求的处理步骤一步步排查，首先确定虚拟机所在的网络是有路由器相连的，所以metadata请求是走的路由器的namespace，相关知识参考<a href="https://zhangchenchen.github.io/2017/02/17/openstack-instance-metadata-discovery/" target="_blank" rel="external">openstack– openstack instance metadata 服务机制探索</a>,网络节点对应路由器的namespace中一切正常，9697 端口的重定向，以及监听9697端口的neutron-metadata-ns-proxy进程也正常。没办法，在该路由器的namespace中对应端口抓包试试，虚拟机中发送169.254.169.254，却一点反应没有，断定请求压根就没有走到该路由器的namespace。只能返回去虚拟机实例中抓包试试，使用traceroute命令发现请求是发到对应网关的，而对应网关就应该在路由器的namespace中啊，到这里基本就蒙逼了。</li>
+<li>只能按照请求的处理步骤一步步排查，首先确定虚拟机所在的网络是有路由器相连的，所以metadata请求是走的路由器的namespace，相关知识参考<a href="https://zhangchenchen.github.io/2017/02/17/openstack-instance-metadata-discovery/">openstack– openstack instance metadata 服务机制探索</a>,网络节点对应路由器的namespace中一切正常，9697 端口的重定向，以及监听9697端口的neutron-metadata-ns-proxy进程也正常。没办法，在该路由器的namespace中对应端口抓包试试，虚拟机中发送169.254.169.254，却一点反应没有，断定请求压根就没有走到该路由器的namespace。只能返回去虚拟机实例中抓包试试，使用traceroute命令发现请求是发到对应网关的，而对应网关就应该在路由器的namespace中啊，到这里基本就蒙逼了。</li>
 <li>在经过一番徒劳无功的试错后，终于找到了一点线索。我在查看neutron agent状态的时候，发现neutron-l3-agent不只是在网络节点，计算节点也存在neutron-l3-agent，立马想到neutron-l3-agent会在本地计算节点也创建虚拟路由器，所以获取metadata的请求就发送到本地计算节点的路由器 namespace，果然，本地计算节点也有一个路由器，抓包发现确实是发送到了这里，而且该节点对应网络的neutron-ns-metadata-proxy-xxxxxxxxx.log发现了 socket.error报错信息，说明neutron-ns-metadata-proxy通过 unix domian socket 转发给 neutron-metadata-agent的时候出现了问题。本能的想是不是配置错误导致的，查看l3-agent的配置文件时发现有个配置项：agent_mode = dvr ，赶紧搜了一下，终于找到了进入的正确姿势。</li>
 </ul>
-<h2 id="neutron-分布式虚拟路由（DVR）"><a href="#neutron-分布式虚拟路由（DVR）" class="headerlink" title="neutron 分布式虚拟路由（DVR）"></a>neutron 分布式虚拟路由（DVR）</h2><h3 id="整体架构"><a href="#整体架构" class="headerlink" title="整体架构"></a>整体架构</h3><p>neutron 的DVR 是属于openstack HA的一部分，主要解决虚拟路由器的HA（即neutron-l3-agent的HA）。之前写过一篇<a href="https://zhangchenchen.github.io/2017/04/14/openstack-ha/" target="_blank" rel="external">记录openstack的HA</a>,但没有仔细研究过neutron DVR。</p>
+<h2 id="neutron-分布式虚拟路由（DVR）"><a href="#neutron-分布式虚拟路由（DVR）" class="headerlink" title="neutron 分布式虚拟路由（DVR）"></a>neutron 分布式虚拟路由（DVR）</h2><h3 id="整体架构"><a href="#整体架构" class="headerlink" title="整体架构"></a>整体架构</h3><p>neutron 的DVR 是属于openstack HA的一部分，主要解决虚拟路由器的HA（即neutron-l3-agent的HA）。之前写过一篇<a href="https://zhangchenchen.github.io/2017/04/14/openstack-ha/">记录openstack的HA</a>,但没有仔细研究过neutron DVR。</p>
 <p>在没有使用dvr时，我们的整体架构大致是这样的：</p>
 <p><img src="http://oeptotikb.bkt.clouddn.com/neutron-arc-1.png" alt="neutron-arc1"></p>
 <p>计算节点只需要安装L2 Agent就可以，而使用dvr模式后：</p>
@@ -452,7 +619,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/06/14/python-hidden-feature/">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/06/14/python-hidden-feature/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -606,7 +773,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/06/05/ceph-rbd-snapshot/">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/06/05/ceph-rbd-snapshot/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -696,12 +863,12 @@
       
         
           
-            <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>关于openstack 中的快照，备份部分之前做过一次总结，<a href="https://zhangchenchen.github.io/2017/01/23/openstack-incremental-backup/" target="_blank" rel="external">openstack 中的快照与备份</a> ,因为目前基本使用ceph rbd作为共享存储后端，所以本篇文章想讨论以rbd作为存储后端时的备份与快照情况：</p>
+            <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>关于openstack 中的快照，备份部分之前做过一次总结，<a href="https://zhangchenchen.github.io/2017/01/23/openstack-incremental-backup/">openstack 中的快照与备份</a> ,因为目前基本使用ceph rbd作为共享存储后端，所以本篇文章想讨论以rbd作为存储后端时的备份与快照情况：</p>
 <ul>
-<li>nova image-create：具体实现参考<a href="https://zhangchenchen.github.io/2017/01/23/openstack-incremental-backup/" target="_blank" rel="external">openstack 中的快照与备份</a> </li>
+<li>nova image-create：具体实现参考<a href="https://zhangchenchen.github.io/2017/01/23/openstack-incremental-backup/">openstack 中的快照与备份</a> </li>
 <li>nova backup: 同上。</li>
 <li>cinder snapshot：直接利用 rbd snapshot 实现</li>
-<li>cinder backup：支持增量备份，也用到了rbd snapshot，参考<a href="https://zhangchenchen.github.io/2017/05/09/openstack-cinder-incremental-backup-with-ceph/" target="_blank" rel="external"> cinder-backup 利用ceph实现增量备份</a></li>
+<li>cinder backup：支持增量备份，也用到了rbd snapshot，参考<a href="https://zhangchenchen.github.io/2017/05/09/openstack-cinder-incremental-backup-with-ceph/"> cinder-backup 利用ceph实现增量备份</a></li>
 </ul>
 <p>由以上情况可知，rbd snapshot 几乎都要用到，所以接下来探讨下rbd snapshot 的实现原理。</p>
 <h2 id="rbd-snapshot-vs-rbd-clone"><a href="#rbd-snapshot-vs-rbd-clone" class="headerlink" title="rbd snapshot vs rbd clone"></a>rbd snapshot vs rbd clone</h2><p>首先知道这两者的区别：</p>
@@ -788,7 +955,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/05/18/python-thread-pool/">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/05/18/python-thread-pool/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -878,7 +1045,7 @@
       
         
           
-            <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>首先需要了解的是threadpool 的用途，他更适合于用到一些大量的短任务合集，而非一些时间长的任务，换句话说，适合大量的CPU密集型短任务，那些消耗时间较长的IO密集型长任务适合用<a href="https://zhangchenchen.github.io/2016/09/26/python-yield-and%20coroutine/" target="_blank" rel="external">协程</a>去解决。</p>
+            <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>首先需要了解的是threadpool 的用途，他更适合于用到一些大量的短任务合集，而非一些时间长的任务，换句话说，适合大量的CPU密集型短任务，那些消耗时间较长的IO密集型长任务适合用<a href="https://zhangchenchen.github.io/2016/09/26/python-yield-and%20coroutine/">协程</a>去解决。</p>
 <p>目前，python 标准库（特指python2.X）中的threadpool模块是在 multiprocessing.pool.threadpool，或者multiprocessing.dummy.ThreadPool（dummy模块是针对threading 多线程的进一步封装）。该模块有个缺点就是在所有线程执行完之前无法强制退出。实现原理大同小异：实例化pool的时候会创建指定数目的线程，把task 传给一个task-queue，线程会读取task-queue 的task，没有就阻塞，读取到后就执行，并将结果交给一个result-queue。</p>
 <p>除了标准库中的threadpool，还有一些使用比较多的threadpool，以下展开。</p>
 <h2 id="pip-中的-ThreadPool"><a href="#pip-中的-ThreadPool" class="headerlink" title="pip 中的 ThreadPool"></a>pip 中的 ThreadPool</h2><p>安装简单：pip install threadpool<br>使用如下：</p>
@@ -931,7 +1098,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/05/09/openstack-cinder-incremental-backup-with-ceph/">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/05/09/openstack-cinder-incremental-backup-with-ceph/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -1096,7 +1263,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/04/14/openstack-ha/">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/04/14/openstack-ha/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -1297,7 +1464,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/04/06/linux-performance-monitoring-tool/">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/04/06/linux-performance-monitoring-tool/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -1482,7 +1649,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/16/openvswitch-quick-start/">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/03/16/openvswitch-quick-start/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -1593,7 +1760,7 @@
 <li>bridge: ovs中的网桥可以理解为现实世界中的物理交换机，作用就是根据一定流规则（如openflow），把从某个端口(port)收到的数据包转发到另一个或多个端口。图中br-int与br-tun就是两个bridge。</li>
 <li>port: ovs 中的port是收发数据包的单元,每个端口都附属于某一个bridge。图中qvoxxx，以及patch-tun,patch-int等都是port。</li>
 <li>interface: 接口是ovs与外部交换数据包的组件。一个接口就是操作系统的一块网卡，这块网卡可能是ovs生成的虚拟网卡，也可能是物理网卡挂载在ovs上，也可能是操作系统的虚拟网卡（TUN/TAP）挂载在ovs上。</li>
-<li><p>flowtable: 上文讲过，ovs会根据流表进行包的转发，最常用的就是openflow协议，下图为openflow的流表匹配顺序：首先按照从小到大的顺序匹配流表，表内按照优先级匹配表项，示例参见<a href="https://zhangchenchen.github.io/2017/02/12/neutron-layer2-3-realization-discovry/" target="_blank" rel="external">openstack– neutron 二/三层网络实现探究</a>。</p>
+<li><p>flowtable: 上文讲过，ovs会根据流表进行包的转发，最常用的就是openflow协议，下图为openflow的流表匹配顺序：首先按照从小到大的顺序匹配流表，表内按照优先级匹配表项，示例参见<a href="https://zhangchenchen.github.io/2017/02/12/neutron-layer2-3-realization-discovry/">openstack– neutron 二/三层网络实现探究</a>。</p>
 <p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-16-openvswitch-openflow-match.png" alt="openflow-match"></p>
 </li>
 </ul>
@@ -1664,7 +1831,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/13/neutron-troubleshooting-common-problems/">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/03/13/neutron-troubleshooting-common-problems/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -1690,7 +1857,7 @@
               
                 
                 <a class="post-title-link" href="/2017/03/13/neutron-troubleshooting-common-problems/" itemprop="url">
-                  neutron-- 对neutron一些常见网络问题的troubleshooting
+                  openstack-- 对neutron一些常见网络问题的troubleshooting
                 </a>
               
             
@@ -1774,7 +1941,7 @@
 <p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-13-vm_get_ip.png" alt="vm-get-ip"></p>
 <p>关于这部分的具体代码分析，可以参考<a href="http://www.cnblogs.com/sammyliu/p/4419195.html" target="_blank" rel="external">Neutron 理解（5）：Neutron 是如何向 Nova 虚机分配固定IP地址的 （How Neutron Allocates Fixed IPs to Nova Instance）</a><br>接下来我们看下packets 的flow流向，以便更精准的定位问题,因为二层网络的实现方式不一样——————openvswitch方式和Linux bridge方式，所以流向也不尽相同，先看下ovs的流向。</p>
 <p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-13-openvswitch_flow.png" alt="ovs-get-ip"></p>
-<p>流程图一目了然，原文其实做了很多解释，这里就不多说了，如果不清楚的可以参看原文，或者看我之前的一篇<a href="https://zhangchenchen.github.io/2017/02/12/neutron-layer2-3-realization-discovry/" target="_blank" rel="external">openstack– neutron 二/三层网络实现探究</a></p>
+<p>流程图一目了然，原文其实做了很多解释，这里就不多说了，如果不清楚的可以参看原文，或者看我之前的一篇<a href="https://zhangchenchen.github.io/2017/02/12/neutron-layer2-3-realization-discovry/">openstack– neutron 二/三层网络实现探究</a></p>
 <p>同样，linux bridge实现的二层网络，流向如下：</p>
 <p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-13-linux_bridge_flow.png" alt="bridge-get-ip"></p>
 <p>ok,接下来开始debug:</p>
@@ -1789,7 +1956,7 @@
 <li>接下来看一下虚拟机是否获取到IP。通过 vnc-console 进入虚拟机，执行ip a 命令，如果没有ip的话，首先查看neutron dhcp agent是否挂掉，还是用neutron agent-list命令查看。如果agent没有挂掉的话，再去查看下对应network的dnsmasq服务是否挂掉，使用该命令： ps -ef | grep dnsmasq | grep Network_Id 。再去查看一下对应network的dhcp host文件，是否有对应虚拟机的mac与ip 记录，该文件的位置为：/var/lib/neutron/dhcp/Network_ID/host。如果还是一切正常，那么去查看dhcp-agent 的日志。同时，我们要保证宿主机与虚拟机之间网络是可以联通的，可以通过手动设置虚拟机ip的方法进行验证下。</li>
 <li>如果还是没有解决问题，那就只有一个方法了，使用tcpdump 抓包吧。</li>
 </ul>
-<h2 id="第二类问题：虚拟机无法连通外部网络"><a href="#第二类问题：虚拟机无法连通外部网络" class="headerlink" title="第二类问题：虚拟机无法连通外部网络"></a>第二类问题：虚拟机无法连通外部网络</h2><p>解决这类问题，首先要弄懂L3 agent的工作原理。说白了，就是利用namespace+iptables实现的，参考<a href="https://zhangchenchen.github.io/2017/02/12/neutron-layer2-3-realization-discovry/" target="_blank" rel="external">openstack– neutron 二/三层网络实现探究</a>。</p>
+<h2 id="第二类问题：虚拟机无法连通外部网络"><a href="#第二类问题：虚拟机无法连通外部网络" class="headerlink" title="第二类问题：虚拟机无法连通外部网络"></a>第二类问题：虚拟机无法连通外部网络</h2><p>解决这类问题，首先要弄懂L3 agent的工作原理。说白了，就是利用namespace+iptables实现的，参考<a href="https://zhangchenchen.github.io/2017/02/12/neutron-layer2-3-realization-discovry/">openstack– neutron 二/三层网络实现探究</a>。</p>
 <p>还是看下包流向，因为2层网络的实现方式不同，流向也不尽相同。首先看下ovs方式的流向：</p>
 <p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-13-l3_external_flow.png" alt="ovs-flow"></p>
 <p>再看下linux bridge的方式，图示为从外部网络ping 虚拟机floating ip过程。</p>
@@ -1802,7 +1969,7 @@
 <li>从router到external net：查看在router namespace内能否ping通外部网络：ip netns exec qrouter-078766fe-c4b6-4a14-82fa-e7f85e26c248 ping www.baidu.com   。查看router namespace能否ping通 floating ip: ip netns exec qrouter-078766fe-c4b6-4a14-82fa-e7f85e26c248 ping Floating-IP .这看起来可能有点傻，因为floating ip其实就在这个namespace中，不过这会让我们对问题的严重性有一个认识。</li>
 <li>如果还是没有找到问题，就去查看l3-agent 日志。</li>
 </ul>
-<h2 id="第三类问题：虚拟机无法连通-metadata-server"><a href="#第三类问题：虚拟机无法连通-metadata-server" class="headerlink" title="第三类问题：虚拟机无法连通 metadata server"></a>第三类问题：虚拟机无法连通 metadata server</h2><p>还是先要搞明白metadata server的原理。metadata 获取有两种方式，一种是config drive，一种是metadata server。这里就是讨论metadata server的方式，metadata server 的路由方式有两种：如果虚拟机与router联通的话，就通过router路由，如果虚拟机没有router直连的话，就通过对应dhcp namespace路由。参考<a href="https://zhangchenchen.github.io/2017/02/17/openstack-instance-metadata-discovery/" target="_blank" rel="external">openstack– openstack instance metadata 服务机制探索</a>。</p>
+<h2 id="第三类问题：虚拟机无法连通-metadata-server"><a href="#第三类问题：虚拟机无法连通-metadata-server" class="headerlink" title="第三类问题：虚拟机无法连通 metadata server"></a>第三类问题：虚拟机无法连通 metadata server</h2><p>还是先要搞明白metadata server的原理。metadata 获取有两种方式，一种是config drive，一种是metadata server。这里就是讨论metadata server的方式，metadata server 的路由方式有两种：如果虚拟机与router联通的话，就通过router路由，如果虚拟机没有router直连的话，就通过对应dhcp namespace路由。参考<a href="https://zhangchenchen.github.io/2017/02/17/openstack-instance-metadata-discovery/">openstack– openstack instance metadata 服务机制探索</a>。</p>
 <p>首先看下通过路由器路由的work-flow:</p>
 <p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-13-routed_networks_metadata.png" alt="router-work-flow"></p>
 <p>注意：metdata proxy 是由l3-agent实现，它会在指定端口监听（默认 9697），接收到request后，会增加虚拟机ip,router id到request header并转发到metadata agent。</p>
@@ -1828,173 +1995,11 @@
 <li>查看网络节点neutron-server日志。</li>
 <li>如果是做压测，在Nova的配置文件中，可以适当调大这个vif_plugging_timeout 时间，或增加rpc_thread_pool_size &amp; rpc_conn_pool_size 。</li>
 </ul>
-<p>原文还列举了一些常用的网络调试命令，因为之前总结过，<a href="https://zhangchenchen.github.io/2017/02/10/openstack-common-net-command/" target="_blank" rel="external">openstack–openstack 常用网络调试命令</a>,不再赘述。</p>
+<p>原文还列举了一些常用的网络调试命令，因为之前总结过，<a href="https://zhangchenchen.github.io/2017/02/10/openstack-common-net-command/">openstack–openstack 常用网络调试命令</a>,不再赘述。</p>
 <h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://abregman.com/2016/01/06/openstack-neutron-troubleshooting-and-solving-common-problems/" target="_blank" rel="external">Openstack Neutron: troubleshooting and solving common problems</a></p>
 <p><a href="https://www.youtube.com/watch?v=aNA8Pvewu2M" target="_blank" rel="external">I Can’t Ping My VM! Learn How to Debug Neutron and Solve Common Problems</a></p>
 <p><a href="https://www.youtube.com/watch?v=O9pghlsNG9E" target="_blank" rel="external"> OpenStack Neutron Troubleshooting </a></p>
 <p><a href="http://www.cnblogs.com/sammyliu/p/4419195.html" target="_blank" rel="external">Neutron 理解（5）：Neutron 是如何向 Nova 虚机分配固定IP地址的 （How Neutron Allocates Fixed IPs to Nova Instance）</a></p>
-<p><strong><em>END</em></strong></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/10/LVM-command/">
-
-  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
-    <meta itemprop="name" content="pekingzcc">
-    <meta itemprop="description" content="">
-    <meta itemprop="image" content="/images/avatar.jpg">
-  </span>
-
-  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-    <meta itemprop="name" content="Solar">
-    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
-      <img style="display:none;" itemprop="url image" alt="Solar" src="">
-    </span>
-  </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/03/10/LVM-command/" itemprop="url">
-                  linux-- 利用LVM 对虚拟机进行手动扩容
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-10T11:13:46+08:00">
-                2017-03-10
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/03/10/LVM-command/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/03/10/LVM-command/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>一般来说，如果openstck镜像中安装了growpart(之前的版本叫做growroot),在创建虚拟机的时候就会实现自动扩容。但是今天碰到几个虚拟机没有实现自动扩容的情况，需要手动进行扩容，用到lvm的一些知识，这里记录一下。</p>
-<h2 id="关于LVM的一些知识"><a href="#关于LVM的一些知识" class="headerlink" title="关于LVM的一些知识"></a>关于LVM的一些知识</h2><p>LVM利用Linux内核的device-mapper来实现存储系统的虚拟化（系统分区独立于底层硬件）。通过LVM，你可以实现存储空间的抽象化并在上面建立虚拟分区，可以更简便地扩大和缩小分区，可以增删分区时无需担心某个硬盘上没有足够的连续空间。</p>
-<p>简单来说：LVM是Linux环境中对磁盘分区进行管理的一种机制，是建立在硬盘和分区之上、文件系统之下的一个逻辑层，可提高磁盘分区管理的灵活性。</p>
-<p>LVM的基本组成块如下：</p>
-<ul>
-<li>物理卷Physical volume (PV)：可以在上面建立卷组的媒介，可以是硬盘分区，也可以是硬盘本身或者回环文件（loopback file）。物理卷包括一个特殊的header，其余部分被切割为一块块物理区域（physical extents）。 </li>
-<li>卷组Volume group (VG)：将一组物理卷收集为一个管理单元。</li>
-<li>逻辑卷Logical volume (LV)：虚拟分区，由物理区域（physical extents）组成。</li>
-</ul>
-<p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-10-lvm-500x290.jpg" alt="lvm-pic"></p>
-<h2 id="对虚拟机进行手动扩容"><a href="#对虚拟机进行手动扩容" class="headerlink" title="对虚拟机进行手动扩容"></a>对虚拟机进行手动扩容</h2><p>注：本文测试为实验环境，直接利用workstation 开启虚拟机，扩展磁盘，最后实现手动扩展。</p>
-<p>首先，确认磁盘使用lvm以及确定磁盘大小：</p>
-<p><img src="http://oeptotikb.bkt.clouddn.com/2017-030-10-lvm-1.png" alt="lvm-1"></p>
-<p>可以看到磁盘/dev/sda大小总共约为53G，/dev/sda2是已经加入卷组的一个物理卷。</p>
-<p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-2.png" alt="lvm-2"></p>
-<p>/dev/mapper/cl-root 与/dev/mapper/cl-swap 设备其实是逻辑卷。<br><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-3.png" alt="lvm-3"></p>
-<p>接下来在workstation面板进行磁盘扩展：</p>
-<p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-4.png" alt="lvm-4"></p>
-<p>查看磁盘情况：</p>
-<p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-df.png" alt="lvm-5"></p>
-<p>可以看到磁盘已经扩展为60G+了，但是磁盘分区还是两个且大小没变，而且挂载root的/dev/mapper/cl-root依然是50G,所以接下来我们需要做的就是将多出来的10G空间进行磁盘分区并最终扩展到逻辑卷dev/mapper/cl-root。</p>
-<p>首先磁盘分区并将该分区设置为LVM格式。</p>
-<p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-6.png" alt="lvm-6"></p>
-<p>重启机器（或者不重启，执行 partprobe 命令让内核更新分区表），将/dev/sda3创建物理卷，并将该物理卷加入卷组。</p>
-<p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-7.png" alt="lvm-7"></p>
-<p>扩展逻辑卷并将对应的文件系统扩展，如果是ext3/4文件系统用resize2fs 命令。</p>
-<p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-8.png" alt="lvm-8"></p>
-<p>扩展成功。</p>
-<p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-9.png" alt="lvm-9"></p>
-<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://wiki.archlinux.org/index.php/LVM_" target="_blank" rel="external">LVM WIKI</a></p>
-<p><a href="https://wsgzao.github.io/post/lvm/" target="_blank" rel="external">LVM逻辑卷管理配置小结</a></p>
-<p><a href="http://dreamfire.blog.51cto.com/418026/1084729" target="_blank" rel="external">Linux LVM逻辑卷配置过程详解</a></p>
-<p><a href="https://www.rootusers.com/how-to-increase-the-size-of-a-linux-lvm-by-expanding-the-virtual-machine-disk/" target="_blank" rel="external">How to Increase the size of a Linux LVM by expanding the virtual machine disk</a></p>
 <p><strong><em>END</em></strong></p>
 
           
@@ -2072,7 +2077,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">66</span>
+                <span class="site-state-item-count">67</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2083,7 +2088,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">22</span>
+                <span class="site-state-item-count">24</span>
                 <span class="site-state-item-name">tags</span>
               </a>
             </div>

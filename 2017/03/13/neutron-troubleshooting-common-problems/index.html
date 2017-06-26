@@ -87,8 +87,8 @@
 <meta name="description" content="引出一直对neutron网络的troubleshooting 感到头疼，今天偶然翻到一篇博客，感觉写的非常棒，Openstack Neutron: troubleshooting and solving common problems,这篇博客也是两个教学视频的总结，顺便看了一下视频，感觉内容差不多就没看完，链接在后面。
 本篇博客算是对上述博客以及视频的一个翻译（没有严格翻译）与整理，以及自己补充">
 <meta property="og:type" content="article">
-<meta property="og:title" content="neutron-- 对neutron一些常见网络问题的troubleshooting">
-<meta property="og:url" content="http://yoursite.com/2017/03/13/neutron-troubleshooting-common-problems/index.html">
+<meta property="og:title" content="openstack-- 对neutron一些常见网络问题的troubleshooting">
+<meta property="og:url" content="https://zhangchenchen.github.io/2017/03/13/neutron-troubleshooting-common-problems/index.html">
 <meta property="og:site_name" content="Solar">
 <meta property="og:description" content="引出一直对neutron网络的troubleshooting 感到头疼，今天偶然翻到一篇博客，感觉写的非常棒，Openstack Neutron: troubleshooting and solving common problems,这篇博客也是两个教学视频的总结，顺便看了一下视频，感觉内容差不多就没看完，链接在后面。
 本篇博客算是对上述博客以及视频的一个翻译（没有严格翻译）与整理，以及自己补充">
@@ -101,9 +101,9 @@
 <meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-03-13-routed_networks_metadata.png">
 <meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-03-13isolated_network_metadata.png">
 <meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-03-13vif_plugging.png">
-<meta property="og:updated_time" content="2017-03-16T05:21:20.267Z">
+<meta property="og:updated_time" content="2017-06-26T00:40:14.985Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="neutron-- 对neutron一些常见网络问题的troubleshooting">
+<meta name="twitter:title" content="openstack-- 对neutron一些常见网络问题的troubleshooting">
 <meta name="twitter:description" content="引出一直对neutron网络的troubleshooting 感到头疼，今天偶然翻到一篇博客，感觉写的非常棒，Openstack Neutron: troubleshooting and solving common problems,这篇博客也是两个教学视频的总结，顺便看了一下视频，感觉内容差不多就没看完，链接在后面。
 本篇博客算是对上述博客以及视频的一个翻译（没有严格翻译）与整理，以及自己补充">
 <meta name="twitter:image" content="http://oeptotikb.bkt.clouddn.com/2017-03-13-vm_get_ip.png">
@@ -134,13 +134,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2017/03/13/neutron-troubleshooting-common-problems/"/>
+  <link rel="canonical" href="https://zhangchenchen.github.io/2017/03/13/neutron-troubleshooting-common-problems/"/>
 
 
 
 
 
-  <title> neutron-- 对neutron一些常见网络问题的troubleshooting | Solar </title>
+  <title> openstack-- 对neutron一些常见网络问题的troubleshooting | Solar </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -285,7 +285,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/13/neutron-troubleshooting-common-problems/">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/03/13/neutron-troubleshooting-common-problems/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -309,7 +309,7 @@
             
             
               
-                neutron-- 对neutron一些常见网络问题的troubleshooting
+                openstack-- 对neutron一些常见网络问题的troubleshooting
               
             
           </h1>
@@ -390,7 +390,7 @@
 <p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-13-vm_get_ip.png" alt="vm-get-ip"></p>
 <p>关于这部分的具体代码分析，可以参考<a href="http://www.cnblogs.com/sammyliu/p/4419195.html" target="_blank" rel="external">Neutron 理解（5）：Neutron 是如何向 Nova 虚机分配固定IP地址的 （How Neutron Allocates Fixed IPs to Nova Instance）</a><br>接下来我们看下packets 的flow流向，以便更精准的定位问题,因为二层网络的实现方式不一样——————openvswitch方式和Linux bridge方式，所以流向也不尽相同，先看下ovs的流向。</p>
 <p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-13-openvswitch_flow.png" alt="ovs-get-ip"></p>
-<p>流程图一目了然，原文其实做了很多解释，这里就不多说了，如果不清楚的可以参看原文，或者看我之前的一篇<a href="https://zhangchenchen.github.io/2017/02/12/neutron-layer2-3-realization-discovry/" target="_blank" rel="external">openstack– neutron 二/三层网络实现探究</a></p>
+<p>流程图一目了然，原文其实做了很多解释，这里就不多说了，如果不清楚的可以参看原文，或者看我之前的一篇<a href="https://zhangchenchen.github.io/2017/02/12/neutron-layer2-3-realization-discovry/">openstack– neutron 二/三层网络实现探究</a></p>
 <p>同样，linux bridge实现的二层网络，流向如下：</p>
 <p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-13-linux_bridge_flow.png" alt="bridge-get-ip"></p>
 <p>ok,接下来开始debug:</p>
@@ -405,7 +405,7 @@
 <li>接下来看一下虚拟机是否获取到IP。通过 vnc-console 进入虚拟机，执行ip a 命令，如果没有ip的话，首先查看neutron dhcp agent是否挂掉，还是用neutron agent-list命令查看。如果agent没有挂掉的话，再去查看下对应network的dnsmasq服务是否挂掉，使用该命令： ps -ef | grep dnsmasq | grep Network_Id 。再去查看一下对应network的dhcp host文件，是否有对应虚拟机的mac与ip 记录，该文件的位置为：/var/lib/neutron/dhcp/Network_ID/host。如果还是一切正常，那么去查看dhcp-agent 的日志。同时，我们要保证宿主机与虚拟机之间网络是可以联通的，可以通过手动设置虚拟机ip的方法进行验证下。</li>
 <li>如果还是没有解决问题，那就只有一个方法了，使用tcpdump 抓包吧。</li>
 </ul>
-<h2 id="第二类问题：虚拟机无法连通外部网络"><a href="#第二类问题：虚拟机无法连通外部网络" class="headerlink" title="第二类问题：虚拟机无法连通外部网络"></a>第二类问题：虚拟机无法连通外部网络</h2><p>解决这类问题，首先要弄懂L3 agent的工作原理。说白了，就是利用namespace+iptables实现的，参考<a href="https://zhangchenchen.github.io/2017/02/12/neutron-layer2-3-realization-discovry/" target="_blank" rel="external">openstack– neutron 二/三层网络实现探究</a>。</p>
+<h2 id="第二类问题：虚拟机无法连通外部网络"><a href="#第二类问题：虚拟机无法连通外部网络" class="headerlink" title="第二类问题：虚拟机无法连通外部网络"></a>第二类问题：虚拟机无法连通外部网络</h2><p>解决这类问题，首先要弄懂L3 agent的工作原理。说白了，就是利用namespace+iptables实现的，参考<a href="https://zhangchenchen.github.io/2017/02/12/neutron-layer2-3-realization-discovry/">openstack– neutron 二/三层网络实现探究</a>。</p>
 <p>还是看下包流向，因为2层网络的实现方式不同，流向也不尽相同。首先看下ovs方式的流向：</p>
 <p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-13-l3_external_flow.png" alt="ovs-flow"></p>
 <p>再看下linux bridge的方式，图示为从外部网络ping 虚拟机floating ip过程。</p>
@@ -418,7 +418,7 @@
 <li>从router到external net：查看在router namespace内能否ping通外部网络：ip netns exec qrouter-078766fe-c4b6-4a14-82fa-e7f85e26c248 ping www.baidu.com   。查看router namespace能否ping通 floating ip: ip netns exec qrouter-078766fe-c4b6-4a14-82fa-e7f85e26c248 ping Floating-IP .这看起来可能有点傻，因为floating ip其实就在这个namespace中，不过这会让我们对问题的严重性有一个认识。</li>
 <li>如果还是没有找到问题，就去查看l3-agent 日志。</li>
 </ul>
-<h2 id="第三类问题：虚拟机无法连通-metadata-server"><a href="#第三类问题：虚拟机无法连通-metadata-server" class="headerlink" title="第三类问题：虚拟机无法连通 metadata server"></a>第三类问题：虚拟机无法连通 metadata server</h2><p>还是先要搞明白metadata server的原理。metadata 获取有两种方式，一种是config drive，一种是metadata server。这里就是讨论metadata server的方式，metadata server 的路由方式有两种：如果虚拟机与router联通的话，就通过router路由，如果虚拟机没有router直连的话，就通过对应dhcp namespace路由。参考<a href="https://zhangchenchen.github.io/2017/02/17/openstack-instance-metadata-discovery/" target="_blank" rel="external">openstack– openstack instance metadata 服务机制探索</a>。</p>
+<h2 id="第三类问题：虚拟机无法连通-metadata-server"><a href="#第三类问题：虚拟机无法连通-metadata-server" class="headerlink" title="第三类问题：虚拟机无法连通 metadata server"></a>第三类问题：虚拟机无法连通 metadata server</h2><p>还是先要搞明白metadata server的原理。metadata 获取有两种方式，一种是config drive，一种是metadata server。这里就是讨论metadata server的方式，metadata server 的路由方式有两种：如果虚拟机与router联通的话，就通过router路由，如果虚拟机没有router直连的话，就通过对应dhcp namespace路由。参考<a href="https://zhangchenchen.github.io/2017/02/17/openstack-instance-metadata-discovery/">openstack– openstack instance metadata 服务机制探索</a>。</p>
 <p>首先看下通过路由器路由的work-flow:</p>
 <p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-13-routed_networks_metadata.png" alt="router-work-flow"></p>
 <p>注意：metdata proxy 是由l3-agent实现，它会在指定端口监听（默认 9697），接收到request后，会增加虚拟机ip,router id到request header并转发到metadata agent。</p>
@@ -444,7 +444,7 @@
 <li>查看网络节点neutron-server日志。</li>
 <li>如果是做压测，在Nova的配置文件中，可以适当调大这个vif_plugging_timeout 时间，或增加rpc_thread_pool_size &amp; rpc_conn_pool_size 。</li>
 </ul>
-<p>原文还列举了一些常用的网络调试命令，因为之前总结过，<a href="https://zhangchenchen.github.io/2017/02/10/openstack-common-net-command/" target="_blank" rel="external">openstack–openstack 常用网络调试命令</a>,不再赘述。</p>
+<p>原文还列举了一些常用的网络调试命令，因为之前总结过，<a href="https://zhangchenchen.github.io/2017/02/10/openstack-common-net-command/">openstack–openstack 常用网络调试命令</a>,不再赘述。</p>
 <h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://abregman.com/2016/01/06/openstack-neutron-troubleshooting-and-solving-common-problems/" target="_blank" rel="external">Openstack Neutron: troubleshooting and solving common problems</a></p>
 <p><a href="https://www.youtube.com/watch?v=aNA8Pvewu2M" target="_blank" rel="external">I Can’t Ping My VM! Learn How to Debug Neutron and Solve Common Problems</a></p>
 <p><a href="https://www.youtube.com/watch?v=O9pghlsNG9E" target="_blank" rel="external"> OpenStack Neutron Troubleshooting </a></p>
@@ -573,7 +573,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">66</span>
+                <span class="site-state-item-count">67</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -584,7 +584,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">22</span>
+                <span class="site-state-item-count">24</span>
                 <span class="site-state-item-name">tags</span>
               </a>
             </div>
@@ -757,7 +757,7 @@
       var disqus_shortname = 'pekingzcc';
       var disqus_identifier = '2017/03/13/neutron-troubleshooting-common-problems/';
 
-      var disqus_title = "neutron-- 对neutron一些常见网络问题的troubleshooting";
+      var disqus_title = "openstack-- 对neutron一些常见网络问题的troubleshooting";
 
 
       function run_disqus_script(disqus_script) {

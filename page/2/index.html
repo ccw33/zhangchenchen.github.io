@@ -86,7 +86,7 @@
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="Solar">
-<meta property="og:url" content="http://yoursite.com/page/2/index.html">
+<meta property="og:url" content="https://zhangchenchen.github.io/page/2/index.html">
 <meta property="og:site_name" content="Solar">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Solar">
@@ -117,7 +117,7 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/page/2/"/>
+  <link rel="canonical" href="https://zhangchenchen.github.io/page/2/"/>
 
 
 
@@ -270,7 +270,169 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/07/update-your-openstack-image/">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/03/10/LVM-command/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="pekingzcc">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/avatar.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="Solar">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="Solar" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/03/10/LVM-command/" itemprop="url">
+                  linux-- 利用LVM 对虚拟机进行手动扩容
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-10T11:13:46+08:00">
+                2017-03-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/03/10/LVM-command/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/03/10/LVM-command/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>一般来说，如果openstck镜像中安装了growpart(之前的版本叫做growroot),在创建虚拟机的时候就会实现自动扩容。但是今天碰到几个虚拟机没有实现自动扩容的情况，需要手动进行扩容，用到lvm的一些知识，这里记录一下。</p>
+<h2 id="关于LVM的一些知识"><a href="#关于LVM的一些知识" class="headerlink" title="关于LVM的一些知识"></a>关于LVM的一些知识</h2><p>LVM利用Linux内核的device-mapper来实现存储系统的虚拟化（系统分区独立于底层硬件）。通过LVM，你可以实现存储空间的抽象化并在上面建立虚拟分区，可以更简便地扩大和缩小分区，可以增删分区时无需担心某个硬盘上没有足够的连续空间。</p>
+<p>简单来说：LVM是Linux环境中对磁盘分区进行管理的一种机制，是建立在硬盘和分区之上、文件系统之下的一个逻辑层，可提高磁盘分区管理的灵活性。</p>
+<p>LVM的基本组成块如下：</p>
+<ul>
+<li>物理卷Physical volume (PV)：可以在上面建立卷组的媒介，可以是硬盘分区，也可以是硬盘本身或者回环文件（loopback file）。物理卷包括一个特殊的header，其余部分被切割为一块块物理区域（physical extents）。 </li>
+<li>卷组Volume group (VG)：将一组物理卷收集为一个管理单元。</li>
+<li>逻辑卷Logical volume (LV)：虚拟分区，由物理区域（physical extents）组成。</li>
+</ul>
+<p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-10-lvm-500x290.jpg" alt="lvm-pic"></p>
+<h2 id="对虚拟机进行手动扩容"><a href="#对虚拟机进行手动扩容" class="headerlink" title="对虚拟机进行手动扩容"></a>对虚拟机进行手动扩容</h2><p>注：本文测试为实验环境，直接利用workstation 开启虚拟机，扩展磁盘，最后实现手动扩展。</p>
+<p>首先，确认磁盘使用lvm以及确定磁盘大小：</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-030-10-lvm-1.png" alt="lvm-1"></p>
+<p>可以看到磁盘/dev/sda大小总共约为53G，/dev/sda2是已经加入卷组的一个物理卷。</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-2.png" alt="lvm-2"></p>
+<p>/dev/mapper/cl-root 与/dev/mapper/cl-swap 设备其实是逻辑卷。<br><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-3.png" alt="lvm-3"></p>
+<p>接下来在workstation面板进行磁盘扩展：</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-4.png" alt="lvm-4"></p>
+<p>查看磁盘情况：</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-df.png" alt="lvm-5"></p>
+<p>可以看到磁盘已经扩展为60G+了，但是磁盘分区还是两个且大小没变，而且挂载root的/dev/mapper/cl-root依然是50G,所以接下来我们需要做的就是将多出来的10G空间进行磁盘分区并最终扩展到逻辑卷dev/mapper/cl-root。</p>
+<p>首先磁盘分区并将该分区设置为LVM格式。</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-6.png" alt="lvm-6"></p>
+<p>重启机器（或者不重启，执行 partprobe 命令让内核更新分区表），将/dev/sda3创建物理卷，并将该物理卷加入卷组。</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-7.png" alt="lvm-7"></p>
+<p>扩展逻辑卷并将对应的文件系统扩展，如果是ext3/4文件系统用resize2fs 命令。</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-8.png" alt="lvm-8"></p>
+<p>扩展成功。</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-10-lvm-9.png" alt="lvm-9"></p>
+<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://wiki.archlinux.org/index.php/LVM_" target="_blank" rel="external">LVM WIKI</a></p>
+<p><a href="https://wsgzao.github.io/post/lvm/" target="_blank" rel="external">LVM逻辑卷管理配置小结</a></p>
+<p><a href="http://dreamfire.blog.51cto.com/418026/1084729" target="_blank" rel="external">Linux LVM逻辑卷配置过程详解</a></p>
+<p><a href="https://www.rootusers.com/how-to-increase-the-size-of-a-linux-lvm-by-expanding-the-virtual-machine-disk/" target="_blank" rel="external">How to Increase the size of a Linux LVM by expanding the virtual machine disk</a></p>
+<p><strong><em>END</em></strong></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/03/07/update-your-openstack-image/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -470,7 +632,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/03/something-about-ceph-rbd/">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/03/03/something-about-ceph-rbd/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -627,7 +789,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/02/28/install-ceph-with-domestic-yum-source/">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/02/28/install-ceph-with-domestic-yum-source/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -786,7 +948,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/02/22/how-to-debug-openstack-rest-api/">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/02/22/how-to-debug-openstack-rest-api/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -876,7 +1038,7 @@
       
         
           
-            <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>在学习openstack 的过程中，基本都是这样一个过程，先是通过 dashboard 对openstack 有一个感性的认识，之后通过命令行了解openstack 更多的功能，但openstack 的内部实现还是一个黑盒。这时就需要了解 openstack 提供的最原始的 rest API, rest API 不仅是提供给终端 user使用，它内部组件的通信机制也用的rest API ，当然还有AMQP,关于 rest与AMQP 的比较见<a href="https://zhangchenchen.github.io/2017/01/10/something-about-http&amp;tcp&amp;amqp/" target="_blank" rel="external">这篇文章</a> 。本篇文章主要讲如何使用 postman 调试openstack 的rest api，之前会花一些篇幅讲一点openstack api version 的知识。</p>
+            <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>在学习openstack 的过程中，基本都是这样一个过程，先是通过 dashboard 对openstack 有一个感性的认识，之后通过命令行了解openstack 更多的功能，但openstack 的内部实现还是一个黑盒。这时就需要了解 openstack 提供的最原始的 rest API, rest API 不仅是提供给终端 user使用，它内部组件的通信机制也用的rest API ，当然还有AMQP,关于 rest与AMQP 的比较见<a href="https://zhangchenchen.github.io/2017/01/10/something-about-http&amp;tcp&amp;amqp/">这篇文章</a> 。本篇文章主要讲如何使用 postman 调试openstack 的rest api，之前会花一些篇幅讲一点openstack api version 的知识。</p>
 <h2 id="openstack-api-版本演变"><a href="#openstack-api-版本演变" class="headerlink" title="openstack api 版本演变"></a>openstack api 版本演变</h2><p>openstack 自开源以来发展还是挺迅猛的，对应各组件的api version演变也很快，特别是 nova, cinder, keystone等组件的api。在最新的官方文档中，也就是 N 版本的openstack,目前使用的API(只列出一些常用的) 为 ：</p>
 <ul>
 <li>Bare Metal API v1 (microversions)</li>
@@ -976,7 +1138,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/02/17/openstack-instance-metadata-discovery/">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/02/17/openstack-instance-metadata-discovery/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -1144,7 +1306,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/02/12/neutron-layer2-3-realization-discovry/">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/02/12/neutron-layer2-3-realization-discovry/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -1347,7 +1509,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/02/10/openstack-common-net-command/">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/02/10/openstack-common-net-command/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -1523,7 +1685,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/02/03/form-jekyll-to-hexo-blog/">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/02/03/form-jekyll-to-hexo-blog/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -1676,7 +1838,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/01/23/openstack-incremental-backup/">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/01/23/openstack-incremental-backup/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -1792,12 +1954,12 @@
 <h2 id="cinder相关的快照-备份机制"><a href="#cinder相关的快照-备份机制" class="headerlink" title="cinder相关的快照/备份机制"></a>cinder相关的快照/备份机制</h2><h3 id="cinder-快照"><a href="#cinder-快照" class="headerlink" title="cinder 快照"></a>cinder 快照</h3><ul>
 <li>命令为 cinder snapshot-create 同nova volume-snapshot-create一样效果。除了create,还有其他list,delete,metadata等命令。</li>
 <li>可以用snapshot 对volume进行恢复，见示例<a href="http://qiita.com/idzzy/items/cfb568e83e2645e3f32e" target="_blank" rel="external">Openstack - Cinder Snapshot/Restore</a>  </li>
-<li>如果cinder使用rbd作为后端存储，那么这时候的snapshot 便是利用rbd snapshot来实现的，关于ceph rbd snapshot的实现原理，参考<a href="https://zhangchenchen.github.io/2017/06/05/ceph-rbd-snapshot/" target="_blank" rel="external">ceph– ceph rbd快照的实现原理</a></li>
+<li>如果cinder使用rbd作为后端存储，那么这时候的snapshot 便是利用rbd snapshot来实现的，关于ceph rbd snapshot的实现原理，参考<a href="https://zhangchenchen.github.io/2017/06/05/ceph-rbd-snapshot/">ceph– ceph rbd快照的实现原理</a></li>
 </ul>
 <h3 id="cinder-备份"><a href="#cinder-备份" class="headerlink" title="cinder 备份"></a>cinder 备份</h3><ul>
 <li>命令 cinder backup-create </li>
 <li>cinder支持多种backend,对全量备份，增量备份的支持也不尽相同，这里只讨论以ceph rbd 作为backend的情况，其他的backend可以参考这里，<a href="http://blog.csdn.net/wytdahu/article/details/45246095" target="_blank" rel="external">Openstack 中cinder backup三种backend的对比</a>- 使用 rbd作为后端，支持全量备份和增量备份。backup-create时先尝试创建增量备份，如果不成功，会创建全量备份，不需要指明专门的参数。</li>
-<li>参考这篇, <a href="https://zhangchenchen.github.io/2017/05/09/openstack-cinder-incremental-backup-with-ceph/" target="_blank" rel="external">cinder-backup 利用ceph实现增量备份</a>。        </li>
+<li>参考这篇, <a href="https://zhangchenchen.github.io/2017/05/09/openstack-cinder-incremental-backup-with-ceph/">cinder-backup 利用ceph实现增量备份</a>。        </li>
 </ul>
 <h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://wsfdl.com/openstack/2014/08/12/Nova%E5%BF%AB%E7%85%A7%E5%88%86%E6%9E%90.html" target="_blank" rel="external">Nova 快照分析</a></p>
 <p><a href="https://raymii.org/s/tutorials/OpenStack_Quick_and_automatic_instance_snapshot_backups.html" target="_blank" rel="external">OpenStack: Quick and automatic instance snapshot backup and restore (and before an apt upgrade) with nova backup</a></p>
@@ -1807,186 +1969,6 @@
 <p><a href="https://www.zybuluo.com/zwei/note/352999" target="_blank" rel="external">openstack liberty版本使用 ceph 作为存储后端</a></p>
 <p><a href="http://blog.csdn.net/wytdahu/article/details/45246095" target="_blank" rel="external">Openstack 中cinder backup三种backend的对比</a></p>
 <p><a href="http://gorka.eguileor.com/inside-cinders-incremental-backup/" target="_blank" rel="external">Inside Cinder’s Incremental Backup</a></p>
-<p><strong><em>END</em></strong></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/01/19/openstack-reset-instance-password/">
-
-  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
-    <meta itemprop="name" content="pekingzcc">
-    <meta itemprop="description" content="">
-    <meta itemprop="image" content="/images/avatar.jpg">
-  </span>
-
-  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-    <meta itemprop="name" content="Solar">
-    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
-      <img style="display:none;" itemprop="url image" alt="Solar" src="">
-    </span>
-  </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/01/19/openstack-reset-instance-password/" itemprop="url">
-                  openstack系列--重设虚拟机实例密码几种方法
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-19T14:57:25+08:00">
-                2017-01-19
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/01/19/openstack-reset-instance-password/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/01/19/openstack-reset-instance-password/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="目录结构："><a href="#目录结构：" class="headerlink" title="目录结构："></a>目录结构：</h2><p><a href="#A">引出</a></p>
-<p><a href="#B">采用 nova get-password 方式</a></p>
-<p><a href="#C">采用 libvirt-set-admin-password </a></p>
-<p><a href="#D">采用 nova rebuild instance 的方式</a></p>
-<p><a href="#E">采用 cloud-init 的方式</a></p>
-<p><a name="A"></a></p>
-<h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><ul>
-<li>要解决的问题很明确：就是如果虚拟机的连接采用用户名密码登录的方式，而密码忘记的话，需要采取什么手段解决。</li>
-<li>其实解决方案是要取决于真实的生产环境，虚拟化方式的不同，初始化虚拟机密码方式的不同，openstack版本的不同，都会造成某个方案的可行不可行。以下几种方案可能或多或少会出现无法实现的情况，楼主尽量把条件讲清楚。</li>
-</ul>
-<p><a name="B"></a></p>
-<h2 id="采用-nova-get-password-方式"><a href="#采用-nova-get-password-方式" class="headerlink" title="采用 nova get-password 方式"></a>采用 nova get-password 方式</h2><ul>
-<li>利用nova 提供的这个接口可以获取instance的password,就不用密码reset了。</li>
-<li>适用条件：虚拟化方式为XEN，不支持libvirt.</li>
-</ul>
-<p><a name="C"></a></p>
-<h2 id="采用-libvirt-set-admin-password"><a href="#采用-libvirt-set-admin-password" class="headerlink" title="采用 libvirt-set-admin-password"></a>采用 libvirt-set-admin-password</h2><ul>
-<li>Openstack L 版本新加入的功能，直接使用 “nova set-password “(或早期版本client的”nova root-password”) 就可以，之前的版本该命令不支持Libvirt,仅支持XEN。</li>
-<li>适用条件：Openstack Libvirt+ 版本，宿主机libvirt版本1.2.16+，虚拟机镜像安装2.3+ 版本的qemu-guest-agent，详见<a href="http://niusmallnan.com/_build/html/_templates/openstack/inject_passwd.html#id2" target="_blank" rel="external">虚拟机系统密码的修改方案¶</a> </li>
-<li>博主试验了linux 几个主要版本（debian,ubuntu，centos）,只要满足以上的限制条件，都能修改成功，不过官网提供的cloud 版本镜像大都没有安装 qemu-guest-agent，或者版本太低，需要自己安装并制作成镜像。windows 的镜像相对比较麻烦点，宿主机装的virtio-win，通过文件挂载的方式给guest安装对应驱动和QGA,其实不用安装也可以，实现最终都是guest 安装virtio-serial驱动,然后安装quemu-guest-agent就可以了，还有一点就是要设置镜像的property ,例如：hw_qemu_guest_agent=yes，os_type=windows。<br>参考<a href="https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Virtualization_Administration_Guide/sect-QEMU_Guest_Agent-Running_the_QEMU_guest_agent_on_a_Windows_guest.html" target="_blank" rel="external">Running the QEMU Guest Agent on a Windows Guest</a>，<a href="https://serverfault.com/questions/587238/can-i-have-virtio-win-package-on-centos" target="_blank" rel="external">Can I have virtio-win package on CentOS</a></li>
-</ul>
-<p><a href="http://bbs.qy.com.cn/forum.php?mod=viewthread&amp;tid=1152" target="_blank" rel="external">CentOS 7.1 QEMU guest agent 安装 与 使用</a> (注：这篇文章有点过时了，因为QGA以及驱动的版本已经升级了好几版，大部分功能都已经实现，比如密码修改等，但是整个流程是一致的)</p>
-<ul>
-<li>关于qemu-guest-agent ，可以参考<a href="http://blog.csdn.net/zzh_gaoxingjiuhao/article/details/52638863" target="_blank" rel="external">nova 通过 qemu-guest-agent 修改用户密码</a></li>
-</ul>
-<p><a name="D"></a></p>
-<h2 id="采用-nova-image-create-nova-rebuild的方式"><a href="#采用-nova-image-create-nova-rebuild的方式" class="headerlink" title="采用 nova image-create / nova rebuild的方式"></a>采用 nova image-create / nova rebuild的方式</h2><ul>
-<li>如果虚拟机是根据user-data来设定初始密码的，那么cloud-init只在第一次创建虚拟机执行一次，以后不会执行（reboot也不会执行）。那么我们也只能再次launch一下，方法如下。</li>
-<li><p>首先对当前虚拟机做一次snapshot.</p>
-<p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-01-22-image-create.png" alt="image-create"></p>
-<p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-01-20-image-snap.png" alt="image-snap"></p>
-</li>
-<li><p>利用该snapshot ，设定好user-data重新boot 一个新的虚拟机</p>
-<p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-01-20-snap-boot.png" alt="snap-boot"></p>
-</li>
-<li><p>注意：此处只是保证系统盘数据是不变的，如果是数据盘的话还要将对应的数据盘detach再attch到新建的虚拟机中。当然，如果虚拟机是直接用的adminPass的话（即injectPassword的方式）也可以直接利用rebuild命令（rebuild只能用于image启动的instance,而不能用于volume 启动的instance）。</p>
-</li>
-<li><p>这种方法其实比较笨拙，不到万不得已一般不会这么做。</p>
-</li>
-</ul>
-<p><a name="E"></a></p>
-<h2 id="采用-cloud-init-的方式"><a href="#采用-cloud-init-的方式" class="headerlink" title="采用 cloud-init 的方式"></a>采用 cloud-init 的方式</h2><ul>
-<li>这种方法算是所有方法里面最轻便的，但坏处是需要自己定制脚本。对于cloud-init，不熟悉的话可以先翻一下<a href="http://cloudinit.readthedocs.io/en/latest/topics/capabilities.html" target="_blank" rel="external">官方手册</a></li>
-<li>原理很简单：借助cloud-init,在虚拟机启动的时候开启一个服务，用来监测metadata中设定的某个值，如果该值发生改变（或者满足其他条件）即做出密码更改的动作并reboot。</li>
-<li>可喜的是，我在github找到了类似的代码<a href="https://github.com/vvaldez/openstack-password-reset" target="_blank" rel="external">openstack-password-reset</a> ,不过这个代码只是考虑了RH7系列，而且密码是随机生成的，如果再推给openstack，可能更复杂了。我又更改一下脚本，支持更多Linux版本，且把重设后的密码定死了。年后会把改过的代码挂到github上。</li>
-<li>这里面的reset Python程序是通过外链获取的，于是干脆在nova里加了一个API，用来获取该程序。</li>
-<li>如果是传递多个文件给cloud-init的话，需要使用MIME的格式，tips:一般是把多个脚本/cloud-config文件 打包成MIME格式文件，然后压缩成gzip格式，传给cloud-init。</li>
-</ul>
-<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://github.com/vvaldez/openstack-password-reset" target="_blank" rel="external">Password Reset</a></p>
-<p><a href="http://niusmallnan.com/_build/html/_templates/openstack/inject_passwd.html#id2" target="_blank" rel="external">虚拟机系统密码的修改方案</a></p>
-<p><a href="http://blog.csdn.net/heaven619/article/details/53420258" target="_blank" rel="external">CloudInit &amp; User-Data</a></p>
 <p><strong><em>END</em></strong></p>
 
           
@@ -2064,7 +2046,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">66</span>
+                <span class="site-state-item-count">67</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2075,7 +2057,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">22</span>
+                <span class="site-state-item-count">24</span>
                 <span class="site-state-item-name">tags</span>
               </a>
             </div>

@@ -91,7 +91,7 @@ nova backup: 同上。
 cinder snapshot：直接利用 rbd snapshot">
 <meta property="og:type" content="article">
 <meta property="og:title" content="ceph-- ceph rbd快照的实现原理">
-<meta property="og:url" content="http://yoursite.com/2017/06/05/ceph-rbd-snapshot/index.html">
+<meta property="og:url" content="https://zhangchenchen.github.io/2017/06/05/ceph-rbd-snapshot/index.html">
 <meta property="og:site_name" content="Solar">
 <meta property="og:description" content="引出关于openstack 中的快照，备份部分之前做过一次总结，openstack 中的快照与备份 ,因为目前基本使用ceph rbd作为共享存储后端，所以本篇文章想讨论以rbd作为存储后端时的备份与快照情况：
 
@@ -138,7 +138,7 @@ cinder snapshot：直接利用 rbd snapshot">
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2017/06/05/ceph-rbd-snapshot/"/>
+  <link rel="canonical" href="https://zhangchenchen.github.io/2017/06/05/ceph-rbd-snapshot/"/>
 
 
 
@@ -289,7 +289,7 @@ cinder snapshot：直接利用 rbd snapshot">
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/06/05/ceph-rbd-snapshot/">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/06/05/ceph-rbd-snapshot/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -374,12 +374,12 @@ cinder snapshot：直接利用 rbd snapshot">
       
 
       
-        <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>关于openstack 中的快照，备份部分之前做过一次总结，<a href="https://zhangchenchen.github.io/2017/01/23/openstack-incremental-backup/" target="_blank" rel="external">openstack 中的快照与备份</a> ,因为目前基本使用ceph rbd作为共享存储后端，所以本篇文章想讨论以rbd作为存储后端时的备份与快照情况：</p>
+        <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>关于openstack 中的快照，备份部分之前做过一次总结，<a href="https://zhangchenchen.github.io/2017/01/23/openstack-incremental-backup/">openstack 中的快照与备份</a> ,因为目前基本使用ceph rbd作为共享存储后端，所以本篇文章想讨论以rbd作为存储后端时的备份与快照情况：</p>
 <ul>
-<li>nova image-create：具体实现参考<a href="https://zhangchenchen.github.io/2017/01/23/openstack-incremental-backup/" target="_blank" rel="external">openstack 中的快照与备份</a> </li>
+<li>nova image-create：具体实现参考<a href="https://zhangchenchen.github.io/2017/01/23/openstack-incremental-backup/">openstack 中的快照与备份</a> </li>
 <li>nova backup: 同上。</li>
 <li>cinder snapshot：直接利用 rbd snapshot 实现</li>
-<li>cinder backup：支持增量备份，也用到了rbd snapshot，参考<a href="https://zhangchenchen.github.io/2017/05/09/openstack-cinder-incremental-backup-with-ceph/" target="_blank" rel="external"> cinder-backup 利用ceph实现增量备份</a></li>
+<li>cinder backup：支持增量备份，也用到了rbd snapshot，参考<a href="https://zhangchenchen.github.io/2017/05/09/openstack-cinder-incremental-backup-with-ceph/"> cinder-backup 利用ceph实现增量备份</a></li>
 </ul>
 <p>由以上情况可知，rbd snapshot 几乎都要用到，所以接下来探讨下rbd snapshot 的实现原理。</p>
 <h2 id="rbd-snapshot-vs-rbd-clone"><a href="#rbd-snapshot-vs-rbd-clone" class="headerlink" title="rbd snapshot vs rbd clone"></a>rbd snapshot vs rbd clone</h2><p>首先知道这两者的区别：</p>
@@ -551,7 +551,7 @@ cinder snapshot：直接利用 rbd snapshot">
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">66</span>
+                <span class="site-state-item-count">67</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -562,7 +562,7 @@ cinder snapshot：直接利用 rbd snapshot">
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">22</span>
+                <span class="site-state-item-count">24</span>
                 <span class="site-state-item-name">tags</span>
               </a>
             </div>
