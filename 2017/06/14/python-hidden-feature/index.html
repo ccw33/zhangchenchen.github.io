@@ -92,7 +92,7 @@
 <meta property="og:site_name" content="Solar">
 <meta property="og:description" content="引出偶然间翻到Stackoverflow上的这个问题，浏览了一下，觉得有点意思，摘录了一些感觉能用到的纪录在此。
 使用‘  * ’ 代表函数的list/dict参数1234567def draw_point(x, y):    print(x,y)point_foo = [3, 4] # or (3,4)point_bar = &amp;#123;&apos;y&apos;: 3, &apos;x&apos;: 2&amp;#125;draw_poin">
-<meta property="og:updated_time" content="2017-06-20T05:49:41.164Z">
+<meta property="og:updated_time" content="2017-06-30T09:00:26.741Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="python-- python 中的一些隐藏特性">
 <meta name="twitter:description" content="引出偶然间翻到Stackoverflow上的这个问题，浏览了一下，觉得有点意思，摘录了一些感觉能用到的纪录在此。
@@ -390,7 +390,8 @@
 <figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">from</span> __future__ <span class="keyword">import</span> with_statement</div><div class="line"></div><div class="line"><span class="keyword">with</span> open(<span class="string">'foo.txt'</span>, <span class="string">'w'</span>) <span class="keyword">as</span> f:</div><div class="line">    f.write(<span class="string">'hello!'</span>)</div></pre></td></tr></table></figure>
 <p>with 语句在这里的作用是在调用with时，会调用这个文件实例的 <strong>enter</strong> 方法，和 <strong>exit</strong> 方法，如果发生异常，异常的详细信息会传给 <strong>exit</strong> 方法处理并抛出，with在这里的主要用途是保证文件句柄最终关闭，其实with 可以看作是异常处理的一种抽象。<br>除了打开文件经常使用with外，线程锁以及数据库事务也经常用到。</p>
 <h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://stackoverflow.com/questions/101268/hidden-features-of-python#113198" target="_blank" rel="external">Hidden features of Python </a></p>
-<p><strong><em>END</em></strong></p>
+<p><strong><em>本篇文章由<a href="https://zhangchenchen.github.io/">pekingzcc</a>采用<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="external">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可,转载请注明。</em></strong></p>
+<p> <strong><em>END</em></strong></p>
 
       
     </div>
@@ -551,6 +552,12 @@
         </div>
 
         
+        
+          <div class="cc-license motion-element" itemprop="license">
+            <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" target="_blank">
+              <img src="/images/cc-by-nc-sa.svg" alt="Creative Commons" />
+            </a>
+          </div>
         
 
         

@@ -120,7 +120,7 @@
 -f 如果后面没有参数的话会列出之前脚本定义的所有函数，如果有参数的话列出以参数命名的函数
 
 -x 设置变量在脚本外也可">
-<meta property="og:updated_time" content="2017-01-22T05:55:06.526Z">
+<meta property="og:updated_time" content="2017-06-30T08:59:34.918Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="shell脚本系列--declare 与 typeset">
 <meta name="twitter:description" content="目录结构：命令用途 
@@ -429,7 +429,8 @@
 <h2 id="使用示例"><a href="#使用示例" class="headerlink" title="使用示例"></a>使用示例</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#!/bin/bash</span></div><div class="line"></div><div class="line"><span class="function"><span class="title">func1</span></span> ()</div><div class="line">&#123;</div><div class="line">  <span class="built_in">echo</span> This is a function.</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="built_in">declare</span> <span class="_">-f</span>        <span class="comment"># Lists the function above.</span></div><div class="line"></div><div class="line"><span class="built_in">echo</span></div><div class="line"></div><div class="line"><span class="built_in">declare</span> -i var1   <span class="comment"># var1 is an integer.</span></div><div class="line">var1=2367</div><div class="line"><span class="built_in">echo</span> <span class="string">"var1 declared as <span class="variable">$var1</span>"</span></div><div class="line">var1=var1+1       <span class="comment"># Integer declaration eliminates the need for 'let'.</span></div><div class="line"><span class="built_in">echo</span> <span class="string">"var1 incremented by 1 is <span class="variable">$var1</span>."</span></div><div class="line"><span class="comment"># Attempt to change variable declared as integer.</span></div><div class="line"><span class="built_in">echo</span> <span class="string">"Attempting to change var1 to floating point value, 2367.1."</span></div><div class="line">var1=2367.1       <span class="comment"># Results in error message, with no change to variable.</span></div><div class="line"><span class="built_in">echo</span> <span class="string">"var1 is still <span class="variable">$var1</span>"</span></div><div class="line"></div><div class="line"><span class="built_in">echo</span></div><div class="line"></div><div class="line"><span class="built_in">declare</span> -r var2=13.36         <span class="comment"># 'declare' permits setting a variable property</span></div><div class="line">                              <span class="comment">#+ and simultaneously assigning it a value.</span></div><div class="line"><span class="built_in">echo</span> <span class="string">"var2 declared as <span class="variable">$var2</span>"</span> <span class="comment"># Attempt to change readonly variable.</span></div><div class="line">var2=13.37                    <span class="comment"># Generates error message, and exit from script.</span></div><div class="line"></div><div class="line"><span class="built_in">echo</span> <span class="string">"var2 is still <span class="variable">$var2</span>"</span>    <span class="comment"># This line will not execute.</span></div><div class="line"></div><div class="line"><span class="built_in">exit</span> 0                        <span class="comment"># Script will not exit here.</span></div></pre></td></tr></table></figure>
 <h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://tldp.org/LDP/abs/html/declareref.html" target="_blank" rel="external">Advanced Bash-Scripting Guide</a></p>
 <p><a href="http://www.cnblogs.com/fhefh/archive/2011/04/22/2024857.html" target="_blank" rel="external">linux bash shell之declare </a></p>
-<p><strong><em>END</em></strong></p>
+<p><strong><em>本篇文章由<a href="https://zhangchenchen.github.io/">pekingzcc</a>采用<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="external">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可,转载请注明。</em></strong></p>
+<p> <strong><em>END</em></strong></p>
 
       
     </div>
@@ -588,6 +589,12 @@
         </div>
 
         
+        
+          <div class="cc-license motion-element" itemprop="license">
+            <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" target="_blank">
+              <img src="/images/cc-by-nc-sa.svg" alt="Creative Commons" />
+            </a>
+          </div>
         
 
         

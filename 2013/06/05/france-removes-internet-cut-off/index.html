@@ -92,7 +92,7 @@
 <meta property="og:site_name" content="Solar">
 <meta property="og:description" content="导入SQL文件时出现“Invalid default value for UPDATE_TIME”,UPDATE_TIME 是timeStamp类型。设置的默认值为“00-00-00 0000 0000” 。
 经过不断试验发现是因为sql_mode 的设置原因，按照网上说的更改my_default.ini 并重启mysql后发现还是不行。SELECT @@global.sql_mode;SELEC">
-<meta property="og:updated_time" content="2017-01-22T05:55:06.487Z">
+<meta property="og:updated_time" content="2017-06-30T08:59:48.211Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="mysql 系列--Invalid default value for UPDATE_TIME">
 <meta name="twitter:description" content="导入SQL文件时出现“Invalid default value for UPDATE_TIME”,UPDATE_TIME 是timeStamp类型。设置的默认值为“00-00-00 0000 0000” 。
@@ -373,7 +373,8 @@
 <p>SET GLOBAL sql_mode=’’;<br>  SET SESSION sql_mode=’’;</p>
 </blockquote>
 <p> 将sql_mode 设置为空，问题解决。<br> 关于sql_mode ，<a href="http://dev.mysql.com/doc/refman/5.5/en/sql-mode.html#sql-mode-important" target="_blank" rel="external">见此</a></p>
-<p>  <strong><em>END</em></strong></p>
+<p>  <strong><em>本篇文章由<a href="https://zhangchenchen.github.io/">pekingzcc</a>采用<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="external">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可,转载请注明。</em></strong></p>
+<p> <strong><em>END</em></strong></p>
 
       
     </div>
@@ -519,6 +520,12 @@
         </div>
 
         
+        
+          <div class="cc-license motion-element" itemprop="license">
+            <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" target="_blank">
+              <img src="/images/cc-by-nc-sa.svg" alt="Creative Commons" />
+            </a>
+          </div>
         
 
         
