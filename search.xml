@@ -3,6 +3,13 @@
   
     
     <entry>
+      <title><![CDATA[Openstack-- nova-network 网络实现一窥]]></title>
+      <url>%2F2017%2F06%2F30%2Ftangle-with-nova-network%2F</url>
+      <content type="text"><![CDATA[引出nova-network 是Neutron（或Quantum）之前，openstack 的网络管理项目，随着Neutron项目的愈发成熟，nova-network 也随之逐渐被弃用。不过，其实 nova-network 还是非常好用的，相对neutron 来说，简单轻便，也经受过生产环境的验证。而且，可以通过简单配置将虚拟机二层网络与真实物理网络打通，实现利用fixed-ip就可以直接访问虚拟机的单网络环境。本文主要总结下 nova-network 的网络管理以及实现原理，并与neutron 做一下比较。 nova-network 网络类型nova-network 支持两种网络类型（确切地说是三种，这里将Flat与FlatDHCP看做一类），分别是Flat/FlatDHCP 和 Vlan类型。 FlatManager and FlatDHCPManagerVlanManagernova-network 网络实现原理本次试验借助 VirtualBox 实现： Flat/FlatDHCP网络实现原理 下载 centos7-minimal 镜像，并使用该镜像开启一个虚拟机guest#1 注意网络配置 两个网卡，一个是bridge模式，便于利用xshell等工具连接，一个是设为内部网络。 安装完毕后，设置第二个网卡的静态IP，不要与第一个网卡的网络重复，之后会用第二个网卡所在的局域网进行网络安装。 Vlan实现原理参照 官网Red Hat Entperise Linux 注：安装需要用到 epel源，因为是Centos，只需 yum install epel-release 即可。 nova-network vs neutron参考文章OpenStack Networking – FlatManager and FlatDHCPManager Openstack Networking for Scalability and Multi-tenancy with VlanManager Network service - easy version - nova-network openstack 网络架构 nova-network + neutron UnderstandingFlatNetworking END]]></content>
+    </entry>
+
+    
+    <entry>
       <title><![CDATA[Devops-- 借助virtualbox 初次实践 cobbler]]></title>
       <url>%2F2017%2F06%2F26%2Fcobbler-test-with-virtualbox%2F</url>
       <content type="text"><![CDATA[Cobbler 简介Cobbler 是由Python 语言开发，实现在网络安装环境中快速的安装linux 系统。在没有出现Cobbler之前，我们通常是通过使用Kickstart 来进行自动化安装操作系统，但是kickstart 并未实现完全的自动化，我们依然需要安装配置各种服务（DHCP,TFTP,HTTP等），编写kickstart 脚本（即ks.cfg文件）等等。Cobbler可以看做是在kickstart项目上的一层封装，融合了DHCP,TFTP，PXE等一系列服务，提供了CLI和web两种管理形式，使得网络安装操作系统更加方便，同时也提供了API接口方便二次开发。 Cobbler 原理概述Cobbler 是典型的CS架构，我们只需要在服务端做好相应的安装配置，客户端设置PXE网络启动即可。整体的运作流程如下，图片来自Cobbler自动化安装配置实践: Cobbler 实践本次试验借助 VirtualBox 实现： 准备工作 下载 centos7-minimal 镜像，并使用该镜像开启一个虚拟机guest#1 注意网络配置 两个网卡，一个是bridge模式，便于利用xshell等工具连接，一个是设为内部网络。 安装完毕后，设置第二个网卡的静态IP，不要与第一个网卡的网络重复，之后会用第二个网卡所在的局域网进行网络安装。 Cobbler 安装参照 官网Red Hat Entperise Linux 注：安装需要用到 epel源，因为是Centos，只需 yum install epel-release 即可。 Cobbler 配置参考官网Cobbler Quickstart Guide 注： 利用cobbler check 查看配置错误，有些地方并非必须修改。 server 与 next-server设置为第二块网卡的ip Cobbler 使用 利用lrzsz命令上传 centos7-minimal 镜像至虚拟机guest#1. 本地挂载镜像 1mount -o loop ./CentOS-7-x86_64-Minimal-1611.iso /mnt 导入镜像 1cobbler import --name=centos7 --arch=x86_64 --path=/mnt 执行 cobbler sync命令 virtualbox 开启另一个虚拟机，一个网卡，设置为内部网络，adaptor type 为PC-Net III （为了PXE boot）。设置启动方式为网络启动优先。 遇到的问题 TFTP Timed out : guest#1的TFTP Server 没有启动造成。 failed to start switch root：dracut cant locate /dev/root 参考文章Cobbler doc cobbler wiki) Cobbler自动化安装配置实践 自动化运维工具Cobbler Testing out cobbler with virtuabox END]]></content>
