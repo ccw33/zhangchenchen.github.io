@@ -100,7 +100,7 @@
 <meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-07-24-shebei.png">
 <meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-07-24-kvm-topology.jpg">
 <meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-07-24-error-log.png">
-<meta property="og:updated_time" content="2017-07-24T03:24:10.300Z">
+<meta property="og:updated_time" content="2017-07-27T03:08:18.987Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Openstack-- 最近遇到的几个Openstack问题小结">
 <meta name="twitter:description" content="win7虚拟机CPU核数不变问题问题描述：虚拟机镜像为win7系统，配置为4cpu的时候，发现设备管理器显示为4cpu，但是任务管理器智能识别2cpu，如下图。
@@ -387,7 +387,9 @@
 <p>无法ssh到目标节点，查阅相关资料后，得出resize命令需要设置nova用户在节点之间的passwordless authentication，解决如下：</p>
 <ul>
 <li>sudo -u nova ssh-keygen   # 生成nova的密钥</li>
-<li>ssh-copy-id nova@<serverip> #复制公钥到目的节点</serverip></li>
+<li><p>ssh-copy-id nova@<serverip> #复制公钥到目的节点</serverip></p>
+<p>tips:复制公钥的过程中如果报错“This account is currently not available”，可能是因为用户nova的shell禁止登录了，修改/etc/passwd 中nova对应的shell登录部分由“/sbin /nologin”改成“/bin/bash”。</p>
+</li>
 </ul>
 <h2 id="ceph-节点资源耗尽"><a href="#ceph-节点资源耗尽" class="headerlink" title="ceph 节点资源耗尽"></a>ceph 节点资源耗尽</h2><p>问题描述：公司有个生产环境的云平台，因为前期的滥用，导致存储资源耗费非常严重，已经出现2个计算节点near full，这会导致出现一系列问题，比如虚拟机卡顿，无法访问等问题。<br>解决方案：</p>
 <ul>

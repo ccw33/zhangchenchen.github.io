@@ -371,7 +371,9 @@
 <p>无法ssh到目标节点，查阅相关资料后，得出resize命令需要设置nova用户在节点之间的passwordless authentication，解决如下：</p>
 <ul>
 <li>sudo -u nova ssh-keygen   # 生成nova的密钥</li>
-<li>ssh-copy-id nova@<serverip> #复制公钥到目的节点</serverip></li>
+<li><p>ssh-copy-id nova@<serverip> #复制公钥到目的节点</serverip></p>
+<p>tips:复制公钥的过程中如果报错“This account is currently not available”，可能是因为用户nova的shell禁止登录了，修改/etc/passwd 中nova对应的shell登录部分由“/sbin /nologin”改成“/bin/bash”。</p>
+</li>
 </ul>
 <h2 id="ceph-节点资源耗尽"><a href="#ceph-节点资源耗尽" class="headerlink" title="ceph 节点资源耗尽"></a>ceph 节点资源耗尽</h2><p>问题描述：公司有个生产环境的云平台，因为前期的滥用，导致存储资源耗费非常严重，已经出现2个计算节点near full，这会导致出现一系列问题，比如虚拟机卡顿，无法访问等问题。<br>解决方案：</p>
 <ul>
@@ -704,15 +706,18 @@
 </li>
 <li>virtualbox 开启另一个虚拟机，一个网卡，设置为内部网络，adaptor type 为PC-Net III （为了PXE boot）。设置启动方式为网络启动优先。</li>
 </ul>
+<h2 id="Cobbler-常用命令行"><a href="#Cobbler-常用命令行" class="headerlink" title="Cobbler 常用命令行"></a>Cobbler 常用命令行</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">$ cobbler list        <span class="comment">#列出相关cobber元素(distros和profile)</span></div><div class="line">$ cobbler check       <span class="comment">#检查cobbler配置(一般会提示需要进行怎样的配置)</span></div><div class="line">$ cobbler report      <span class="comment">#列出cobbler的详细信息</span></div><div class="line">$ cobbler distro      <span class="comment">#查看导入的相关系统发行版信息</span></div><div class="line">$ cobbler profile     <span class="comment">#查看cobbler创建的相关pofile信息</span></div><div class="line">$ cobbler sync        <span class="comment">#同步cobbler相关配置(最好每次执行完配置后都进行修改)</span></div><div class="line">$ cobbler reposync    <span class="comment">#同步repo源</span></div></pre></td></tr></table></figure>
 <h3 id="遇到的问题"><a href="#遇到的问题" class="headerlink" title="遇到的问题"></a>遇到的问题</h3><ul>
 <li>TFTP Timed out : guest#1的TFTP Server 没有启动造成。</li>
 <li>failed to start switch root：<a href="https://www.centos.org/forums/viewtopic.php?t=57419" target="_blank" rel="external">dracut cant locate /dev/root</a></li>
+<li>如果是某台机器需要重装系统的话，需要在该机器上安装koan，利用koan命令：koan –replace-self –server=10.45.249.102 –profile=rhel6.6-64-x86_64 进项镜像的拉取以及重装</li>
 </ul>
 <h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://cobbler.github.io/" target="_blank" rel="external">Cobbler doc</a></p>
 <p><a href="https://zh.wikipedia.org/wiki/Cobbler_(%E8%BD%AF%E4%BB%B6" target="_blank" rel="external">cobbler wiki</a>)</p>
 <p><a href="https://wsgzao.github.io/post/cobbler/" target="_blank" rel="external">Cobbler自动化安装配置实践</a></p>
 <p><a href="http://cuchadanfan.blog.51cto.com/9940284/1698348" target="_blank" rel="external">自动化运维工具Cobbler</a></p>
 <p><a href="http://www.webscalability.com/blog/2013/03/testing-out-cobbler-with-virtuabox/" target="_blank" rel="external">Testing out cobbler with virtuabox</a></p>
+<p><a href="http://www.bijishequ.com/detail/50880?p=" target="_blank" rel="external">主机自动化部署之cobbler总结</a></p>
 <p> <strong><em>本篇文章由<a href="https://zhangchenchen.github.io/">pekingzcc</a>采用<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="external">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可,转载请注明。</em></strong></p>
 <p> <strong><em>END</em></strong></p>
 
