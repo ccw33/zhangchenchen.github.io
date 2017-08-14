@@ -93,7 +93,7 @@
 <meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-08-03.harbor-arc.jpg">
 <meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-08-03-harbor-flow1.jpg">
 <meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-08-03-harbor-flow-2.jpg">
-<meta property="og:updated_time" content="2017-08-03T07:35:03.383Z">
+<meta property="og:updated_time" content="2017-08-13T06:55:57.112Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Docker-- 关于Harbor 的一些记录">
 <meta name="twitter:description" content="Harbor 简介Harbor 是 Vmware China研发开源的企业级私有容器Registry,基于docker官方的解决方案Distribution。目前来说，已经成为企业级私有容器仓库的首选（主要是可供选择的本来就不多，可能是因为镜像管理不像容器编排那样是必争之地）。相对于Docker Distribution，Harbor添加了安全，认证，管理等功能，性能以及安全性都得到提升，主要 f">
@@ -395,7 +395,14 @@
 <p>客户端 登陆成功后，输入docker push xxxxxx 之后，流程如下图（便于说明省略Docker client与Proxy之间通信）：</p>
 <p><img src="http://oeptotikb.bkt.clouddn.com/2017-08-03-harbor-flow-2.jpg" alt="docker-push-flow"></p>
 <p>(a) 同样，首先与Registery通信，返回一个token服务的地址URL.<br>(b) Docker客户端会与token服务通信，指明要申请一个push image操作的token。<br>(c) token服务访问数据库验证当前用户是否有该操作的权限，如果有，会将image信息以及push操作进行编码，用私钥签名，生成token返回给Docker客户端。<br>(d) Docker客户端再次与Registry通信，不过这次会将token放到请求header中，Registry收到请求后利用公钥解码并核对，核对成功，便可以开始push 操作了。</p>
-<h2 id="Harbor-安装"><a href="#Harbor-安装" class="headerlink" title="Harbor 安装"></a>Harbor 安装</h2><p>参考<a href="https://github.com/vmware/harbor/blob/master/docs/installation_guide.md" target="_blank" rel="external">Installation and Configuration Guide</a></p>
+<h2 id="Harbor-安装"><a href="#Harbor-安装" class="headerlink" title="Harbor 安装"></a>Harbor 安装</h2><p>比较简单：</p>
+<ol>
+<li>准备：python&gt;=2.7, docker&gt;=1.10, docker-compose&gt;=1.6.0</li>
+<li>下载离线安装包</li>
+<li>修改配置文件 harbor.cfg</li>
+<li>执行脚本install.sh </li>
+</ol>
+<p>参考<a href="https://github.com/vmware/harbor/blob/master/docs/installation_guide.md" target="_blank" rel="external">Installation and Configuration Guide</a></p>
 <h2 id="Harbor-高可用"><a href="#Harbor-高可用" class="headerlink" title="Harbor 高可用"></a>Harbor 高可用</h2><p>对于Harbor高可用方案，目前并没有最佳实践，不过我看issues上有不少相关内容，可以参考<a href="https://github.com/vmware/harbor/issues/327" target="_blank" rel="external">Harbor HA feature design proposal/discussion</a>。<br>其实，私有云相对来说对镜像的请求并非高频，在做HA的时候还是结合实际情况，切勿为了HA而HA,还要综合考量成本，安全等因素。</p>
 <p>这部分内容暂且留个坑，以后再写。</p>
 <h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://segmentfault.com/a/1190000007705296" target="_blank" rel="external">VMware Harbor：基于 Docker Distribution 的企业级 Registry 服务</a></p>
@@ -527,7 +534,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">72</span>
+                <span class="site-state-item-count">73</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -538,7 +545,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">29</span>
+                <span class="site-state-item-count">30</span>
                 <span class="site-state-item-name">tags</span>
               </a>
             </div>
