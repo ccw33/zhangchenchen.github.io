@@ -88,10 +88,11 @@
 利用 kubeadm 搭建一个四节点的k8s测试集群
 利用harbor搭建一个单节点的私有镜像仓库
 k8s集群与私有镜像仓库整合
+部署dashboard
 
 前期准备准备以下5个节点，一个为k8s的master节点，3个为node节点，最后一个作为私有仓库镜像，系统为centos7.2：
 
-注：k8s的安装方式有很多，kubeadm安装方式是独立节点安装的官方推荐方式，简单可重复，但不适用于生产环境，因为没有做HA，">
+注：k8s的安装方式有很多，kubeadm安装方式是独立节点安装的官方推荐方式，简单可重复，但不适用于生">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Kubernete-- 利用kubeadm 搭建一个kubernate集群">
 <meta property="og:url" content="https://zhangchenchen.github.io/2017/08/14/install-kubernete-by-kubreadm/index.html">
@@ -100,23 +101,26 @@ k8s集群与私有镜像仓库整合
 利用 kubeadm 搭建一个四节点的k8s测试集群
 利用harbor搭建一个单节点的私有镜像仓库
 k8s集群与私有镜像仓库整合
+部署dashboard
 
 前期准备准备以下5个节点，一个为k8s的master节点，3个为node节点，最后一个作为私有仓库镜像，系统为centos7.2：
 
-注：k8s的安装方式有很多，kubeadm安装方式是独立节点安装的官方推荐方式，简单可重复，但不适用于生产环境，因为没有做HA，">
+注：k8s的安装方式有很多，kubeadm安装方式是独立节点安装的官方推荐方式，简单可重复，但不适用于生">
 <meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-08-14-node.png">
 <meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-08-14-k8s-image.png">
-<meta property="og:updated_time" content="2017-08-14T12:52:47.400Z">
+<meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-08-16-dashboard.png">
+<meta property="og:updated_time" content="2017-08-16T03:05:44.173Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Kubernete-- 利用kubeadm 搭建一个kubernate集群">
 <meta name="twitter:description" content="目标
 利用 kubeadm 搭建一个四节点的k8s测试集群
 利用harbor搭建一个单节点的私有镜像仓库
 k8s集群与私有镜像仓库整合
+部署dashboard
 
 前期准备准备以下5个节点，一个为k8s的master节点，3个为node节点，最后一个作为私有仓库镜像，系统为centos7.2：
 
-注：k8s的安装方式有很多，kubeadm安装方式是独立节点安装的官方推荐方式，简单可重复，但不适用于生产环境，因为没有做HA，">
+注：k8s的安装方式有很多，kubeadm安装方式是独立节点安装的官方推荐方式，简单可重复，但不适用于生">
 <meta name="twitter:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-08-14-node.png">
 
 
@@ -390,6 +394,7 @@ k8s集群与私有镜像仓库整合
 <li>利用 kubeadm 搭建一个四节点的k8s测试集群</li>
 <li>利用harbor搭建一个单节点的私有镜像仓库</li>
 <li>k8s集群与私有镜像仓库整合</li>
+<li>部署dashboard</li>
 </ul>
 <h2 id="前期准备"><a href="#前期准备" class="headerlink" title="前期准备"></a>前期准备</h2><p>准备以下5个节点，一个为k8s的master节点，3个为node节点，最后一个作为私有仓库镜像，系统为centos7.2：</p>
 <p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-08-14-node.png" alt="five-nodes"></p>
@@ -414,7 +419,7 @@ k8s集群与私有镜像仓库整合
 <p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-08-14-k8s-image.png" alt="k8s-image"></p>
 <p>我们直接用的最新版1.7.3，如果服务器可以翻墙，直接拉取镜像：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">images=(kube-proxy-amd64:v1.7.3 kube-scheduler-amd64:v1.7.3 kube-controller-manager-amd64:v1.7.3 kube-apiserver-amd64:v1.7.3 etcd-amd64:3.0.17 k8s-dns-sidecar-amd64:1.14.4 pause-amd64:3.0 k8s-dns-kube-dns-amd64:1.14.4 k8s-dns-dnsmasq-nanny-amd64:1.14.4)</div><div class="line"><span class="keyword">for</span> imageName <span class="keyword">in</span> <span class="variable">$&#123;images[@]&#125;</span> ; <span class="keyword">do</span></div><div class="line">  docker pull gcr.io/google_containers/<span class="variable">$imageName</span></div><div class="line"><span class="keyword">done</span></div></pre></td></tr></table></figure>
-<p>如果不能翻墙，可以先翻墙下载下来，然后上传到dockerhub上，再下载下来。</p>
+<p>如果不能翻墙，可以先翻墙下载下来，然后push到dockerhub上，再pull下来,注意pull下来之后，还是要更改tag为gcr.io/google_containers/$imageName形式。</p>
 <h3 id="master-节点安装"><a href="#master-节点安装" class="headerlink" title="master 节点安装"></a>master 节点安装</h3><p>在master节点执行：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">kubeadm init</div></pre></td></tr></table></figure>
 <p>执行完成后，会输出一个token，node节点安装时会用到。</p>
@@ -441,16 +446,34 @@ k8s集群与私有镜像仓库整合
 <ul>
 <li>利用kubectl创建docker-registry的secret</li>
 </ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">kubectl create secret docker-registry myregistrykey --docker-server=DOCKER_REGISTRY_SERVER --docker-username=DOCKER_USER --docker-password=DOCKER_PASSWORD --docker-email=DOCKER_EMAIL</div></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">kubectl create secret docker-registry myregistrykey --docker-server=DOCKER_REGISTRY_SERVER --docker-username=DOCKER_USER --docker-password=DOCKER_PASSWORD --docker-email=DOCKER_EMAIL</div><div class="line"></div><div class="line">kubectl get secret --all-namespaces   <span class="comment">#查看创建的secret</span></div></pre></td></tr></table></figure>
+<p>在写dockerfile的时候指定imagePullSecrets即可，示例如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># cat ./deployment-with-secret.yaml</span></div><div class="line">apiVersion: extensions/v1beta1</div><div class="line">kind: Deployment</div><div class="line">metadata:</div><div class="line">  name: nginx-deployment-from-harbor</div><div class="line">  namespace: kube-public</div><div class="line">spec:</div><div class="line">  replicas: 3</div><div class="line">  template:</div><div class="line">    metadata:</div><div class="line">      labels:</div><div class="line">        app: nginx-for-test</div><div class="line">    spec:</div><div class="line">      containers:</div><div class="line">      - name: nginx-for-test</div><div class="line">        image: 172.16.21.253:10080/aisino-lib/docker.io/nginx:latest</div><div class="line">        ports:</div><div class="line">        - containerPort: 80</div><div class="line">      imagePullSecrets:</div><div class="line">      - name: harbor-k8s-secret</div></pre></td></tr></table></figure>
 <ul>
 <li>通过secret yaml文件创建pull image所用的secret,其实跟上述方法类似，不过是用yaml文件创建的secret.</li>
 </ul>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># cat myregistrykey.yaml</span></div><div class="line">apiVersion: v1</div><div class="line">kind: Secret</div><div class="line">metadata:</div><div class="line">  name: myregistrykey</div><div class="line">  namespace: awesomeapps</div><div class="line">data:</div><div class="line">  .dockerconfigjson: &#123;base64 -w 0 ~/.docker/config.json&#125;</div><div class="line"><span class="built_in">type</span>: kubernetes.io/dockerconfigjson</div></pre></td></tr></table></figure>
 <p>其中，dockerconfigjson后面的数据就是docker login后生成的config.json文件的base64编码输出（-w 0让base64输出在单行上，避免折行）</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">kubectl create <span class="_">-f</span> myregistrykey.yaml</div></pre></td></tr></table></figure>
+<p>secret使用方式与第二种方式一样，不过kubectl和yaml创建的两个secret的类型略有不同，前者是kubernetes.io/dockercfg，后者是kubernetes.io/dockerconfigjson。</p>
+<h2 id="部署dashboard"><a href="#部署dashboard" class="headerlink" title="部署dashboard"></a>部署dashboard</h2><p>由<a href="https://github.com/kubernetes/dashboard" target="_blank" rel="external">README</a> 文件可知，有两种部署方式，如果是没有安装RBAC权限控制的，可以执行</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">kubectl create <span class="_">-f</span> https://git.io/kube-dashboard</div></pre></td></tr></table></figure>
+<p>如果有RBAC的，可以执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">kubectl create <span class="_">-f</span> https://git.io/kube-dashboard-no-rbac</div></pre></td></tr></table></figure>
+<p>kubeadm安装方式自从1.6+版之后自动安装RBAC，所以需要选择第二种。如果权限问题依旧（注：一般是报错serviceaccount:kube-system:default” cannot list statefulsets.apps in the namespace “default”.）可以根据该<a href="https://github.com/kubernetes/dashboard/issues/1803" target="_blank" rel="external">issue</a>,添加一个权限。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># cat dashboard-rbac.yml</span></div><div class="line">kind: ClusterRoleBinding</div><div class="line">apiVersion: rbac.authorization.k8s.io/v1beta1</div><div class="line">metadata:</div><div class="line">  name: dashboard-admin</div><div class="line">roleRef:</div><div class="line">  apiGroup: rbac.authorization.k8s.io</div><div class="line">  kind: ClusterRole</div><div class="line">  name: cluster-admin </div><div class="line">subjects:</div><div class="line">- kind: ServiceAccount</div><div class="line">  name: default</div><div class="line">  namespace: kube-system</div><div class="line"></div><div class="line"><span class="comment"># kubectl create -f dashboard-rbac.yml</span></div></pre></td></tr></table></figure>
+<p>注：如果想外部可以直接访问dashboard，需要修改下dockfile文件，将最后的service配置修改为nodePort,示例如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">.......................</div><div class="line">---</div><div class="line">kind: Service</div><div class="line">apiVersion: v1</div><div class="line">metadata:</div><div class="line">  labels:</div><div class="line">    k8s-app: kubernetes-dashboard</div><div class="line">  name: kubernetes-dashboard</div><div class="line">  namespace: kube-system</div><div class="line">spec:</div><div class="line">  <span class="built_in">type</span>: NodePort</div><div class="line">  ports:</div><div class="line">  - nodePort: 30002</div><div class="line">    port: 80</div><div class="line">    targetPort: 9090</div><div class="line">  selector:</div><div class="line">    k8s-app: kubernetes-dashboard</div></pre></td></tr></table></figure>
+<p>这样便可以直接<a href="http://NODEIP:30002访问。关于port，nodePort" target="_blank" rel="external">http://NODEIP:30002访问。关于port，nodePort</a>, targetPort,可以参考<a href="http://blog.csdn.net/xinghun_4/article/details/50492041" target="_blank" rel="external">kubernetes中port、target port、node port的对比分析，以及kube-proxy代理</a></p>
+<h2 id="部署Heapster-监控与统计"><a href="#部署Heapster-监控与统计" class="headerlink" title="部署Heapster 监控与统计"></a>部署Heapster 监控与统计</h2><p>Heapster是一个容器集群监控和性能分析工具，天然支持Kubernetes和CoreOS。<br>这里使用influxDB作为Heapster的后端存储部署，参考<a href="https://github.com/kubernetes/heapster/blob/master/docs/influxdb.md" target="_blank" rel="external">安装文档</a>.<br>首先下载对应版本的相关dockerfile文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">wget https://github.com/kubernetes/heapster/archive/v1.3.0.tar.gz</div></pre></td></tr></table></figure>
+<p>解压并直接部署即可：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">tar -zxvf v1.3.0.tar.gz</div><div class="line"><span class="built_in">cd</span> heapster-1.3.0/deploy/kube-config/influxdb</div><div class="line"></div><div class="line">kubectl create <span class="_">-f</span> ./*</div></pre></td></tr></table></figure>
+<p>该过程会pull相关镜像，同样，可以先翻墙pull下来再push到私有镜像仓库再使用。<br>最终完成后，所有pods都running,可以看到dashboard的界面多了仪表盘。</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-08-16-dashboard.png" alt="dashboard"></p>
 <h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://kubernetes.io/docs/setup/independent/install-kubeadm/" target="_blank" rel="external">k8s-doc-Installing kubeadm</a></p>
 <p><a href="http://yoyolive.com/2017/02/27/Kubernetes-1-5-3-Local-Install/" target="_blank" rel="external">CentOS 7 安装Kubernetes 1.5.3 集群(本地安装)</a></p>
-<p>[Kubernetes从Private Registry中拉取容器镜像的方法]<a href="http://tonybai.com/2016/11/16/how-to-pull-images-from-private-registry-on-kubernetes-cluster/?utm_source=rss" target="_blank" rel="external">http://tonybai.com/2016/11/16/how-to-pull-images-from-private-registry-on-kubernetes-cluster/?utm_source=rss</a>)</p>
+<p><a href="http://tonybai.com/2016/11/16/how-to-pull-images-from-private-registry-on-kubernetes-cluster/?utm_source=rss" target="_blank" rel="external">Kubernetes从Private Registry中拉取容器镜像的方法</a></p>
 <p><a href="https://kubernetes.io/docs/concepts/containers/images/#using-a-private-registry" target="_blank" rel="external">k8s-doc-Images</a></p>
 <p><strong><em>本篇文章由<a href="https://zhangchenchen.github.io/">pekingzcc</a>采用<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="external">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可,转载请注明。</em></strong></p>
 <p> <strong><em>END</em></strong></p>
@@ -634,7 +657,7 @@ k8s集群与私有镜像仓库整合
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#目标"><span class="nav-number">1.</span> <span class="nav-text">目标</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#前期准备"><span class="nav-number">2.</span> <span class="nav-text">前期准备</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#kubernete-集群安装"><span class="nav-number">3.</span> <span class="nav-text">kubernete 集群安装</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#k8s所有节点需要执行的操作"><span class="nav-number">3.1.</span> <span class="nav-text">k8s所有节点需要执行的操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#master-节点安装"><span class="nav-number">3.2.</span> <span class="nav-text">master 节点安装</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#node-节点安装"><span class="nav-number">3.3.</span> <span class="nav-text">node 节点安装</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#部署pod网络"><span class="nav-number">3.4.</span> <span class="nav-text">部署pod网络</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#部署sock-shop微服务demo"><span class="nav-number">3.5.</span> <span class="nav-text">部署sock-shop微服务demo</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Harbor-安装"><span class="nav-number">4.</span> <span class="nav-text">Harbor 安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#k8s-添加私有镜像"><span class="nav-number">5.</span> <span class="nav-text">k8s 添加私有镜像</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文章"><span class="nav-number">6.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#目标"><span class="nav-number">1.</span> <span class="nav-text">目标</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#前期准备"><span class="nav-number">2.</span> <span class="nav-text">前期准备</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#kubernete-集群安装"><span class="nav-number">3.</span> <span class="nav-text">kubernete 集群安装</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#k8s所有节点需要执行的操作"><span class="nav-number">3.1.</span> <span class="nav-text">k8s所有节点需要执行的操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#master-节点安装"><span class="nav-number">3.2.</span> <span class="nav-text">master 节点安装</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#node-节点安装"><span class="nav-number">3.3.</span> <span class="nav-text">node 节点安装</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#部署pod网络"><span class="nav-number">3.4.</span> <span class="nav-text">部署pod网络</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#部署sock-shop微服务demo"><span class="nav-number">3.5.</span> <span class="nav-text">部署sock-shop微服务demo</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Harbor-安装"><span class="nav-number">4.</span> <span class="nav-text">Harbor 安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#k8s-添加私有镜像"><span class="nav-number">5.</span> <span class="nav-text">k8s 添加私有镜像</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#部署dashboard"><span class="nav-number">6.</span> <span class="nav-text">部署dashboard</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#部署Heapster-监控与统计"><span class="nav-number">7.</span> <span class="nav-text">部署Heapster 监控与统计</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文章"><span class="nav-number">8.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
             
 
           </div>
