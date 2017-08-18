@@ -92,7 +92,7 @@
 <meta property="og:description" content="概览首先需要了解这三种机制的区别：简单来说，认证(Authenticating)是对客户端的认证，通俗点就是用户名密码验证，授权(Authorization)是对资源的授权，k8s中的资源无非是容器，最终其实就是容器的计算，网络，存储资源，当一个请求经过认证后，需要访问某一个资源（比如创建一个pod），授权检查都会通过访问策略比较该请求上下文的属性，（比如用户，资源和Namespace），根据授权">
 <meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-08-17-k8s-authorition.png">
 <meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-08-17-k8s-openid-token.jpg">
-<meta property="og:updated_time" content="2017-08-18T02:28:16.475Z">
+<meta property="og:updated_time" content="2017-08-18T02:35:14.780Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Kubernetes-- 漫谈kubernetes 中的认证 & 授权 & 准入机制">
 <meta name="twitter:description" content="概览首先需要了解这三种机制的区别：简单来说，认证(Authenticating)是对客户端的认证，通俗点就是用户名密码验证，授权(Authorization)是对资源的授权，k8s中的资源无非是容器，最终其实就是容器的计算，网络，存储资源，当一个请求经过认证后，需要访问某一个资源（比如创建一个pod），授权检查都会通过访问策略比较该请求上下文的属性，（比如用户，资源和Namespace），根据授权">
@@ -456,7 +456,7 @@
 <li>DefaultTolerationSeconds</li>
 <li>PodSecurityPolicy</li>
 </ul>
-<p>当Kubernetes版本&gt;=1.6.0，官方建议使用这些插件：<br>–admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota,DefaultTolerationSeconds<br>当Kubernetes版本&gt;=1.4.0，官方建议使用这些插件：<br>–admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota</p>
+<p>当Kubernetes版本&gt;=1.6.0，官方建议使用这些插件：<br>–admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota,DefaultTolerationSeconds<br>当Kubernetes版本&gt;=1.4.0，官方建议使用这些插件：<br>–admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota<br>以上是标准的准入插件，如果是自己定制的话，k8s1.7版 出了两个alpha features, Initializers 和 External Admission Webhooks，详情可以参考<a href="https://kubernetes.io/docs/admin/extensible-admission-controllers/" target="_blank" rel="external">Dynamic Admission Control</a>.</p>
 <h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://kubernetes.io/docs/admin/authentication/#x509-client-certs" target="_blank" rel="external">Authenticating</a></p>
 <p><a href="https://kubernetes.io/docs/admin/authorization/" target="_blank" rel="external">authorization</a></p>
 <p><a href="http://blog.frognew.com/2017/01/kubernetes-api-server-authc.html" target="_blank" rel="external">Kubernetes集群安全：Api Server认证</a></p>

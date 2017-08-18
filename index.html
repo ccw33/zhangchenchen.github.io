@@ -451,7 +451,7 @@
 <li>DefaultTolerationSeconds</li>
 <li>PodSecurityPolicy</li>
 </ul>
-<p>当Kubernetes版本&gt;=1.6.0，官方建议使用这些插件：<br>–admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota,DefaultTolerationSeconds<br>当Kubernetes版本&gt;=1.4.0，官方建议使用这些插件：<br>–admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota</p>
+<p>当Kubernetes版本&gt;=1.6.0，官方建议使用这些插件：<br>–admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota,DefaultTolerationSeconds<br>当Kubernetes版本&gt;=1.4.0，官方建议使用这些插件：<br>–admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota<br>以上是标准的准入插件，如果是自己定制的话，k8s1.7版 出了两个alpha features, Initializers 和 External Admission Webhooks，详情可以参考<a href="https://kubernetes.io/docs/admin/extensible-admission-controllers/" target="_blank" rel="external">Dynamic Admission Control</a>.</p>
 <h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://kubernetes.io/docs/admin/authentication/#x509-client-certs" target="_blank" rel="external">Authenticating</a></p>
 <p><a href="https://kubernetes.io/docs/admin/authorization/" target="_blank" rel="external">authorization</a></p>
 <p><a href="http://blog.frognew.com/2017/01/kubernetes-api-server-authc.html" target="_blank" rel="external">Kubernetes集群安全：Api Server认证</a></p>
