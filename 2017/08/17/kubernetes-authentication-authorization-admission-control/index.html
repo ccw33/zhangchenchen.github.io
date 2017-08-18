@@ -92,7 +92,7 @@
 <meta property="og:description" content="概览首先需要了解这三种机制的区别：简单来说，认证(Authenticating)是对客户端的认证，通俗点就是用户名密码验证，授权(Authorization)是对资源的授权，k8s中的资源无非是容器，最终其实就是容器的计算，网络，存储资源，当一个请求经过认证后，需要访问某一个资源（比如创建一个pod），授权检查都会通过访问策略比较该请求上下文的属性，（比如用户，资源和Namespace），根据授权">
 <meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-08-17-k8s-authorition.png">
 <meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-08-17-k8s-openid-token.jpg">
-<meta property="og:updated_time" content="2017-08-18T02:05:03.675Z">
+<meta property="og:updated_time" content="2017-08-18T02:28:16.475Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Kubernetes-- 漫谈kubernetes 中的认证 & 授权 & 准入机制">
 <meta name="twitter:description" content="概览首先需要了解这三种机制的区别：简单来说，认证(Authenticating)是对客户端的认证，通俗点就是用户名密码验证，授权(Authorization)是对资源的授权，k8s中的资源无非是容器，最终其实就是容器的计算，网络，存储资源，当一个请求经过认证后，需要访问某一个资源（比如创建一个pod），授权检查都会通过访问策略比较该请求上下文的属性，（比如用户，资源和Namespace），根据授权">
@@ -449,13 +449,14 @@
 <li>ImagePolicyWebhook</li>
 <li>ServiceAccount：这个插件实现了serviceAccounts等等自动化，如果使用ServiceAccount对象，强烈推荐使用这个插件</li>
 <li>SecurityContextDeny：将Pod定义中定义了的SecurityContext选项全部失效。SecurityContext包含在容器中定义了操作系统级别的安全选型如fsGroup，selinux等选项</li>
-<li>ResourceQuota：用于amespace上的配额管理，它会观察进入的请求，确保在namespace上的配额不超标。推荐将这个插件放到准入控制器列表的最后一个。ResourceQuota准入控制器既可以限制某个namespace中创建资源的数量，又可以限制某个namespace中被Pod请求的资源总量。ResourceQuota准入控制器和ResourceQuota资源对象一起可以实现资源配额管理。</li>
+<li>ResourceQuota：用于namespace上的配额管理，它会观察进入的请求，确保在namespace上的配额不超标。推荐将这个插件放到准入控制器列表的最后一个。ResourceQuota准入控制器既可以限制某个namespace中创建资源的数量，又可以限制某个namespace中被Pod请求的资源总量。ResourceQuota准入控制器和ResourceQuota资源对象一起可以实现资源配额管理。</li>
 <li>LimitRanger：用于Pod和容器上的配额管理，它会观察进入的请求，确保Pod和容器上的配额不会超标。准入控制器LimitRanger和资源对象LimitRange一起实现资源限制管理</li>
 <li>NamespaceLifecycle：当一个请求是在一个不存在的namespace下创建资源对象时，该请求会被拒绝。当删除一个namespace时，将会删除该namespace下的所有资源对象</li>
 <li>DefaultStorageClass</li>
 <li>DefaultTolerationSeconds</li>
-<li>PodSecurityPolicy<br>当Kubernetes版本&gt;=1.4.0，官方建议使用这些插件：<br>–admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota</li>
+<li>PodSecurityPolicy</li>
 </ul>
+<p>当Kubernetes版本&gt;=1.6.0，官方建议使用这些插件：<br>–admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota,DefaultTolerationSeconds<br>当Kubernetes版本&gt;=1.4.0，官方建议使用这些插件：<br>–admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota</p>
 <h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://kubernetes.io/docs/admin/authentication/#x509-client-certs" target="_blank" rel="external">Authenticating</a></p>
 <p><a href="https://kubernetes.io/docs/admin/authorization/" target="_blank" rel="external">authorization</a></p>
 <p><a href="http://blog.frognew.com/2017/01/kubernetes-api-server-authc.html" target="_blank" rel="external">Kubernetes集群安全：Api Server认证</a></p>
@@ -593,7 +594,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">32</span>
+                <span class="site-state-item-count">29</span>
                 <span class="site-state-item-name">tags</span>
               </a>
             </div>
