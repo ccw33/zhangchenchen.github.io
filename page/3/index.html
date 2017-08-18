@@ -270,6 +270,166 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/02/28/install-ceph-with-domestic-yum-source/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="pekingzcc">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/avatar.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="Solar">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="Solar" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/02/28/install-ceph-with-domestic-yum-source/" itemprop="url">
+                  ceph-- 使用国内yum源搭建ceph集群
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-02-28T16:13:46+08:00">
+                2017-02-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/02/28/install-ceph-with-domestic-yum-source/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/02/28/install-ceph-with-domestic-yum-source/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>初衷是自己搭建一套ceph的实验集群，按照官方的quick start,按理说应该是分分钟的事，因为GFW的原因，搞得忙活了一上午，再加上心情烦躁,中间出现了各种差错，这里记录一下。</p>
+<h2 id="系统预检并安装ceph-deploy"><a href="#系统预检并安装ceph-deploy" class="headerlink" title="系统预检并安装ceph-deploy"></a>系统预检并安装ceph-deploy</h2><p>准备集群系统，网络设置，SSH无密码登录等设置略过，详细参考<a href="http://docs.ceph.com/docs/master/start/quick-start-preflight/" target="_blank" rel="external">PREFLIGHT CHECKLIST</a></p>
+<p>这里有一个地方需要注意的是：centos7 在修改HOSTNAME 的时候命令如下，无需重启：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ sudo hostnamectl --static <span class="built_in">set</span>-hostname &lt;host-name&gt;</div></pre></td></tr></table></figure>
+<p>预检完成后，ceph-deploy 的安装以及 ceph在各节点的安装如果出现错误的话很大可能上是yum 源的问题，所以重点说下如何配置yum国内源。</p>
+<h3 id="更换国内-YUM-源"><a href="#更换国内-YUM-源" class="headerlink" title="更换国内 YUM 源"></a>更换国内 YUM 源</h3><ul>
+<li>更换base源为国内163源:</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.163.com/.help/CentOS7-Base-163.repo</div></pre></td></tr></table></figure>
+<ul>
+<li>更换epel源为上海交大的源(注：随着版本更迭，以下链接可能会失效，如果出现404错误，那就需要更改链接)：</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">$ rpm -Uvh http://ftp.sjtu.edu.cn/fedora/epel/7/x86_64/e/epel-release-7-9.noarch.rpm</div><div class="line"></div><div class="line">$ rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7</div></pre></td></tr></table></figure>
+<ul>
+<li>更换ceph源为国内163源</li>
+</ul>
+<p>建议不用改变ceph.repo,直接设置环境变量即可，如果更改ceph.repo，那么执行ceph-deploy的时候还是需要在命令行中指定国内源url，否则又会使用官方源。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">export</span> CEPH_DEPLOY_REPO_URL=http://mirrors.163.com/ceph/rpm-jewel/el7</div><div class="line"></div><div class="line">$ <span class="built_in">export</span> CEPH_DEPLOY_GPG_URL=http://mirrors.163.com/ceph/keys/release.asc</div><div class="line"></div><div class="line">$ yum clean all</div><div class="line"></div><div class="line">$ yum makecache</div><div class="line"></div><div class="line">$ yum update -y</div></pre></td></tr></table></figure>
+<h2 id="安装并配置ceph-cluster"><a href="#安装并配置ceph-cluster" class="headerlink" title="安装并配置ceph cluster"></a>安装并配置ceph cluster</h2><p>接下来的事情就跟官网的步骤差不多了，大致如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># Create monitor node</span></div><div class="line">ceph-deploy new node1 node2 node3</div><div class="line"></div><div class="line"><span class="comment"># Software Installation</span></div><div class="line">ceph-deploy install deploy node1 node2 node3</div><div class="line"></div><div class="line"><span class="comment"># Gather keys</span></div><div class="line">ceph-deploy mon create-initial</div><div class="line"></div><div class="line"><span class="comment"># Ceph deploy parepare and activate</span></div><div class="line">ceph-deploy osd prepare node1:/dev/sdb node2:/dev/sdb node3:/dev/sdb</div><div class="line">ceph-deploy osd activate node1:/var/lib/ceph/osd/ceph-0 node2:/var/lib/ceph/osd/ceph-1 node3:/var/lib/ceph/osd/ceph-2</div><div class="line"></div><div class="line"><span class="comment"># Make 3 copies by default</span></div><div class="line"><span class="built_in">echo</span> <span class="string">"osd pool default size = 3"</span> | tee <span class="_">-a</span> <span class="variable">$HOME</span>/ceph.conf</div><div class="line"></div><div class="line"><span class="comment"># Copy admin keys and configuration files</span></div><div class="line">ceph-deploy --overwrite-conf admin deploy node1 node2 node3</div></pre></td></tr></table></figure>
+<h2 id="一个尚未解决的顽疾"><a href="#一个尚未解决的顽疾" class="headerlink" title="一个尚未解决的顽疾"></a>一个尚未解决的顽疾</h2><p>在公司使用国内源安装ceph的时候，出现了一个这样的错误：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">http://mirrors.163.com/ceph/rpm-jewel/el7/x86_64/ceph-mds-10.2.5-0.el7.x86_64.rpm: [Errno -1] Package does not match intended download. Suggestion: run yum --enablerepo=ceph clean metadata</div></pre></td></tr></table></figure>
+<p>Package does not match intended 这个错误在我安装其他软件的时候也出现过，用尽了各种办法也没有解决该问题，但我在家里的时候却没有出现过该问题。所以推测是公司网络用了类似缓存的机制。</p>
+<h2 id="更新-2017-3-18"><a href="#更新-2017-3-18" class="headerlink" title="更新-2017-3-18"></a>更新-2017-3-18</h2><p>找到了解决上述问题的方法，就是先直接wget下来rpm包，然后用yum localinstall 或者rpm -ivh 安装,如果出现两个包互相依赖的情况，就两个包同时安装。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">wget http://mirrors.163.com/ceph/rpm-jewel/el7/x86_64/ceph-mds-10.2.5-0.el7.x86_64.rpm</div><div class="line"></div><div class="line">yum localinstall ceph-mds-10.2.5-0.el7.x86_64.rpm</div></pre></td></tr></table></figure>
+<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://docs.ceph.com/docs/master/start/quick-start-preflight/" target="_blank" rel="external">PREFLIGHT CHECKLIST</a></p>
+<p><a href="http://docs.ceph.com/docs/master/start/quick-ceph-deploy/" target="_blank" rel="external">STORAGE CLUSTER QUICK START</a></p>
+<p><a href="http://ceph.org.cn/2016/09/02/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8%E5%9B%BD%E5%86%85%E6%BA%90%E9%83%A8%E7%BD%B2ceph%EF%BC%9F/" target="_blank" rel="external">如何使用国内源部署Ceph？</a></p>
+<p><a href="http://www.centoscn.com/CentOS/config/2014/1031/4039.html" target="_blank" rel="external">CentOS7修改主机名</a></p>
+<p><a href="http://itgeeker.net/centos-7-epel-china-mirror-repository/" target="_blank" rel="external">CentOS 7 x86_64适用的EPEL安装源 国内镜像列表</a></p>
+<p><strong><em>本篇文章由<a href="https://zhangchenchen.github.io/">pekingzcc</a>采用<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="external">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可,转载请注明。</em></strong></p>
+<p> <strong><em>END</em></strong></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
   <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/02/22/how-to-debug-openstack-rest-api/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1937,167 +2097,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/01/12/openstack-pasteDeploy&route&application/">
-
-  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
-    <meta itemprop="name" content="pekingzcc">
-    <meta itemprop="description" content="">
-    <meta itemprop="image" content="/images/avatar.jpg">
-  </span>
-
-  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-    <meta itemprop="name" content="Solar">
-    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
-      <img style="display:none;" itemprop="url image" alt="Solar" src="">
-    </span>
-  </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/01/12/openstack-pasteDeploy&route&application/" itemprop="url">
-                  openstack 系列--nova-api 的paste&route的简单抽象
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-12T15:17:25+08:00">
-                2017-01-12
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/01/12/openstack-pasteDeploy&route&application/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/01/12/openstack-pasteDeploy&route&application/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="目录结构："><a href="#目录结构：" class="headerlink" title="目录结构："></a>目录结构：</h2><p><a href="#A">由Python的调用实例想到的 </a></p>
-<p><a href="#B">nova-api 的paster&amp;route 模型</a></p>
-<p><a name="A"></a></p>
-<h2 id="由Python的调用实例想到的"><a href="#由Python的调用实例想到的" class="headerlink" title="由Python的调用实例想到的"></a>由Python的调用实例想到的</h2><ul>
-<li>公司的云平台有两个自己写的服务，highland和rainflow。也没有开发文档，只能自己去看代码琢磨一下，从paste配置文件看下最终调用的route app，是一个factory方法，我记得factory方法应该返回一个WSGI APP,但是看下源码是这样的：</li>
-</ul>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@classmethod</span></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">factory</span><span class="params">(cls, global_config, **local_config)</span>:</span></div><div class="line">    <span class="string">"""Simple paste factory, :class:`rainflow.wsgi.Router` doesn't have"""</span></div><div class="line">    <span class="keyword">return</span> cls()</div></pre></td></tr></table></figure>
-<p>是一个类方法返回这个类，我就有点懵了，这样是执行什么操作呢，难道是再创建一个实例。而且nova-api也是这么干的，证明不是错误。后来搜了一下资料，再试验了一下大致知道怎么回事了。</p>
-<ul>
-<li>看下下面这个示例：</li>
-</ul>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#!/usr/bin/env python</span></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">demo</span>:</span></div><div class="line"><span class="meta">    @classmethod</span></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">iam_classmethod</span><span class="params">(cls)</span>:</span></div><div class="line">        print(<span class="string">"classmethod"</span>)</div><div class="line">        <span class="keyword">return</span> cls()</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></div><div class="line">        print(<span class="string">"i am init"</span>)</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__call__</span><span class="params">(self)</span>:</span></div><div class="line">        <span class="keyword">print</span><span class="string">"i am calling"</span></div><div class="line"></div><div class="line">test=demo.iam_classmethod()</div><div class="line">test()</div></pre></td></tr></table></figure>
-<p>运行结果为：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">classmethod</div><div class="line">i am init</div><div class="line">i am calling</div></pre></td></tr></table></figure>
-<p>iam_classmethod方法会返回一个类实例，执行这个类实例就是调用<strong>call</strong>() 方法。<br>同理，上面那个代码其实就是调用<strong>call</strong>方法，我们可以在对应的父类找到。</p>
-<p><a name="B"></a></p>
-<h2 id="nova-api-的paster-amp-route-模型"><a href="#nova-api-的paster-amp-route-模型" class="headerlink" title="nova-api 的paster&amp;route 模型"></a>nova-api 的paster&amp;route 模型</h2><ul>
-<li>nova-api的路由模型其实不难，只不过层层封装，比较复杂，在网上找到一个比较好理解的示例。</li>
-<li>首先要明白路由的生成过程跟路由的寻址过程是两条线，当我们启动nova-api的时候，路由的map就已经生成了，当我们发送rest请求时，就会根据路由的map去找对应的application以及controller。所以，重点是看下路由的生成过程。</li>
-</ul>
-<p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-01-12-openstack-paste-route.png" alt="paster&amp;route"></p>
-<ul>
-<li>看下一个简单的代码实现（代码来自网上，没有经过验证，只是为了说明）：</li>
-</ul>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">from</span> __future__ <span class="keyword">import</span> print_function</div><div class="line"><span class="keyword">from</span> routes <span class="keyword">import</span> Mapper</div><div class="line"><span class="keyword">import</span> webob.dec</div><div class="line"><span class="keyword">import</span> webob.exc</div><div class="line"><span class="keyword">import</span> routes.middleware</div><div class="line"><span class="keyword">import</span> testtools</div><div class="line"></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyController</span><span class="params">(object)</span>:</span></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">getlist</span><span class="params">(self, mykey)</span>:</span></div><div class="line">        print(<span class="string">"step 4: MyController's getlist(self, mykey) is invoked"</span>)</div><div class="line">        <span class="keyword">return</span> <span class="string">"getlist(), mykey="</span> + mykey</div><div class="line"></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyApplication</span><span class="params">(object)</span>:</span></div><div class="line">    <span class="string">"""Test application to call from router."""</span></div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, controller)</span>:</span></div><div class="line">        self._controller = controller</div><div class="line">        </div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__call__</span><span class="params">(self, environ, start_response)</span>:</span></div><div class="line">        print(<span class="string">"step 3: MyApplication is invoked"</span>)</div><div class="line">        </div><div class="line">        action_args = environ[<span class="string">'wsgiorg.routing_args'</span>][<span class="number">1</span>].copy()</div><div class="line">        <span class="keyword">try</span>:</div><div class="line">            <span class="keyword">del</span> action_args[<span class="string">'controller'</span>]</div><div class="line">        <span class="keyword">except</span> KeyError:</div><div class="line">            <span class="keyword">pass</span></div><div class="line"></div><div class="line">        <span class="keyword">try</span>:</div><div class="line">            <span class="keyword">del</span> action_args[<span class="string">'format'</span>]</div><div class="line">        <span class="keyword">except</span> KeyError:</div><div class="line">            <span class="keyword">pass</span></div><div class="line">        </div><div class="line">        action = action_args.pop(<span class="string">'action'</span>, <span class="keyword">None</span>)</div><div class="line">        controller_method = getattr(self._controller, action)</div><div class="line">        result = controller_method(**action_args)</div><div class="line">        </div><div class="line">        start_response(<span class="string">'200 OK'</span>, [(<span class="string">'Content-Type'</span>, <span class="string">'text/plain'</span>)])</div><div class="line">        <span class="keyword">return</span> [result]</div><div class="line"></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyRouter</span><span class="params">(object)</span>:</span></div><div class="line">    <span class="string">"""Test router."""</span></div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></div><div class="line">        route_name = <span class="string">"dummy_route"</span></div><div class="line">        route_path = <span class="string">"/dummies"</span></div><div class="line">        </div><div class="line">        my_application = MyApplication(MyController()) </div><div class="line">        </div><div class="line">        self.mapper = Mapper()</div><div class="line">        self.mapper.connect(route_name, route_path,</div><div class="line">                        controller=my_application,</div><div class="line">                        action=<span class="string">"getlist"</span>,</div><div class="line">                        mykey=<span class="string">"myvalue"</span>,</div><div class="line">                        conditions=&#123;<span class="string">"method"</span>: [<span class="string">'GET'</span>]&#125;)</div><div class="line">        </div><div class="line">        </div><div class="line">        self._router = routes.middleware.RoutesMiddleware(self._dispatch,</div><div class="line">                                                          self.mapper)</div><div class="line"></div><div class="line"><span class="meta">    @webob.dec.wsgify(RequestClass=webob.Request)</span></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__call__</span><span class="params">(self, req)</span>:</span></div><div class="line">        <span class="string">"""Route the incoming request to a controller based on self.map.</span></div><div class="line"></div><div class="line">        If no match, return a 404.</div><div class="line"></div><div class="line">        """</div><div class="line">        print(<span class="string">"step 1: MyRouter is invoked"</span>)</div><div class="line">        <span class="keyword">return</span> self._router</div><div class="line"></div><div class="line"><span class="meta">    @staticmethod</span></div><div class="line"><span class="meta">    @webob.dec.wsgify(RequestClass=webob.Request)</span></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">_dispatch</span><span class="params">(req)</span>:</span></div><div class="line">        <span class="string">"""Dispatch the request to the appropriate controller.</span></div><div class="line"></div><div class="line">        Called by self._router after matching the incoming request to a route</div><div class="line">        and putting the information into req.environ.  Either returns 404</div><div class="line">        or the routed WSGI app's response.</div><div class="line"></div><div class="line">        """</div><div class="line">        print(<span class="string">"step 2: RoutesMiddleware is invoked, calling our _dispatch back"</span>)</div><div class="line">        </div><div class="line">        match_dict = req.environ[<span class="string">'wsgiorg.routing_args'</span>][<span class="number">1</span>]</div><div class="line">        <span class="keyword">if</span> <span class="keyword">not</span> match_dict:</div><div class="line">            <span class="keyword">return</span> webob.exc.HTTPNotFound()</div><div class="line">        app = match_dict[<span class="string">'controller'</span>]</div><div class="line">        <span class="keyword">return</span> app</div><div class="line">        </div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">RoutingTestCase</span><span class="params">(testtools.TestCase)</span>:</span></div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">test_router</span><span class="params">(self)</span>:</span></div><div class="line">        router = MyRouter()</div><div class="line">        result = webob.Request.blank(<span class="string">'/dummies'</span>).get_response(router)</div><div class="line">        self.assertEqual(result.body, <span class="string">"getlist(), mykey=myvalue"</span>)</div></pre></td></tr></table></figure>
-<ul>
-<li>关于添加一个路由请求的操作参考这里<a href="http://blog.csdn.net/tantexian/article/details/37884037" target="_blank" rel="external">openstack-wsgi的route中增加api流程详解（os-networks）增加</a></li>
-</ul>
-<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://www.itnose.net/detail/6098529.html" target="_blank" rel="external">使用Python Routes + webob 的 REST API的测试程序.</a></p>
-<p><a href="http://blog.csdn.net/tantexian/article/details/37884037" target="_blank" rel="external">openstack-wsgi的route中增加api流程详解（os-networks）增加</a></p>
-<p><a href="http://www.maxwellxxx.com/openstackWsgi" target="_blank" rel="external">浅析openstack中WSGI+Restful router“框架？”</a></p>
-<p><strong><em>本篇文章由<a href="https://zhangchenchen.github.io/">pekingzcc</a>采用<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="external">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可,转载请注明。</em></strong></p>
-<p> <strong><em>END</em></strong></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2145,7 +2144,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">73</span>
+                <span class="site-state-item-count">74</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2156,7 +2155,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">30</span>
+                <span class="site-state-item-count">32</span>
                 <span class="site-state-item-name">tags</span>
               </a>
             </div>

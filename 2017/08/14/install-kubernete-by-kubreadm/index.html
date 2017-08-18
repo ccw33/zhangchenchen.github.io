@@ -68,7 +68,7 @@
 <link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="kubernete," />
+  <meta name="keywords" content="kubernetes," />
 
 
 
@@ -109,7 +109,7 @@ k8s集群与私有镜像仓库整合
 <meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-08-14-node.png">
 <meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/2017-08-14-k8s-image.png">
 <meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-08-16-dashboard.png">
-<meta property="og:updated_time" content="2017-08-16T03:05:44.173Z">
+<meta property="og:updated_time" content="2017-08-16T07:26:10.044Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Kubernete-- 利用kubeadm 搭建一个kubernate集群">
 <meta name="twitter:description" content="目标
@@ -462,10 +462,10 @@ k8s集群与私有镜像仓库整合
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">kubectl create <span class="_">-f</span> https://git.io/kube-dashboard-no-rbac</div></pre></td></tr></table></figure>
 <p>kubeadm安装方式自从1.6+版之后自动安装RBAC，所以需要选择第二种。如果权限问题依旧（注：一般是报错serviceaccount:kube-system:default” cannot list statefulsets.apps in the namespace “default”.）可以根据该<a href="https://github.com/kubernetes/dashboard/issues/1803" target="_blank" rel="external">issue</a>,添加一个权限。</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># cat dashboard-rbac.yml</span></div><div class="line">kind: ClusterRoleBinding</div><div class="line">apiVersion: rbac.authorization.k8s.io/v1beta1</div><div class="line">metadata:</div><div class="line">  name: dashboard-admin</div><div class="line">roleRef:</div><div class="line">  apiGroup: rbac.authorization.k8s.io</div><div class="line">  kind: ClusterRole</div><div class="line">  name: cluster-admin </div><div class="line">subjects:</div><div class="line">- kind: ServiceAccount</div><div class="line">  name: default</div><div class="line">  namespace: kube-system</div><div class="line"></div><div class="line"><span class="comment"># kubectl create -f dashboard-rbac.yml</span></div></pre></td></tr></table></figure>
-<p>注：如果想外部可以直接访问dashboard，需要修改下dockfile文件，将最后的service配置修改为nodePort,示例如下：</p>
+<p>注：如果想外部可以直接访问dashboard，需要修改下yaml文件，将最后的service配置修改为nodePort,示例如下：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">.......................</div><div class="line">---</div><div class="line">kind: Service</div><div class="line">apiVersion: v1</div><div class="line">metadata:</div><div class="line">  labels:</div><div class="line">    k8s-app: kubernetes-dashboard</div><div class="line">  name: kubernetes-dashboard</div><div class="line">  namespace: kube-system</div><div class="line">spec:</div><div class="line">  <span class="built_in">type</span>: NodePort</div><div class="line">  ports:</div><div class="line">  - nodePort: 30002</div><div class="line">    port: 80</div><div class="line">    targetPort: 9090</div><div class="line">  selector:</div><div class="line">    k8s-app: kubernetes-dashboard</div></pre></td></tr></table></figure>
 <p>这样便可以直接<a href="http://NODEIP:30002访问。关于port，nodePort" target="_blank" rel="external">http://NODEIP:30002访问。关于port，nodePort</a>, targetPort,可以参考<a href="http://blog.csdn.net/xinghun_4/article/details/50492041" target="_blank" rel="external">kubernetes中port、target port、node port的对比分析，以及kube-proxy代理</a></p>
-<h2 id="部署Heapster-监控与统计"><a href="#部署Heapster-监控与统计" class="headerlink" title="部署Heapster 监控与统计"></a>部署Heapster 监控与统计</h2><p>Heapster是一个容器集群监控和性能分析工具，天然支持Kubernetes和CoreOS。<br>这里使用influxDB作为Heapster的后端存储部署，参考<a href="https://github.com/kubernetes/heapster/blob/master/docs/influxdb.md" target="_blank" rel="external">安装文档</a>.<br>首先下载对应版本的相关dockerfile文件：</p>
+<h2 id="部署Heapster-监控与统计"><a href="#部署Heapster-监控与统计" class="headerlink" title="部署Heapster 监控与统计"></a>部署Heapster 监控与统计</h2><p>Heapster是一个容器集群监控和性能分析工具，天然支持Kubernetes和CoreOS。<br>这里使用influxDB作为Heapster的后端存储部署，参考<a href="https://github.com/kubernetes/heapster/blob/master/docs/influxdb.md" target="_blank" rel="external">安装文档</a>.<br>首先下载对应版本的相关yaml文件：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">wget https://github.com/kubernetes/heapster/archive/v1.3.0.tar.gz</div></pre></td></tr></table></figure>
 <p>解压并直接部署即可：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">tar -zxvf v1.3.0.tar.gz</div><div class="line"><span class="built_in">cd</span> heapster-1.3.0/deploy/kube-config/influxdb</div><div class="line"></div><div class="line">kubectl create <span class="_">-f</span> ./*</div></pre></td></tr></table></figure>
@@ -500,7 +500,7 @@ k8s集群与私有镜像仓库整合
       
         <div class="post-tags">
           
-            <a href="/tags/kubernete/" rel="tag"># kubernete</a>
+            <a href="/tags/kubernetes/" rel="tag"># kubernetes</a>
           
         </div>
       
@@ -518,6 +518,10 @@ k8s集群与私有镜像仓库整合
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/08/17/kubernetes-authentication-authorization-admission-control/" rel="prev" title="Kubernetes-- 漫谈kubernetes 中的认证 & 授权 & 准入机制">
+                Kubernetes-- 漫谈kubernetes 中的认证 & 授权 & 准入机制 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -594,7 +598,7 @@ k8s集群与私有镜像仓库整合
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">73</span>
+                <span class="site-state-item-count">74</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -605,7 +609,7 @@ k8s集群与私有镜像仓库整合
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">30</span>
+                <span class="site-state-item-count">32</span>
                 <span class="site-state-item-name">tags</span>
               </a>
             </div>
