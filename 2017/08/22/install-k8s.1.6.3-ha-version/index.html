@@ -86,36 +86,36 @@
 
 <meta name="description" content="kubernetes HA 整体架构k8s的HA相对于openstack的HA要简单很多，主要包括以下三各方面：
 
-etcd的HA:创建HA集群
+etcd的HA:创建HA集群,如果还不放心，可以使用分布式存储系统
 apiserver(无状态服务)的HA:双活模式，前面加一个load balance
 controller manager 和 scheduler的HA:主备模式。
 
 
-博主是按照Kubernetes 1.6 高可用集群部署这篇博客一步步安装下来的，基于">
+博主是按照Kubernetes 1.6 高可用">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Kubernetes-- 手动安装高可用k8s1.6问题汇总">
 <meta property="og:url" content="https://zhangchenchen.github.io/2017/08/22/install-k8s.1.6.3-ha-version/index.html">
 <meta property="og:site_name" content="Solar">
 <meta property="og:description" content="kubernetes HA 整体架构k8s的HA相对于openstack的HA要简单很多，主要包括以下三各方面：
 
-etcd的HA:创建HA集群
+etcd的HA:创建HA集群,如果还不放心，可以使用分布式存储系统
 apiserver(无状态服务)的HA:双活模式，前面加一个load balance
 controller manager 和 scheduler的HA:主备模式。
 
 
-博主是按照Kubernetes 1.6 高可用集群部署这篇博客一步步安装下来的，基于">
+博主是按照Kubernetes 1.6 高可用">
 <meta property="og:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/20170822-k8s-ha.jpg">
-<meta property="og:updated_time" content="2017-08-22T08:45:19.968Z">
+<meta property="og:updated_time" content="2017-08-22T08:48:55.577Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Kubernetes-- 手动安装高可用k8s1.6问题汇总">
 <meta name="twitter:description" content="kubernetes HA 整体架构k8s的HA相对于openstack的HA要简单很多，主要包括以下三各方面：
 
-etcd的HA:创建HA集群
+etcd的HA:创建HA集群,如果还不放心，可以使用分布式存储系统
 apiserver(无状态服务)的HA:双活模式，前面加一个load balance
 controller manager 和 scheduler的HA:主备模式。
 
 
-博主是按照Kubernetes 1.6 高可用集群部署这篇博客一步步安装下来的，基于">
+博主是按照Kubernetes 1.6 高可用">
 <meta name="twitter:image" content="http://7xrnwq.com1.z0.glb.clouddn.com/20170822-k8s-ha.jpg">
 
 
@@ -387,7 +387,7 @@ controller manager 和 scheduler的HA:主备模式。
       
         <h2 id="kubernetes-HA-整体架构"><a href="#kubernetes-HA-整体架构" class="headerlink" title="kubernetes HA 整体架构"></a>kubernetes HA 整体架构</h2><p>k8s的HA相对于<a href="https://zhangchenchen.github.io/2017/04/14/openstack-ha/">openstack的HA</a>要简单很多，主要包括以下三各方面：</p>
 <ul>
-<li>etcd的HA:创建HA集群</li>
+<li>etcd的HA:创建HA集群,如果还不放心，可以使用分布式存储系统</li>
 <li>apiserver(无状态服务)的HA:双活模式，前面加一个load balance</li>
 <li>controller manager 和 scheduler的HA:主备模式。</li>
 </ul>
@@ -460,6 +460,10 @@ controller manager 和 scheduler的HA:主备模式。
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/09/12/openNebula-vs-openstack/" rel="prev" title="Openstack-- OpenStack 与OpenNebula的前世今生">
+                Openstack-- OpenStack 与OpenNebula的前世今生 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -536,7 +540,7 @@ controller manager 和 scheduler的HA:主备模式。
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">75</span>
+                <span class="site-state-item-count">76</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
