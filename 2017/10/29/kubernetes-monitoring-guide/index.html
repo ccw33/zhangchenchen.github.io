@@ -84,28 +84,22 @@
 
 
 
-<meta name="description" content="Heapster &amp;amp; InfluxDB &amp;amp; GrafanaHeapster &amp;amp; InfluxDB &amp;amp; Grafana的组合是kubernetes监控的官方推荐组合，官方dashboard的概览中就用到了这三个工具来展示监控数据。这三个组合中，
-
-Heapster 作为metric数据的聚合和处理
-InfluxDB是一个时间序列数据库，用来存储Heapster传过来的">
+<meta name="description" content="关于k8s的监控，官方文档有一个系列Kubernetes: a monitoring guide,涵盖了大部分内容，如果觉得费时可以直接参阅这篇文章,本文主要是偏重Heapster &amp;amp; InfluxDB &amp;amp; Grafana 方案的实践。
+Heapster &amp;amp; InfluxDB &amp;amp; GrafanaHeapster &amp;amp; InfluxDB &amp;amp; Grafan">
 <meta property="og:type" content="article">
 <meta property="og:title" content="kubernetes-- kubernetes 监控指南">
 <meta property="og:url" content="https://zhangchenchen.github.io/2017/10/29/kubernetes-monitoring-guide/index.html">
 <meta property="og:site_name" content="Solar">
-<meta property="og:description" content="Heapster &amp;amp; InfluxDB &amp;amp; GrafanaHeapster &amp;amp; InfluxDB &amp;amp; Grafana的组合是kubernetes监控的官方推荐组合，官方dashboard的概览中就用到了这三个工具来展示监控数据。这三个组合中，
-
-Heapster 作为metric数据的聚合和处理
-InfluxDB是一个时间序列数据库，用来存储Heapster传过来的">
+<meta property="og:description" content="关于k8s的监控，官方文档有一个系列Kubernetes: a monitoring guide,涵盖了大部分内容，如果觉得费时可以直接参阅这篇文章,本文主要是偏重Heapster &amp;amp; InfluxDB &amp;amp; Grafana 方案的实践。
+Heapster &amp;amp; InfluxDB &amp;amp; GrafanaHeapster &amp;amp; InfluxDB &amp;amp; Grafan">
 <meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-10-31-monitoring-architecture.png">
 <meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/2017-10-31-cluster-info.jpg">
 <meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/grafana-20171101154016.jpg">
-<meta property="og:updated_time" content="2017-11-02T06:16:21.357Z">
+<meta property="og:updated_time" content="2017-11-07T08:20:46.776Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="kubernetes-- kubernetes 监控指南">
-<meta name="twitter:description" content="Heapster &amp;amp; InfluxDB &amp;amp; GrafanaHeapster &amp;amp; InfluxDB &amp;amp; Grafana的组合是kubernetes监控的官方推荐组合，官方dashboard的概览中就用到了这三个工具来展示监控数据。这三个组合中，
-
-Heapster 作为metric数据的聚合和处理
-InfluxDB是一个时间序列数据库，用来存储Heapster传过来的">
+<meta name="twitter:description" content="关于k8s的监控，官方文档有一个系列Kubernetes: a monitoring guide,涵盖了大部分内容，如果觉得费时可以直接参阅这篇文章,本文主要是偏重Heapster &amp;amp; InfluxDB &amp;amp; Grafana 方案的实践。
+Heapster &amp;amp; InfluxDB &amp;amp; GrafanaHeapster &amp;amp; InfluxDB &amp;amp; Grafan">
 <meta name="twitter:image" content="http://oeptotikb.bkt.clouddn.com/2017-10-31-monitoring-architecture.png">
 
 
@@ -375,7 +369,8 @@ InfluxDB是一个时间序列数据库，用来存储Heapster传过来的">
       
 
       
-        <h2 id="Heapster-amp-InfluxDB-amp-Grafana"><a href="#Heapster-amp-InfluxDB-amp-Grafana" class="headerlink" title="Heapster &amp; InfluxDB &amp; Grafana"></a>Heapster &amp; InfluxDB &amp; Grafana</h2><p>Heapster &amp; InfluxDB &amp; Grafana的组合是kubernetes监控的官方推荐组合，官方dashboard的概览中就用到了这三个工具来展示监控数据。这三个组合中，</p>
+        <p>关于k8s的监控，官方文档有一个系列<a href="http://blog.kubernetes.io/2017/05/kubernetes-monitoring-guide.html" target="_blank" rel="external">Kubernetes: a monitoring guide</a>,涵盖了大部分内容，如果觉得费时可以直接参阅<a href="https://blog.ruhm.me/post/kubernetes-monitoring/" target="_blank" rel="external">这篇文章</a>,本文主要是偏重Heapster &amp; InfluxDB &amp; Grafana 方案的实践。</p>
+<h2 id="Heapster-amp-InfluxDB-amp-Grafana"><a href="#Heapster-amp-InfluxDB-amp-Grafana" class="headerlink" title="Heapster &amp; InfluxDB &amp; Grafana"></a>Heapster &amp; InfluxDB &amp; Grafana</h2><p>Heapster &amp; InfluxDB &amp; Grafana的组合是kubernetes监控的官方推荐组合，官方dashboard的概览中就用到了这三个工具来展示监控数据。这三个组合中，</p>
 <ul>
 <li>Heapster 作为metric数据的聚合和处理</li>
 <li>InfluxDB是一个时间序列数据库，用来存储Heapster传过来的metric数据</li>
@@ -416,11 +411,14 @@ InfluxDB是一个时间序列数据库，用来存储Heapster传过来的">
 <h3 id="访问-Grafana-界面"><a href="#访问-Grafana-界面" class="headerlink" title="访问 Grafana 界面"></a>访问 Grafana 界面</h3><p>Grafana也提供rest api，url 的构建同上，可以参考<a href="http://docs.grafana.org/http_api/" target="_blank" rel="external">HTTP API Reference</a>。除此之外，grafana还有一个UI可以访问，在Grafana的yaml文件中添加type：NodePort,然后就可以通过ip:NodePort访问该UI。</p>
 <p><img src="http://oeptotikb.bkt.clouddn.com/grafana-20171101154016.jpg" alt="grafana-ui"></p>
 <p>通过该UI界面，设置查询SQL，就可以定制自己需要的图表，参考<a href="https://blog.kublr.com/how-to-utilize-the-heapster-influxdb-grafana-stack-in-kubernetes-for-monitoring-pods-4a553f4d36c9" target="_blank" rel="external">How to Utilize the “Heapster + InfluxDB + Grafana” Stack in Kubernetes for Monitoring Pods</a></p>
+<p>以上就是Heapster &amp; InfluxDB &amp; Grafana 实现k8s监控的内容，这套方案的优点就是部署简单，与k8s结合的很好，缺点也比较明显，heapster是专为k8s设计的，没有通用性，且没有alert机制（当然可以通过设置grafana，但是需要自己做镜像）。除了这一套方案外 ，还有一种广泛使用的方案：prometheus + Grafana，这套方案相对比较通用，除了k8s还可以对接其他系统（比如运行在k8s里面的数据库集群等），且有报警模块alertmanager，缺点就是配置相对比较麻烦，不过为了以后的方便，还是建议采用这种方案。</p>
 <h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://blog.codecp.org/2016/07/07/Kubernets%E7%9B%91%E6%8E%A7%20Heapster+InfluxDB+Grafana/" target="_blank" rel="external">Kubernets监控 Heapster+InfluxDB+Grafana </a></p>
 <p><a href="http://blog.kubernetes.io/2017/05/kubernetes-monitoring-guide.html" target="_blank" rel="external">Kubernetes: a monitoring guide</a></p>
 <p><a href="https://sysdig.com/blog/monitoring-kubernetes-with-sysdig-cloud/" target="_blank" rel="external">Monitoring Kubernetes</a></p>
 <p><a href="https://blog.kublr.com/how-to-utilize-the-heapster-influxdb-grafana-stack-in-kubernetes-for-monitoring-pods-4a553f4d36c9" target="_blank" rel="external">How to Utilize the “Heapster + InfluxDB + Grafana” Stack in Kubernetes for Monitoring Pods</a></p>
 <p><a href="https://jimmysong.io/posts/using-heapster-to-get-object-metrics/" target="_blank" rel="external">使用Heapster获取kubernetes集群对象的metric数据</a></p>
+<p><a href="https://blog.ruhm.me/post/kubernetes-monitoring/" target="_blank" rel="external">UBERNETES 集群监控方案研究</a></p>
+<p><a href="https://jishu.io/kubernetes/kubernetes-monitoring-with-prometheus/" target="_blank" rel="external">使用Prometheus完成Kubernetes集群监控</a></p>
 <p><strong><em>本篇文章由<a href="https://zhangchenchen.github.io/">pekingzcc</a>采用<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="external">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可,转载请注明。</em></strong></p>
 <p> <strong><em>END</em></strong></p>
 
