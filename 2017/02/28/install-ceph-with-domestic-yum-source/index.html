@@ -94,7 +94,7 @@
 <meta property="og:description" content="引出初衷是自己搭建一套ceph的实验集群，按照官方的quick start,按理说应该是分分钟的事，因为GFW的原因，搞得忙活了一上午，再加上心情烦躁,中间出现了各种差错，这里记录一下。
 系统预检并安装ceph-deploy准备集群系统，网络设置，SSH无密码登录等设置略过，详细参考PREFLIGHT CHECKLIST
 这里有一个地方需要注意的是：centos7 在修改HOSTNAME 的时候命">
-<meta property="og:updated_time" content="2017-06-30T09:00:41.164Z">
+<meta property="og:updated_time" content="2017-11-16T06:37:09.153Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="ceph-- 使用国内yum源搭建ceph集群">
 <meta name="twitter:description" content="引出初衷是自己搭建一套ceph的实验集群，按照官方的quick start,按理说应该是分分钟的事，因为GFW的原因，搞得忙活了一上午，再加上心情烦躁,中间出现了各种差错，这里记录一下。
@@ -378,9 +378,9 @@
 </ul>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.163.com/.help/CentOS7-Base-163.repo</div></pre></td></tr></table></figure>
 <ul>
-<li>更换epel源为上海交大的源(注：随着版本更迭，以下链接可能会失效，如果出现404错误，那就需要更改链接)：</li>
+<li>更换epel源为中科大的源(注：随着版本更迭，以下链接可能会失效，如果出现404错误，那就需要更改链接)：</li>
 </ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">$ rpm -Uvh http://ftp.sjtu.edu.cn/fedora/epel/7/x86_64/e/epel-release-7-9.noarch.rpm</div><div class="line"></div><div class="line">$ rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7</div></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">$ rpm -Uvh  http://mirrors.ustc.edu.cn/centos/7/extras/x86_64/Packages/epel-release-7-9.noarch.rpm</div><div class="line"></div><div class="line">$ rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7</div></pre></td></tr></table></figure>
 <ul>
 <li>更换ceph源为国内163源</li>
 </ul>
@@ -521,7 +521,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">81</span>
+                <span class="site-state-item-count">82</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
