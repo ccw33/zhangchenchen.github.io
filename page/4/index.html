@@ -270,6 +270,197 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/02/22/how-to-debug-openstack-rest-api/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="pekingzcc">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/avatar.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="Solar">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="Solar" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/02/22/how-to-debug-openstack-rest-api/" itemprop="url">
+                  openstack-- 如何调试openstack rest API
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-02-22T15:18:25+08:00">
+                2017-02-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/02/22/how-to-debug-openstack-rest-api/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/02/22/how-to-debug-openstack-rest-api/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>在学习openstack 的过程中，基本都是这样一个过程，先是通过 dashboard 对openstack 有一个感性的认识，之后通过命令行了解openstack 更多的功能，但openstack 的内部实现还是一个黑盒。这时就需要了解 openstack 提供的最原始的 rest API, rest API 不仅是提供给终端 user使用，它内部组件的通信机制也用的rest API ，当然还有AMQP,关于 rest与AMQP 的比较见<a href="https://zhangchenchen.github.io/2017/01/10/something-about-http&amp;tcp&amp;amqp/">这篇文章</a> 。本篇文章主要讲如何使用 postman 调试openstack 的rest api，之前会花一些篇幅讲一点openstack api version 的知识。</p>
+<h2 id="openstack-api-版本演变"><a href="#openstack-api-版本演变" class="headerlink" title="openstack api 版本演变"></a>openstack api 版本演变</h2><p>openstack 自开源以来发展还是挺迅猛的，对应各组件的api version演变也很快，特别是 nova, cinder, keystone等组件的api。在最新的官方文档中，也就是 N 版本的openstack,目前使用的API(只列出一些常用的) 为 ：</p>
+<ul>
+<li>Bare Metal API v1 (microversions)</li>
+<li>Block Storage API v3 (microversions)</li>
+<li>Clustering API v1</li>
+<li>Compute API (microversions)</li>
+<li>Container Infrastructure Management API (microversions)</li>
+<li>Identity API v3</li>
+<li>Identity API v3 extensions</li>
+<li>Image service API v2</li>
+<li>Messaging API v2</li>
+<li>Networking API v2.0</li>
+<li>Object Storage API v1</li>
+</ul>
+<p>还支持或者兼容的older api为：</p>
+<ul>
+<li>Block Storage API v2</li>
+</ul>
+<p>废弃的api 为：</p>
+<ul>
+<li>Block Storage API v1</li>
+<li>Identity API v2.0</li>
+<li>Identity admin API v2.0</li>
+<li>Identity API v2.0 extensions</li>
+<li>Image service API v1</li>
+</ul>
+<h3 id="microversion-解释"><a href="#microversion-解释" class="headerlink" title="microversion 解释"></a>microversion 解释</h3><p>这里简单解释下 microversion,microversion的使用是为了向后兼容性，因为openstack的版本迭代比较快，当我们对openstack进行版本升级后，对应的client 或其他调用openstack api的系统因为某些原因没法升级，仍然依赖之前的API，这个时候就可以使用microversion来解决这个问题。<br>举个栗子，比如Compute API，我们先通过一个 get请求( youropenstackIP:8774/ )获取支持的version 版本，返回如下：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">    <span class="attr">"versions"</span>: [</div><div class="line">        &#123;</div><div class="line">            <span class="attr">"id"</span>: <span class="string">"v2.0"</span>,</div><div class="line">            <span class="attr">"links"</span>: [</div><div class="line">                &#123;</div><div class="line">                    <span class="attr">"href"</span>: <span class="string">"http://openstack.example.com/v2/"</span>,</div><div class="line">                    <span class="attr">"rel"</span>: <span class="string">"self"</span></div><div class="line">                &#125;</div><div class="line">            ],</div><div class="line">            <span class="attr">"status"</span>: <span class="string">"SUPPORTED"</span>,</div><div class="line">            <span class="attr">"version"</span>: <span class="string">""</span>,</div><div class="line">            <span class="attr">"min_version"</span>: <span class="string">""</span>,</div><div class="line">            <span class="attr">"updated"</span>: <span class="string">"2011-01-21T11:33:21Z"</span></div><div class="line">        &#125;,</div><div class="line">        &#123;</div><div class="line">            <span class="attr">"id"</span>: <span class="string">"v2.1"</span>,</div><div class="line">            <span class="attr">"links"</span>: [</div><div class="line">                &#123;</div><div class="line">                    <span class="attr">"href"</span>: <span class="string">"http://openstack.example.com/v2.1/"</span>,</div><div class="line">                    <span class="attr">"rel"</span>: <span class="string">"self"</span></div><div class="line">                &#125;</div><div class="line">            ],</div><div class="line">            <span class="attr">"status"</span>: <span class="string">"CURRENT"</span>,</div><div class="line">            <span class="attr">"version"</span>: <span class="string">"2.42"</span>,</div><div class="line">            <span class="attr">"min_version"</span>: <span class="string">"2.1"</span>,</div><div class="line">            <span class="attr">"updated"</span>: <span class="string">"2013-07-23T11:33:21Z"</span></div><div class="line">        &#125;</div><div class="line">    ]</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>可以看到支持 V2 版本以及V2.1 的microversion,该 microversion，支持从 V2.1 到 V2.42的所有版本的API，但如果我们使用的话还是需要指定一个版本，在 header中加一个参数：<br><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">X-OpenStack-Nova-API-Version: 2.4</div></pre></td></tr></table></figure></p>
+<h3 id="keystone-v3-简介"><a href="#keystone-v3-简介" class="headerlink" title="keystone v3 简介"></a>keystone v3 简介</h3><p>这里简单说下keystone v3，因为 keystone v3相对于 v2版本来说增加了很多新的特性，这里简单记录一下。</p>
+<p>v2版本对用户的权限管理以每一个用户为单位，需要对每一个用户进行角色分配，并不存在一种对一组用户进行统一管理的方案，v3版本中引入了 Domain 和 Group的概念，将 tenant改为project,从而实现对一组用户进行统一管理。</p>
+<p>直接引用<a href="http://www.ibm.com/developerworks/cn/cloud/library/1506_yuwz_keystonev3/index.html" target="_blank" rel="external">OpenStack Keystone V3 简介</a></p>
+<blockquote>
+<p>V3 利用 Domain 实现真正的多租户（multi-tenancy）架构，Domain 担任 Project 的高层容器。云服务的客户是 Domain 的所有者，他们可以在自己的 Domain 中创建多个 Projects、Users、Groups 和 Roles。通过引入 Domain，云服务客户可以对其拥有的多个 Project 进行统一管理，而不必再向过去那样对每一个 Project 进行单独管理。<br> Group 是一组 Users 的容器，可以向 Group 中添加用户，并直接给 Group 分配角色，那么在这个 Group 中的所有用户就都拥有了 Group 所拥有的角色权限。通过引入 Group 的概念，Keystone V3 实现了对用户组的管理，达到了同时管理一组用户权限的目的。这与 V2 中直接向 User/Project 指定 Role 不同，使得对云服务进行管理更加便捷。</p>
+</blockquote>
+<h2 id="使用-postman-调试openstack-的rest-api"><a href="#使用-postman-调试openstack-的rest-api" class="headerlink" title="使用 postman 调试openstack 的rest api"></a>使用 postman 调试openstack 的rest api</h2><h3 id="openstack-常用组件默认监听端口"><a href="#openstack-常用组件默认监听端口" class="headerlink" title="openstack 常用组件默认监听端口"></a>openstack 常用组件默认监听端口</h3><p>在使用postman调试之前，先列出openstack 中常用组件默认监听的端口：</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-02-22-openstack-default-port.png" alt="default-port"></p>
+<p>其他服务组件的默认监听端口：</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-02-22-openstack-extend-default-port.png" alt="other-default-port"></p>
+<h3 id="使用-postman-调试-openstack-rest-api"><a href="#使用-postman-调试-openstack-rest-api" class="headerlink" title="使用 postman 调试 openstack rest api"></a>使用 postman 调试 openstack rest api</h3><p>调试 rest api 的客户端工具有很多，官网用的是curl，但不是很直观，postman 算是颜值比较高的一款 http api调试工具。我比较习惯于使用 chrome插件版本的postman，安装完毕后，开始进行调试：</p>
+<ul>
+<li><p>向 keystone 发送post请求获取 token 以及 service endpoint:</p>
+<p>  request headers 内容如下：<br><img src="http://oeptotikb.bkt.clouddn.com/2.png" alt="headers"></p>
+<p>  request body 内容如下：</p>
+</li>
+</ul>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-02-22-header-body.png" alt="body"><br>    返回结果如下：</p>
+ <figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">  "access": &#123;</div><div class="line">    "token": &#123;</div><div class="line">      "issued_at": "2017-02-22T08:17:13.025922",</div><div class="line">      "expires": "2017-02-23T08:17:12Z",</div><div class="line">      "id": "1213f82cd41f472ba4291e75a2de8288",</div><div class="line">      "tenant": &#123;</div><div class="line">        "description": "Admin Tenant",</div><div class="line">        "enabled": true,</div><div class="line">        "id": "585324ae7e934e2eb50d84ad7aee3179",</div><div class="line">        "name": "admin"</div><div class="line">      &#125;,</div><div class="line">      "audit_ids": [</div><div class="line">        "T7g-8ZGYTZOUN5oEI-2q5w"</div><div class="line">      ]</div><div class="line">    &#125;,</div><div class="line">    "serviceCatalog": [</div><div class="line">      &#123;</div><div class="line">        "endpoints": [</div><div class="line">          &#123;</div><div class="line">            "adminURL": "http://192.168.24.161:8774/v2/585324ae7e934e2eb50d84ad7aee3179",</div><div class="line">            "region": "RegionOne",</div><div class="line">            "internalURL": "http://192.168.24.161:8774/v2/585324ae7e934e2eb50d84ad7aee3179",</div><div class="line">            "id": "899cc922536f4038922bac198616d086",</div><div class="line">            "publicURL": "http://192.168.24.161:8774/v2/585324ae7e934e2eb50d84ad7aee3179"</div><div class="line">          &#125;,</div><div class="line">          &#123;</div><div class="line">            "adminURL": "http://192.168.24.100:8774/v2/585324ae7e934e2eb50d84ad7aee3179",</div><div class="line">            "region": "testVlan",</div><div class="line">            "internalURL": "http://192.168.24.100:8774/v2/585324ae7e934e2eb50d84ad7aee3179",</div><div class="line">            "id": "2e4cf2fac2be47a4936ba19e15894030",</div><div class="line">            "publicURL": "http://192.168.24.100:8774/v2/585324ae7e934e2eb50d84ad7aee3179"</div><div class="line">          &#125;</div><div class="line">        ],</div><div class="line">        "endpoints_links": [],</div><div class="line">        "type": "compute",</div><div class="line">        "name": "nova"</div><div class="line">      &#125;,</div><div class="line">      ........................................</div><div class="line">    ],</div><div class="line">      ]</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>   可以看到 token id 即我们要的token标示，而且下一步需要的url即endpoint也已经出现在该json串中，以 compute service 的endpoint 为例，获取 虚拟机列表。</p>
+<ul>
+<li><p>向 nova 发送 获取虚拟机列表的rest 请求，将上一步获取到的 token id填入 X-Auth-Token中。</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-02-22nova-auth.png" alt="nova-rest"></p>
+<p> 发送该请求即可得到我们的结果：</p>
+</li>
+</ul>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">  <span class="attr">"servers"</span>: [</div><div class="line">    &#123;</div><div class="line">      <span class="attr">"id"</span>: <span class="string">"712ea870-9ac7-467d-a2d7-5e3caa8499a6"</span>,</div><div class="line">      <span class="attr">"links"</span>: [</div><div class="line">        &#123;</div><div class="line">          <span class="attr">"href"</span>: <span class="string">"http://192.168.24.161:8774/v2/ca36ea9826b04643897f19b7c03be011/servers/712ea870-9ac7-467d-a2d7-5e3caa8499a6"</span>,</div><div class="line">          <span class="attr">"rel"</span>: <span class="string">"self"</span></div><div class="line">        &#125;,</div><div class="line">        &#123;</div><div class="line">          <span class="attr">"href"</span>: <span class="string">"http://192.168.24.161:8774/ca36ea9826b04643897f19b7c03be011/servers/712ea870-9ac7-467d-a2d7-5e3caa8499a6"</span>,</div><div class="line">          <span class="attr">"rel"</span>: <span class="string">"bookmark"</span></div><div class="line">        &#125;</div><div class="line">      ],</div><div class="line">      <span class="attr">"name"</span>: <span class="string">"test"</span></div><div class="line">    &#125;,</div><div class="line">    &#123;</div><div class="line">      <span class="attr">"id"</span>: <span class="string">"257a2852-940e-4271-b188-fcd4d0a8c10c"</span>,</div><div class="line">      <span class="attr">"links"</span>: [</div><div class="line">        &#123;</div><div class="line">          <span class="attr">"href"</span>: <span class="string">"http://192.168.24.161:8774/v2/ca36ea9826b04643897f19b7c03be011/servers/257a2852-940e-4271-b188-fcd4d0a8c10c"</span>,</div><div class="line">          <span class="attr">"rel"</span>: <span class="string">"self"</span></div><div class="line">        &#125;,</div><div class="line">        &#123;</div><div class="line">          <span class="attr">"href"</span>: <span class="string">"http://192.168.24.161:8774/ca36ea9826b04643897f19b7c03be011/servers/257a2852-940e-4271-b188-fcd4d0a8c10c"</span>,</div><div class="line">          <span class="attr">"rel"</span>: <span class="string">"bookmark"</span></div><div class="line">        &#125;</div><div class="line">      ],</div><div class="line">      <span class="attr">"name"</span>: <span class="string">"testmime9"</span></div><div class="line">    &#125;</div><div class="line">  ]</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>  其他请求类似。</p>
+<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://developer.openstack.org/api-guide/quick-start/" target="_blank" rel="external">OpenStack API versions</a></p>
+<p><a href="https://developer.openstack.org/api-guide/quick-start/api-quick-start.html" target="_blank" rel="external">penStack API Documentation</a></p>
+<p><a href="https://docs.openstack.org/kilo/config-reference/content/firewalls-default-ports.html" target="_blank" rel="external">OpenStack DocumentationAppendix Firewalls and default ports</a></p>
+<p><strong><em>本篇文章由<a href="https://zhangchenchen.github.io/">pekingzcc</a>采用<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="external">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可,转载请注明。</em></strong></p>
+<p> <strong><em>END</em></strong></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
   <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/02/17/openstack-instance-metadata-discovery/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1907,167 +2098,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/01/10/something-about-http&tcp&amqp/">
-
-  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
-    <meta itemprop="name" content="pekingzcc">
-    <meta itemprop="description" content="">
-    <meta itemprop="image" content="/images/avatar.jpg">
-  </span>
-
-  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-    <meta itemprop="name" content="Solar">
-    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
-      <img style="display:none;" itemprop="url image" alt="Solar" src="">
-    </span>
-  </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/01/10/something-about-http&tcp&amqp/" itemprop="url">
-                  web系列--关于http，tcp,amqp的一些思考
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-10T10:17:25+08:00">
-                2017-01-10
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/01/10/something-about-http&tcp&amqp/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/01/10/something-about-http&tcp&amqp/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="目录结构："><a href="#目录结构：" class="headerlink" title="目录结构："></a>目录结构：</h2><p><a href="#A">为什么TCP是可以保持长连接的，而基于TCP的HTTP却不能 </a></p>
-<p><a href="#B">AMQP VS HTTP</a></p>
-<p><a name="A"></a></p>
-<h2 id="为什么TCP是可以保持长连接的，而基于TCP的HTTP却不能"><a href="#为什么TCP是可以保持长连接的，而基于TCP的HTTP却不能" class="headerlink" title="为什么TCP是可以保持长连接的，而基于TCP的HTTP却不能"></a>为什么TCP是可以保持长连接的，而基于TCP的HTTP却不能</h2><ul>
-<li>可能这个问题本身表述就不是很清楚，但我也想不出其他合适的词汇了。直接上例子吧：我们在做web应用的时候有时会碰到需要实时推送的情况，但是HTTP协议本身是不支持长时间的连接的，因为HTTP本身是request/response型的协议，可以理解为半双工通讯。而TCP 是支持长连接的，是通过heartbeat来进行连接的保持。这样，就引出我上面提到的问题了。</li>
-<li>在解答这个问题之前，还有几点是要说明的：http1.1中其实也有长连接的概念，具体到header参数就是keep-alive，但是这个keep-alive是一个数值，比如20s,就是这个http连接对应的tcp连接会保持20S,这个时间段过来的http连接会复用上次的tcp连接。如果没有的话，那么会开启一个新的tcp连接。而tcp协议里面的keep-alive就是heartbeat发送的包内容，表示“我还活着”。</li>
-<li>接下来回答一下上面那个问题：其实很简单，我们混淆了“基于TCP协议”这个概念，TCP本身是一个传输层的协议，就是用来作数据传输的，也决定了它必然是全双工，可以保持连接的特性。再来看下http协议，一种request/response型的协议，为什么要做成request/response这种类型呢，因为server端要服务的client太多了，如果每一个连接都保持而不断开，那么服务器的IO很快就会被堵死了。所以http基于tcp,并非就是全部利用的tcp的特性，在http连接建立之前，的确是需要tcp三次握手建立tcp连接，然后利用这个tcp连接传输http包数据，服务端收到请求的数据后，发送对应的response,之后便关闭了这个tcp连接（如果没有keep-alive）。</li>
-<li>再回到刚才的例子：其实现在解决这种实时推送的方案还是很丰富的，比较主流的应该是利用websocket协议来实现。当然，其他的比如：ajax实现的轮询等。就不细讲了，感兴趣就自行Google吧。</li>
-</ul>
-<p><a name="B"></a></p>
-<h2 id="AMQP-VS-HTTP"><a href="#AMQP-VS-HTTP" class="headerlink" title="AMQP VS HTTP"></a>AMQP VS HTTP</h2><p>其实这个问题应该这样描述：在做一个SOA服务时，用HTTP好还是AMQP好？</p>
-<p>该问题的提出主要是因为openstack的内部通信中主要包含rest和Rabbimq两种通信方式，所以不禁对于两种方式的优劣提出了疑问，经过一番思考以及搜索资料后，找到了相对满意的答案：</p>
-<p>主要参考<a href="https://hashnode.com/post/when-designing-service-oriented-architectures-which-one-do-you-use-http-or-amqp-ciibz8flr01drj3xt1ga99f3w" target="_blank" rel="external">When designing Service Oriented Architectures, which one do you use - HTTP or AMQP?</a></p>
-<ul>
-<li>AMQP is damn awesome! 确实，amqp更快，可定制性更强，可以实现异步传输，相对于http来说，作为SOA的信息传输协议真是再好不过了。简单列举下AMQP碾压HTTP 的优点，此处以rabbitmq为例：<ol>
-<li>rabbitmq可以提供面向连接，可靠的信息传递。</li>
-<li>rabbitmq提供过载保护：比如设置queue的timeout,限制 message rate,甚至转移message到别的queue.</li>
-<li>http需要有一个service discovery 机制，rabbitmq 不用。</li>
-<li>rabbitmq 的loadbalance 使用非常简单</li>
-<li>rabbitmq 的后端如果做了热备，如果一个后端节点挂掉，会自动切换到另一节点。</li>
-</ol>
-</li>
-<li>再说下http的优点，毕竟年岁要长一些，SOA的框架非常成熟，学习的曲线也不高，lz之前用过阿里出品的dubbo框架，简单易用。更重要的是，http作为一种成熟的协议标准，想要满足任何需求基本都会有对应的中间件，而且scale up 的成本低。</li>
-<li>综上所述，不难看出，在真正用到SOA时，还是需要取决于实际情况来取舍。如果只是一个内部的系统，交互的模块相对紧密的话推荐用AMQP。如果是一个大型的web系统，与外部交互比较多，而且是多部门协作完成多个模块的开发，那么模块件的交互还是使用标准的http吧。</li>
-<li>对应到openstack也可以看出一二：模块之间交互都是使用http/rest,比如nova与keystone的认证交互，因为每个独立的模块都是一个项目，都有独立的开发团队。而在模块内部，比如，Nova内部，nova-api与nova-scheduler,nova-scheduler与nova-compute 都是使用amqp来实现。</li>
-</ul>
-<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://www.amqp.org/product/solve" target="_blank" rel="external">The Problem We Solve</a></p>
-<p><a href="https://www.v2ex.com/t/170762" target="_blank" rel="external">用两条 HTTP 请求就可以实现双向实时通讯吧？为什么还需要 WebSocket</a></p>
-<p><a href="http://blog.csdn.net/jdk2006/article/details/51695416" target="_blank" rel="external">微服务与SOA之间差了一个ESB</a></p>
-<p><a href="https://hashnode.com/post/when-designing-service-oriented-architectures-which-one-do-you-use-http-or-amqp-ciibz8flr01drj3xt1ga99f3w" target="_blank" rel="external">When designing Service Oriented Architectures, which one do you use - HTTP or AMQP?</a></p>
-<p><a href="https://www.ibm.com/developerworks/cn/opensource/os-cn-rabbit-mq/" target="_blank" rel="external">关于 RabbitMQ 的实时消息推送</a></p>
-<p><strong><em>本篇文章由<a href="https://zhangchenchen.github.io/">pekingzcc</a>采用<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="external">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可,转载请注明。</em></strong></p>
-<p> <strong><em>END</em></strong></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2115,7 +2145,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">82</span>
+                <span class="site-state-item-count">83</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2126,7 +2156,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">31</span>
+                <span class="site-state-item-count">32</span>
                 <span class="site-state-item-name">tags</span>
               </a>
             </div>
