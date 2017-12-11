@@ -270,6 +270,365 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/03/07/update-your-openstack-image/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="pekingzcc">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/avatar.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="Solar">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="Solar" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/03/07/update-your-openstack-image/" itemprop="url">
+                  openstack-- 如何升级现有镜像
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-07T13:13:46+08:00">
+                2017-03-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/03/07/update-your-openstack-image/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/03/07/update-your-openstack-image/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>公司云平台有些镜像的密码注入出了点问题，问题的原因初步诊断为镜像问题，需要对这些镜像进行cloudinit/cloudbase的升级操作。对于已知密码的镜像，可以直接开启一个虚拟机，完成升级后，对该虚拟机做snapshot 操作（nova image-create）即可。对于不知道密码的镜像，经过一番搜索后，可以通过将镜像挂载到本地宿主机，然后chroot的方法进行升级,后来又从官网了解到利用libguestfish 的方法。以下为一些简单记录。</p>
+<h2 id="利用-nova-image-create-升级镜像"><a href="#利用-nova-image-create-升级镜像" class="headerlink" title="利用 nova image-create 升级镜像"></a>利用 nova image-create 升级镜像</h2><ul>
+<li>利用镜像开启一个虚拟机</li>
+<li>进入虚拟机做升级操作，并删除/var/lib/cloud 下的文件，windows需删除LocalScripts/下的文件。</li>
+<li>完成操作后，退出虚拟机并对该虚拟机做snapshot操作。</li>
+<li>镜像完成。</li>
+</ul>
+<h2 id="利用-本地挂载的方法升级镜像"><a href="#利用-本地挂载的方法升级镜像" class="headerlink" title="利用 本地挂载的方法升级镜像"></a>利用 本地挂载的方法升级镜像</h2><p>如果忘记密码的话我们可以使用该方法进行镜像的升级，不过因为glance后端存储方式的不同，挂载到本地HOST的方法也不同，下文分别以本地存储，ceph存储讲解。</p>
+<h3 id="glance-存储为本地存储"><a href="#glance-存储为本地存储" class="headerlink" title="glance 存储为本地存储"></a>glance 存储为本地存储</h3><h4 id="镜像格式为raw格式且镜像文件系统中使没有用LVM"><a href="#镜像格式为raw格式且镜像文件系统中使没有用LVM" class="headerlink" title="镜像格式为raw格式且镜像文件系统中使没有用LVM"></a>镜像格式为raw格式且镜像文件系统中使没有用LVM</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">$ fdisk -lu cirros-0.3.0-x86_64-disk.raw  <span class="comment"># 查看该镜像的分区情况以及是否使用LVM</span></div><div class="line"></div><div class="line">$ kpartx -av cirros-0.3.0-x86_64-disk.raw <span class="comment">#读取镜像的分区表，然后生成代表相应分区的设备/dev/loop0 ，/dev/loop1等等</span></div><div class="line"></div><div class="line">$ mount /dev/mapper/loop0p1 /mnt/image <span class="comment"># 将需要挂载的分区设备进行挂载，此时进入/mnt/image 应该就可以看到熟悉的系统文件目录了 </span></div><div class="line"></div><div class="line">$ <span class="built_in">cd</span> /mnt/image &amp;&amp; cp /etc/resolv.conf etc/resolv.conf <span class="comment"># 覆盖dns</span></div><div class="line"></div><div class="line">$ chroot /mnt/image bash  <span class="comment">#chroot到镜像文件中</span></div><div class="line"></div><div class="line">$ <span class="built_in">source</span> /etc/profile &amp;&amp; <span class="built_in">source</span> ~/.bashrc <span class="comment">#初始化环境变量</span></div></pre></td></tr></table></figure>
+<p>然后就可以进行升级操作了，操作完成后，需要将临时文件清除，yum clean all 等。最后退出chroot 并进行unmount 操作：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">exit</span> <span class="comment"># 退出chroot</span></div><div class="line"></div><div class="line">$ umount /mnt/image </div><div class="line"></div><div class="line">$ kpartx <span class="_">-d</span> cirros-0.3.0-x86_64-disk.raw  <span class="comment"># 删除设备映射关系</span></div></pre></td></tr></table></figure>
+<h4 id="镜像格式为raw格式且镜像文件系统中使用LVM"><a href="#镜像格式为raw格式且镜像文件系统中使用LVM" class="headerlink" title="镜像格式为raw格式且镜像文件系统中使用LVM"></a>镜像格式为raw格式且镜像文件系统中使用LVM</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">$ fdisk -lu centos7-x86_64.img  <span class="comment"># 查看该镜像的分区情况以及是否使用LVM</span></div><div class="line"></div><div class="line">$ kpartx -av centos7-x86_64.img <span class="comment"># 读取镜像的分区表，然后生成代表相应分区的设备/dev/loop0 ，/dev/loop1等等</span></div><div class="line"></div><div class="line">$ pvscan <span class="comment"># 查找lvm设备并记下vg的名字示例为centos</span></div><div class="line"></div><div class="line">$ vgchange -ay centos <span class="comment"># 激活vg中的lvm</span></div><div class="line"></div><div class="line">$ lvs <span class="comment"># 查看lvm设备列表</span></div><div class="line"></div><div class="line">$ mount /dev/centos/root /media/ <span class="comment">#挂载对应的lvm</span></div><div class="line"></div><div class="line">$ <span class="built_in">cd</span> /media/ &amp;&amp; cp /etc/resolv.conf etc/resolv.conf</div><div class="line"></div><div class="line">$ chroot /mnt/image bash  <span class="comment">#chroot到镜像文件中</span></div><div class="line"></div><div class="line">$ <span class="built_in">source</span> /etc/profile &amp;&amp; <span class="built_in">source</span> ~/.bashrc <span class="comment">#初始化环境变量</span></div></pre></td></tr></table></figure>
+<p>退出chroot 并进行unmount 操作如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">exit</span>  <span class="comment"># 退出chroot</span></div><div class="line"></div><div class="line">$ umount /media/ </div><div class="line"></div><div class="line">$ vgchange -an centos <span class="comment"># deactive vg 中的lvm</span></div><div class="line"></div><div class="line">$ kpartx <span class="_">-d</span>  centos7-x86_64.img <span class="comment"># 删除设备映射关系</span></div></pre></td></tr></table></figure>
+<p>如下为一个完整实例（省略chroot操作）：</p>
+<p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-08-chroot-lvm.png" alt="chroot-lvm"></p>
+<h4 id="镜像格式为qcow2格式"><a href="#镜像格式为qcow2格式" class="headerlink" title="镜像格式为qcow2格式"></a>镜像格式为qcow2格式</h4><p>qcow2 格式的镜像需要使用qemu自带的一个工具qemu-nbd，该工具会生成一个nbd(network block device)，然后将镜像映射到该nbd,便可以像普通block设备一样挂载了。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">$ modinfo nbd <span class="comment"># 查看系统kernel是否支持nbd模块</span></div><div class="line"></div><div class="line">$ modprobe nbd max_part=16 <span class="comment"># 加载 nbd模块</span></div><div class="line"></div><div class="line">$ lsmod | grep nbd <span class="comment"># 查看nbd模块是否加载</span></div><div class="line"></div><div class="line">$ qemu-nbd -c /dev/nbd0 centos7.qcow2 <span class="comment"># 将qcow2镜像映射为网络块设备(nbd)</span></div><div class="line"></div><div class="line">$ ll /dev/nbd0* <span class="comment"># 查看映射情况</span></div><div class="line"></div><div class="line">$ mount /dev/nbd0p1 /media/ <span class="comment"># 挂在对应的nbd设备</span></div></pre></td></tr></table></figure>
+<p>卸载的步骤如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">$ umount /media</div><div class="line"></div><div class="line">$ qemu-nbd <span class="_">-d</span> /dev/nbd0</div></pre></td></tr></table></figure>
+<p>如果该qcow2镜像使用LVM的话，前半段挂载nbd设备，后半段参照raw格式。</p>
+<h3 id="glance-存储为ceph存储"><a href="#glance-存储为ceph存储" class="headerlink" title="glance 存储为ceph存储"></a>glance 存储为ceph存储</h3><p>首先需要知道ceph作为glance存储后端的时候，openstack会充分利用ceph 的分层clone的特性来支持快速创建虚拟机。镜像会首先生成一个以snap结尾命名的快照，以后每次开启一个虚拟机都会clone该snapshot。该snapshot是protected，所以无法更改，而如果直接修改image的话，无法同步对应的snapshot。所以最稳妥的方法是先复制一个rbd image，然后修改这个复制的image，修改成功后覆盖或直接删除之前的image。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">$ rbd  cp <span class="variable">$POOL</span>/<span class="variable">$&#123;IMAGE_ID&#125;</span> <span class="variable">$POOL</span>/<span class="variable">$&#123;IMAGE_ID&#125;</span>_copy <span class="comment"># 复制image （允许跨pool）</span></div><div class="line"></div><div class="line">$ rbd map <span class="variable">$POOL</span>/<span class="variable">$&#123;IMAGE_ID&#125;</span>_copy <span class="comment"># 挂载rbd镜像到本地（注意kernel的支持）</span></div><div class="line"></div><div class="line">$ mount /dev/rbd0p1 /mnt <span class="comment"># 挂载对映的rbd到挂载点(rbd0p1 只是示例，依据真实情况填写)</span></div><div class="line"></div><div class="line">$ ll /mnt</div></pre></td></tr></table></figure>
+<p>之后就可以执行chroot 以及镜像的更新操作了。<br>之后的umount操作如下：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">$ umount -r <span class="_">-l</span> /mnt/ </div><div class="line"></div><div class="line">$ rbd unmap /dev/rbd0 <span class="comment">#从rbd中卸载</span></div></pre></td></tr></table></figure></p>
+<p>再然后就是更新glance了，大致步骤如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">$ glance image-create --name NewImage <span class="comment"># 创建image，占个坑，不上传，得到new imageID</span></div><div class="line"> </div><div class="line">$ rbd mv  <span class="variable">$POOL</span>/<span class="variable">$&#123;IMAGE_ID&#125;</span>_copy <span class="variable">$POOL</span>/<span class="variable">$&#123;NEW_IMAGE_ID&#125;</span> <span class="comment"># rbd改名</span></div><div class="line"></div><div class="line">$ rbd --pool=<span class="variable">$POOL</span> --image=<span class="variable">$&#123;NEW_IMAGE_ID&#125;</span> --snap=snap snap create <span class="comment"># 创建snapshot</span></div><div class="line"></div><div class="line">$ rbd --pool=<span class="variable">$POOL</span> --image=<span class="variable">$&#123;NEW_IMAGE_ID&#125;</span> --snap=snap snap protect <span class="comment">#对snapshot做保护</span></div><div class="line"></div><div class="line">$ glance image-update --name=<span class="string">"<span class="variable">$DISPLAY_NAME</span>"</span> --disk-format=raw --container-format=bare --is-public=True <span class="variable">$&#123;NEW_IMAGE_ID&#125;</span> <span class="comment"># 更新glance 元数据</span></div><div class="line"></div><div class="line">$ glance image-update --property image_meta=<span class="string">"<span class="variable">$image_meta</span>"</span> <span class="variable">$&#123;NEW_IMAGE_ID&#125;</span></div><div class="line"></div><div class="line">$ glance image-update --property hw_qemu_guest_agent=yes <span class="variable">$&#123;NEW_IMAGE_ID&#125;</span></div><div class="line"></div><div class="line">$ glance image-update --location rbd://<span class="variable">$FSID</span>/<span class="variable">$POOL</span>/<span class="variable">$NEW_IMAGE_ID</span>/snap <span class="variable">$&#123;NEW_IMAGE_ID&#125;</span> <span class="comment">#更新镜像的地址</span></div></pre></td></tr></table></figure>
+<h2 id="使用-libguestfs-修改虚拟机镜像"><a href="#使用-libguestfs-修改虚拟机镜像" class="headerlink" title="使用 libguestfs 修改虚拟机镜像"></a>使用 libguestfs 修改虚拟机镜像</h2><h3 id="libguestfs项目介绍"><a href="#libguestfs项目介绍" class="headerlink" title="libguestfs项目介绍"></a>libguestfs项目介绍</h3><p>libguestfs 其实是一系列工具组成的，目的就是为了连接并修改本地虚拟机镜像。可以实现的功能有很多，包括：修改镜像内文件，脚本，查看镜像文件系统容量使用情况，物理机与虚拟镜像之间的文件传递，备份，克隆，甚至新建虚拟机实例，格式化磁盘,修改磁盘大小等等。参考<a href="http://libguestfs.org/" target="_blank" rel="external">libguestfs </a></p>
+<h3 id="部分示例"><a href="#部分示例" class="headerlink" title="部分示例"></a>部分示例</h3><p>安装比较简单，如果是rh/centos系列，直接yum安装：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ yum install -y libguestfs-tools</div></pre></td></tr></table></figure>
+<p>下面主要分三部分guestfish，guestmount 以及virt-* tools 讲解</p>
+<h4 id="guestfish-讲解与示例"><a href="#guestfish-讲解与示例" class="headerlink" title="guestfish 讲解与示例"></a>guestfish 讲解与示例</h4><p>通俗讲，guestfish 的作用就是修改镜像内的文件。它并不会将镜像文件系统直接挂载到本地，而是提供了一个类似shell的交互接口允许你查看，编辑，删除文件。</p>
+<p>示例：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ guestfish --rw <span class="_">-a</span> centos63.raw  <span class="comment"># 进入guestfish shell ,Mount the image in read-write mode as root</span></div></pre></td></tr></table></figure>
+<p>进入之后 ，先执行run ，会创建一个虚拟机实例。</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-24-libguestfs.png" alt="libguestfs"></p>
+<p>如果出现错误的话，可以 export LIBGUESTFS_DEBUG=1 打开debug模式查找错误。或者利用 libguestfs-test-tool 命令测试一下。<br>接下来示例编辑网卡配置：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">&gt;&lt;fs&gt; list-filesystems  <span class="comment">#列出可挂载的文件系统</span></div><div class="line"></div><div class="line">&gt;&lt;fs&gt; mount /dev/vg_centosbase/lv_root /  <span class="comment">#挂载</span></div><div class="line"></div><div class="line">&gt;&lt;fs&gt; edit /etc/sysconfig/network-scripts/ifcfg-eth0 <span class="comment">#编辑文件</span></div><div class="line"></div><div class="line">&gt;&lt;fs&gt; <span class="built_in">exit</span> <span class="comment">#退出</span></div></pre></td></tr></table></figure>
+<h4 id="guestmount-讲解与示例"><a href="#guestmount-讲解与示例" class="headerlink" title="guestmount 讲解与示例"></a>guestmount 讲解与示例</h4><p>guestmount 可以实现直接将镜像的文件系统挂载到本地。示例如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">$ guestmount <span class="_">-a</span> centos63_desktop.qcow2 -i --rw /mnt <span class="comment"># i 参数表示自动查找root分区并挂载</span></div><div class="line"></div><div class="line">$ rpm -qa --dbpath /mnt/var/lib/rpm  <span class="comment">#示例查看rpm包</span></div><div class="line"></div><div class="line">$ umount /mnt</div></pre></td></tr></table></figure>
+<p>若umount失败（通常报错 device is busy），可以使用lazy umount，加 l 参数，即：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ umount /mnt <span class="_">-l</span></div></pre></td></tr></table></figure>
+<h4 id="virt-tools-讲解与示例"><a href="#virt-tools-讲解与示例" class="headerlink" title="virt-* tools 讲解与示例"></a>virt-* tools 讲解与示例</h4><p>大概以下几种工具：</p>
+<ul>
+<li>virt-edit : 修改镜像内的文件。</li>
+<li>virt-df : 查看镜像磁盘占用情况。</li>
+<li>virt-resize : resize 镜像。</li>
+<li>virt-sysprep : 准备发布镜像前的一系列操作（比如删除SSH HOST，删除mac地址，删除user 信息）</li>
+<li>virt-sparsify : 镜像稀疏（消除镜像空洞）</li>
+<li>virt-p2v : 物理机转换为虚拟机（kvm）.</li>
+<li>virt-v2v : xen或vmware镜像转换为kvm镜像。</li>
+</ul>
+<p>几个示例（来自<a href="https://docs.openstack.org/image-guide/modify-images.html" target="_blank" rel="external">openstack doc</a>）:</p>
+<p>第一个示例是修改镜像文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">$ virsh shutdown instance-000000e1</div><div class="line"></div><div class="line">$ virt-edit <span class="_">-d</span> instance-000000e1 /etc/shadow  <span class="comment"># d means domain</span></div><div class="line"></div><div class="line">$ virsh start instance-000000e1</div></pre></td></tr></table></figure>
+<p>第二个示例是 resize image：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">$ virt-filesystems --long --parts --blkdevs -h <span class="_">-a</span> /data/images/win2012.qcow2 <span class="comment">#查看分区</span></div><div class="line"></div><div class="line">$ qemu-img create <span class="_">-f</span> qcow2 /data/images/win2012-50gb.qcow2 50G <span class="comment">#新建一块qcow2 image 空间</span></div><div class="line"></div><div class="line">$ virt-resize --expand /dev/sda2 /data/images/win2012.qcow2 /data/images/win2012-50gb.qcow2 <span class="comment"># 扩展空间</span></div></pre></td></tr></table></figure>
+<h2 id="更新"><a href="#更新" class="headerlink" title="更新"></a>更新</h2><ul>
+<li>2017-03-23 增加 libguestfs 修改虚拟机镜像的方法。</li>
+</ul>
+<ul>
+<li>2017-03-34 增加 libguestfs 部分示例</li>
+</ul>
+<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://docs.openstack.org/image-guide/modify-images.html" target="_blank" rel="external">Modify images</a></p>
+<p><a href="http://int32bit.me/2016/06/04/%E5%9C%A8%E7%BA%BF%E6%9B%B4%E6%96%B0Glance%E9%95%9C%E5%83%8F/" target="_blank" rel="external">在线升级glance镜像技巧</a></p>
+<p><a href="http://krystism.is-programmer.com/posts/47074.html" target="_blank" rel="external">挂载raw和qcow2格式的KVM硬盘镜像</a></p>
+<p><a href="https://www.sjy.im/toss/use-yum-update-centos-kernel-quickly.html" target="_blank" rel="external">使用Yum快速更新升级CentOS内核</a></p>
+<p><a href="http://smilejay.com/2012/08/mount-an-image-file/" target="_blank" rel="external">如何挂载一个镜像文件(HOW TO MOUNT AN IMAGE FILE)</a></p>
+<p><a href="http://www.vpsee.com/2010/10/mount-lvm-volumes-from-loopback-disk-images/" target="_blank" rel="external">挂载虚拟机镜像文件里的 LVM 逻辑分区</a></p>
+<p><a href="http://libguestfs.org/" target="_blank" rel="external">libguestfs </a></p>
+<p><a href="http://www.361way.com/kvm-libguestfs-tools/3175.html" target="_blank" rel="external">kvm虚拟化小结（六）libguestfs-tools</a></p>
+<p><a href="http://www.hanbaoying.com/2017/02/26/libguestfs.html" target="_blank" rel="external">libguestfs详解</a></p>
+<p><strong><em>本篇文章由<a href="https://zhangchenchen.github.io/">pekingzcc</a>采用<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="external">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可,转载请注明。</em></strong></p>
+<p> <strong><em>END</em></strong></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/03/03/something-about-ceph-rbd/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="pekingzcc">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/avatar.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="Solar">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="Solar" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/03/03/something-about-ceph-rbd/" itemprop="url">
+                  ceph-- 关于ceph rbd 的一些记录
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-03T09:13:46+08:00">
+                2017-03-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/03/03/something-about-ceph-rbd/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/03/03/something-about-ceph-rbd/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>ceph 的中文文档做的真是非常棒，比起openstack的中文文档来说，不仅全，而且更新也比较及时，openstack的文档还是直接查阅英文版的比较好。</p>
+<p>本文是在查阅ceph官网文档过程中，联系实际操作做出的一些思考与记录。</p>
+<h2 id="ceph-rbd-的简单说明"><a href="#ceph-rbd-的简单说明" class="headerlink" title="ceph rbd 的简单说明"></a>ceph rbd 的简单说明</h2><p>官网对rbd的定义是这样的：Ceph 块设备是精简配置的、大小可调且将数据条带化存储到集群内的多个 OSD。</p>
+<p>ceph rbd是基于 rados来做的，也就是说，一个 rbd image 首先会被分成多个等大的 object，这些object再 根据 crush map 存储到对应的3个（或n个，n为奇数）OSD中，理解这一点对于理解 rbd 中的 stripe-unit和 stripe-count 有帮助。<br>所以如果考虑深层的话需要结合RADOS 的多种能力，如快照、复制和一致性。</p>
+<p>对于openstack来说，通常是通过libvirt 来控制磁盘的虚拟化(比如qemu),再通过qemu来与rbd打交道，如下图：</p>
+<p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-03-openstack-ceph-rbd.png" alt="ceph-rbd-qemu"></p>
+<p>qemu会调用librbd 实现rbd的增删改查等一系列操作，当然也有配套的 qemu命令，详见<a href="http://docs.ceph.org.cn/rbd/qemu-rbd/" target="_blank" rel="external">QEMU 与块设备</a></p>
+<p>libvirt 是一套虚拟机抽象层，它隐藏了底层多种虚拟化的具体实现，提供给client一套统一的通用API和shell接口。关于如何用 virsh 新建一个挂载rbd 的vm，可以参考<a href="http://docs.ceph.org.cn/rbd/libvirt/" target="_blank" rel="external">通过 LIBVIRT 使用 CEPH RBD</a></p>
+<p>关于openstack 与ceph 的整合与配置，参考<a href="http://docs.ceph.org.cn/rbd/rbd-openstack/" target="_blank" rel="external">块设备与 OPENSTACK</a></p>
+<h2 id="rbd-常用操作以及命令"><a href="#rbd-常用操作以及命令" class="headerlink" title="rbd 常用操作以及命令"></a>rbd 常用操作以及命令</h2><p>rbd 的常用操作大致包括三个部分，一个是 常见的增删改查，一个是 针对 snapshot的操作，再加一个map/unmap操作。</p>
+<h3 id="rbd的增删改查"><a href="#rbd的增删改查" class="headerlink" title="rbd的增删改查"></a>rbd的增删改查</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">$ rbd create --size &#123;megabytes&#125; &#123;pool-name&#125;/&#123;image-name&#125; <span class="comment"># 创建 rbd</span></div><div class="line"></div><div class="line">$ rbd ls &#123;poolname&#125; <span class="comment"># 罗列 rbd</span></div><div class="line"></div><div class="line">$ rbd info &#123;pool-name&#125;/&#123;image-name&#125; <span class="comment"># 查看某一rbd具体信息</span></div><div class="line"></div><div class="line">$ rbd resize --size 2048 foo (to increase) <span class="comment"># 增加尺寸</span></div><div class="line">$ rbd resize --size 2048 foo --allow-shrink (to decrease) <span class="comment"># 减小尺寸</span></div><div class="line"></div><div class="line">$ rbd rm &#123;pool-name&#125;/&#123;image-name&#125; <span class="comment"># 删除rbd镜像</span></div></pre></td></tr></table></figure>
+<h3 id="rbd-snapshot-相关操作"><a href="#rbd-snapshot-相关操作" class="headerlink" title="rbd snapshot 相关操作"></a>rbd snapshot 相关操作</h3><p>快照是映像在某个特定时间点的一份只读副本,ceph 的快照有一个比较高级的特性就是分层clone，在openstack 中会实现非常快的创建VM，下文会详细讲解。</p>
+<h4 id="rbd-snapshot-的基本操作"><a href="#rbd-snapshot-的基本操作" class="headerlink" title="rbd snapshot 的基本操作"></a>rbd snapshot 的基本操作</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">$ rbd snap create &#123;pool-name&#125;/&#123;image-name&#125;@&#123;snap-name&#125; <span class="comment"># 创建快照</span></div><div class="line"></div><div class="line">$ rbd snap ls &#123;pool-name&#125;/&#123;image-name&#125; <span class="comment">#罗列 某个镜像的快照</span></div><div class="line"></div><div class="line">$ rbd snap rollback &#123;pool-name&#125;/&#123;image-name&#125;@&#123;snap-name&#125; <span class="comment"># 快照回滚</span></div><div class="line"></div><div class="line">$ rbd snap rm &#123;pool-name&#125;/&#123;image-name&#125;@&#123;snap-name&#125; <span class="comment"># 删除某一快照</span></div><div class="line"></div><div class="line">$ rbd snap purge &#123;pool-name&#125;/&#123;image-name&#125; <span class="comment"># 清除某一镜像的所有快照</span></div></pre></td></tr></table></figure>
+<h4 id="ceph-快照的分层-clone"><a href="#ceph-快照的分层-clone" class="headerlink" title="ceph 快照的分层 clone"></a>ceph 快照的分层 clone</h4><p>Ceph 支持为某一rbd snapshot创建很多个写时复制（ COW ）克隆。所谓写时复制，就是执行 clone命令后，并没有立即执行clone操作，而是引用原文件，当发生写入操作时才真正执行clone操作。</p>
+<p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-03-ceph-cow.png" alt="rbd-cow"></p>
+<p>注意： clone只能用于 protected 的snapshot,且仅支持克隆 format 2 的映像（即用 rbd create –image-format 2 创建的）。</p>
+<p>分层快照使得 Ceph 块设备客户端可以很快地创建映像，这样便能实现openstack 中非常快的创建VM,而且，随着 openstack 的Nova image-create与ceph的snapshot的无缝连接，镜像的制作更快捷方便了，关于这部分，可以参考<a href="http://ceph.org.cn/2016/05/02/%E5%9F%BA%E4%BA%8Eceph-rbd%E7%9A%84openstack-nova%E5%BF%AB%E7%85%A7/" target="_blank" rel="external">基于Ceph RBD的OpenStack Nova快照</a></p>
+<p>关于 rbd snapshot 的内在原理 ，参考<a href="http://www.sysnote.org/2016/02/28/ceph-rbd-snap/" target="_blank" rel="external">ceph rbd快照原理解析</a></p>
+<p>clone 的 步骤如下：</p>
+<p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-03-clone-process.png" alt="clone-process"></p>
+<p>相关命令如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">$ rbd snap protect &#123;pool-name&#125;/&#123;image-name&#125;@&#123;snapshot-name&#125; <span class="comment"># 保护快照</span></div><div class="line"></div><div class="line">$ rbd <span class="built_in">clone</span> &#123;pool-name&#125;/&#123;parent-image&#125;@&#123;snap-name&#125; &#123;pool-name&#125;/&#123;child-image-name&#125; <span class="comment">#克隆快照</span></div><div class="line"></div><div class="line">$ rbd snap unprotect &#123;pool-name&#125;/&#123;image-name&#125;@&#123;snapshot-name&#125; <span class="comment"># 删除快照前，必须先取消保护。此外，不可以删除被克隆映像引用的快照，所以在删除快照前，必须先拍平（ flatten ）此快照的各个克隆。</span></div><div class="line"></div><div class="line">$ rbd children &#123;pool-name&#125;/&#123;image-name&#125;@&#123;snapshot-name&#125; <span class="comment"># 罗列快照的子孙</span></div><div class="line"></div><div class="line">$ rbd flatten &#123;pool-name&#125;/&#123;image-name&#125; <span class="comment"># 拍平克隆映像</span></div></pre></td></tr></table></figure>
+<h3 id="rbd-与内核相关的map-unmap"><a href="#rbd-与内核相关的map-unmap" class="headerlink" title="rbd 与内核相关的map/unmap"></a>rbd 与内核相关的map/unmap</h3><p>注意：由于Linux kernel支持rbd的版本较高，一般需要升级到较高版本（建议升级到3.11+）</p>
+<p>升级内核参考<a href="https://www.sjy.im/toss/use-yum-update-centos-kernel-quickly.html" target="_blank" rel="external">使用Yum快速更新升级CentOS内核</a></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">$ rbd map &#123;pool-name&#125;/&#123;image-name&#125; --id &#123;user-name&#125; <span class="comment"># 映射块设备</span></div><div class="line"></div><div class="line">$ rbd showmapped <span class="comment"># 查看已映射块设备</span></div><div class="line"></div><div class="line">$ rbd unmap /dev/rbd/&#123;poolname&#125;/&#123;imagename&#125; <span class="comment"># 取消块设备映射</span></div></pre></td></tr></table></figure>
+<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://docs.ceph.org.cn/rbd/rbd/" target="_blank" rel="external">CEPH 块设备</a></p>
+<p><a href="http://ceph.org.cn/2016/05/02/%E5%9F%BA%E4%BA%8Eceph-rbd%E7%9A%84openstack-nova%E5%BF%AB%E7%85%A7/" target="_blank" rel="external">基于Ceph RBD的OpenStack Nova快照</a></p>
+<p><a href="http://www.sysnote.org/2016/02/28/ceph-rbd-snap/" target="_blank" rel="external">ceph rbd快照原理解析</a></p>
+<p><strong><em>本篇文章由<a href="https://zhangchenchen.github.io/">pekingzcc</a>采用<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="external">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可,转载请注明。</em></strong></p>
+<p> <strong><em>END</em></strong></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
   <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/02/28/install-ceph-with-domestic-yum-source/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1668,435 +2027,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/01/17/make-openstack-image/">
-
-  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
-    <meta itemprop="name" content="pekingzcc">
-    <meta itemprop="description" content="">
-    <meta itemprop="image" content="/images/avatar.jpg">
-  </span>
-
-  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-    <meta itemprop="name" content="Solar">
-    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
-      <img style="display:none;" itemprop="url image" alt="Solar" src="">
-    </span>
-  </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/01/17/make-openstack-image/" itemprop="url">
-                  openstack 系列--利用Vmware workstation手动制作 openstack centos镜像简记
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-17T15:17:25+08:00">
-                2017-01-17
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/01/17/make-openstack-image/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/01/17/make-openstack-image/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="目录结构："><a href="#目录结构：" class="headerlink" title="目录结构："></a>目录结构：</h2><p><a href="#A">准备工作 </a></p>
-<p><a href="#B">创建虚拟机</a></p>
-<p><a href="#C">安装Centos系统</a></p>
-<p><a href="#D">配置系统</a></p>
-<p><a href="#E">上传镜像</a></p>
-<p><a href="#F">自动创建镜像工具</a></p>
-<p><a href="#G">参考文章</a></p>
-<p>tips:在制作镜像的时候最好先知晓镜像所要满足的要求，比如：是否支持磁盘分区，重设根分区大小，密码初始化等等。最常见的需求有如下几种：</p>
-<ul>
-<li>Disk partitions and resize root partition on boot (cloud-init)</li>
-<li>No hard-coded MAC address information</li>
-<li>SSH server running</li>
-<li>Disable firewall</li>
-<li>Access instance using ssh public key (cloud-init)</li>
-<li>Process user data and other metadata (cloud-init)</li>
-<li>Paravirtualized Xen support in Linux kernel (Xen hypervisor only with Linux kernel version &lt; 3.0)</li>
-</ul>
-<p>这部分内容可参考官方文档，<a href="http://docs.openstack.org/image-guide/openstack-images.html" target="_blank" rel="external">Image requirements</a> 。</p>
-<p><a name="A"></a></p>
-<h2 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h2><ul>
-<li>下载Vmware workstation,并安装Centos7,配置好网络。注：刚开始是用的virtualbox,发现不支持nested KVM,Vmware workstation 10+版本以上应该都可以,注意开启workstation的虚拟化设置。</li>
-<li>宿主机（刚装好的Centos）安装libvirt系列工具:</li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">yum groupinstall Virtualization <span class="string">"Virtualization Client"</span> </div><div class="line">yum install libvirt</div><div class="line">yum install libguestfs-tools</div><div class="line">service libvirtd restart</div></pre></td></tr></table></figure>
-<ul>
-<li>从<a href="https://www.centos.org/download/mirrors/" target="_blank" rel="external">Centos镜像源</a>下载一个最小的Centos7镜像。本文是以centos为例,其他操作系统类似，详见<a href="http://docs.openstack.org/image-guide/create-images-manually.html#" target="_blank" rel="external">Create images manually</a></li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">wget - O http://mirrors.163.com/centos/7.2.1511/isos/x86_64/CentOS-7-x86_64-Minimal-1511.iso</div></pre></td></tr></table></figure>
-<p><a name="B"></a></p>
-<h2 id="创建虚拟机"><a href="#创建虚拟机" class="headerlink" title="创建虚拟机"></a>创建虚拟机</h2><ul>
-<li><p>创建一个容量为5G的磁盘,并更改所属者：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">cd</span> /image</div><div class="line">qemu-img create <span class="_">-f</span> qcow2 centos.qcow2 5G</div><div class="line">chown qemu:qemu /image/centos.qcow2 -R</div></pre></td></tr></table></figure>
-</li>
-<li><p>创建并启动虚拟机</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">sudo virt-install --virt-type kvm --name centos7 --ram 1024 \  <span class="comment"># name 是自己取得</span></div><div class="line"> --disk centos.qcow2,format=qcow2 \      <span class="comment">#disk参数为上面创建的磁盘</span></div><div class="line"> --network network=default \             <span class="comment"># 采用KVM虚拟机网络为nat，其实更建议用bridge模式，删除本行，默认即为bridge模式，不过bridge模式需要自己手动配置宿主机网桥</span></div><div class="line"> --graphics vnc,listen=0.0.0.0 --noautoconsole \</div><div class="line"> --os-type=linux --os-variant=rhel7 \</div><div class="line"> --cdrom=/image/CentOS-7-x86_64-Minimal-1511.iso  <span class="comment">#下载的镜像</span></div></pre></td></tr></table></figure>
-</li>
-<li><p>用“virsh list” 命令查看虚拟机是否启动，如果没有启动的话用“virsh start $NAME” 启动。</p>
-</li>
-<li>执行 “virsh vncdisplay $NAME” ,之后就可以利用vnc-client 访问该虚拟机了。</li>
-</ul>
-<p><a name="C"></a></p>
-<h2 id="安装Centos系统"><a href="#安装Centos系统" class="headerlink" title="安装Centos系统"></a>安装Centos系统</h2><ul>
-<li>利用vnc-viewer 连接 虚拟机，默认是宿主机IP+5900端口。并进行虚拟机的安装。安装时注意大多数配置默认即可，SOFTWARE SELECTION选择Minimal Install，INSTALLATION DESTINATION需要选择手动配置分区，我们只需要一个根分区即可，不需要swap分区，文件系统选择ext4，存储驱动选择Virtio Block Device。</li>
-<li>安装完成后，为了能够联外网，以及用宿主机直接SSH 虚拟机，还要进行网络的配置。KVM虚拟机的网络配置方式主要有两种，Bridge模式和NAT 模式，关于两种模式的介绍可以参考这篇文章，<a href="http://blog.csdn.net/hzhsan/article/details/44098537/" target="_blank" rel="external">KVM虚拟机网络配置 Bridge方式，NAT方式</a>。我们这里使用默认的NAT模式，但是NAT模式有个弊端就是无法从宿主机SSH虚拟机，这样我们还要做些额外的工作实现该功能。</li>
-<li>通过端口转发来实现宿主机直连虚拟机，具体参考<a href="http://www.bkjia.com/Linuxjc/877147.html#top" target="_blank" rel="external">这里</a>。</li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">echo</span> 1 &gt;/proc/sys/net/ipv4/ip_forward  <span class="comment"># 打开ip转发功能，这种方法是暂时的，可以直接修改/etc/sysctl.conf 文件，增加net.ipv4.ip_forward = 1 达到永久效果，文件修该完毕后，要使用sysctl –p使其生效</span></div><div class="line"></div><div class="line">iptables -t nat -A POSTROUTING -o br0 -j MASQUERADE  <span class="comment"># 开启KVM服务器的IPtables的转发功能</span></div><div class="line"></div><div class="line">iptables -t nat -A PREROUTING <span class="_">-d</span> 192.168.1.102 -p tcp -m tcp --dport 8022 -j DNAT --to-destination 192.168.122.173:22</div><div class="line"></div><div class="line">iptables -t nat -A POSTROUTING <span class="_">-s</span> 192.168.122.0/255.255.255.0 <span class="_">-d</span> 192.168.122.173 -p tcp -m tcp --dport 22 -j SNAT --to-source 192.168.122.1</div></pre></td></tr></table></figure>
-<p><a name="D"></a></p>
-<h2 id="配置系统"><a href="#配置系统" class="headerlink" title="配置系统"></a>配置系统</h2><ul>
-<li>SSH到虚拟机后就可以开始一系列的配置工作，首先修改yum源为国内源。</li>
-<li><p>安装acpid服务，并设置开机自启动（acpid服务是用于hypervisor与虚拟机的交互）。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">yum install -y acpid</div><div class="line">systemctl <span class="built_in">enable</span> acpid</div></pre></td></tr></table></figure>
-</li>
-<li><p>虚拟机需要打开boot日志功能，并指定console，这样nova console-log才能获取虚拟机启动时的日志。修改配置文件/etc/default/grub，设置GRUB_CMDLINE_LINUX为：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">GRUB_CMDLINE_LINUX=<span class="string">" vconsole.keymap=us console=tty0 vconsole.font=latarcyrheb-sun16 console=ttyS0,115200"</span></div></pre></td></tr></table></figure>
-</li>
-</ul>
-<p>执行以下语句：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">grub2-mkconfig -o /boot/grub2/grub.cfg</div></pre></td></tr></table></figure>
-<p>ubuntu 的话执行 update-grub。</p>
-<ul>
-<li>手动安装qemu-guest-agent(版本必须是2.3+，L 版的动态修改密码需要用到)：</li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">yum install -y qemu-guest-agent</div></pre></td></tr></table></figure>
-<p>配置qemu-ga，修改/etc/sysconfig/qemu-ga，配置内容为:</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">TRANSPORT_METHOD=<span class="string">"virtio-serial"</span></div><div class="line">DEVPATH=<span class="string">"/dev/virtio-ports/org.qemu.guest_agent.0"</span></div><div class="line">LOGFILE=<span class="string">"/var/log/qemu-ga/qemu-ga.log"</span></div><div class="line">PIDFILE=<span class="string">"/var/run/qemu-ga.pid"</span></div><div class="line">BLACKLIST_RPC=<span class="string">""</span></div><div class="line">FSFREEZE_HOOK_ENABLE=0</div></pre></td></tr></table></figure>
-<ul>
-<li><p>为了使虚拟机能够和外部的metadata service通信，需要禁用默认的zeroconf route：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">echo</span> <span class="string">"NOZEROCONF=yes"</span> &gt;&gt; /etc/sysconfig/network</div></pre></td></tr></table></figure>
-</li>
-<li><p>最后安装cloud-init：</p>
-</li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">yum install -y cloud-init</div></pre></td></tr></table></figure>
-<ul>
-<li>为了实现自动扩容, 需要安装growpart：</li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">yum update -y</div><div class="line">yum install -y epel-release</div><div class="line">yum install -y cloud-utils-growpart</div><div class="line">rpm -qa kernel | sed <span class="string">'s/^kernel-//'</span>  | xargs -I &#123;&#125; dracut <span class="_">-f</span> /boot/initramfs-&#123;&#125;.img &#123;&#125;</div></pre></td></tr></table></figure>
-<ul>
-<li><p>基本完成，虚拟机关机。</p>
-</li>
-<li><p>宿主机上进行清理工作：</p>
-</li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">virt-sysprep <span class="_">-d</span> centos7 <span class="comment"># 移除mac地址信息</span></div><div class="line">virsh undefine centos7 <span class="comment"># 删除虚拟机</span></div></pre></td></tr></table></figure>
-<p><a name="E"></a></p>
-<h2 id="上传镜像"><a href="#上传镜像" class="headerlink" title="上传镜像"></a>上传镜像</h2><ul>
-<li>镜像格式转换（ceph只支持raw格式）</li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">qemu-img convert <span class="_">-f</span> qcow2 -O raw centos.qcow2 centos.raw</div></pre></td></tr></table></figure>
-<ul>
-<li>直接用glance上传镜像就不赘述了，这里有个窍门就是如果后端是ceph的话可以利用rbd import 的方式来加快速度，如下。 </li>
-<li>首先glance create 一条记录，但没有执行镜像上传操作，只是新建一条数据库记录。并记录下image-id。</li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">glance image-create</div></pre></td></tr></table></figure>
-<ul>
-<li>利用ceph import 镜像并执行快照</li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">rbd --pool=volumes import  centos.raw  --image=<span class="variable">$IMAGE_ID</span> --new-format --order 24</div><div class="line">rbd --pool=volumes --image=<span class="variable">$IMAGE_ID</span> --snap=snap snap create</div><div class="line">rbd --pool=volumes --image=<span class="variable">$IMAGE_ID</span> --snap=snap snap protect</div></pre></td></tr></table></figure>
-<ul>
-<li>完善镜像的必要属性</li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">glance image-update --name=<span class="string">"centos-7.2-64bit"</span> --disk-format=raw --container-format=bare <span class="variable">$IMAGE_ID</span></div><div class="line"></div><div class="line"><span class="comment"># 配置qemu-ga，该步骤是必须的，否则libvert启动虚拟机时不会生成qemu-ga配置项，导致虚拟机内部的qemu-ga由于找不到对应的虚拟串行字符设备而启动失败，提示找不到channel</span></div><div class="line">glance image-update --property hw_qemu_guest_agent=yes <span class="variable">$IMAGE_ID</span></div></pre></td></tr></table></figure>
-<ul>
-<li>设置镜像的location url<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">glance location-add --url rbd://<span class="variable">$FS_ROOT</span>/glance_images/<span class="variable">$IMAGE_ID</span>/snap <span class="variable">$IMAGE_ID</span><span class="comment">#这里的$FS_ROOT 可以通过查看ceph -s 中的cluster.</span></div></pre></td></tr></table></figure>
-</li>
-</ul>
-<p>具体参考<a href="http://int32bit.me/2016/05/28/%E6%89%8B%E5%8A%A8%E5%88%B6%E4%BD%9COpenstack%E9%95%9C%E5%83%8F/" target="_blank" rel="external">手动制作Openstack镜像</a> 的上传镜像部分。</p>
-<p><a name="F"></a></p>
-<h2 id="自动创建镜像工具"><a href="#自动创建镜像工具" class="headerlink" title="自动创建镜像工具"></a>自动创建镜像工具</h2><p>openstack 文档提供了几个类似的工具，没有尝试，<a href="http://docs.openstack.org/image-guide/create-images-automatically.html" target="_blank" rel="external">Tool support for image creation</a>.</p>
-<p><a name="G"></a></p>
-<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://docs.openstack.org/image-guide/centos-image.html" target="_blank" rel="external">openstack doc:Example: CentOS image</a></p>
-<p><a href="http://int32bit.me/2016/05/28/%E6%89%8B%E5%8A%A8%E5%88%B6%E4%BD%9COpenstack%E9%95%9C%E5%83%8F/" target="_blank" rel="external">手动制作Openstack镜像</a></p>
-<p><a href="http://yanheven.github.io/centos65-image-create" target="_blank" rel="external">制作openstack用的centos6.5镜像</a></p>
-<p><a href="http://blog.csdn.net/hzhsan/article/details/44098537/" target="_blank" rel="external">KVM虚拟机网络配置 Bridge方式，NAT方式</a></p>
-<p><a href="http://www.bkjia.com/Linuxjc/877147.html#top" target="_blank" rel="external">烂泥：KVM使用NAT联网并为VM配置iptables端口转发，kvmiptables</a></p>
-<p><a href="http://www.chenshake.com/about-openstack-centos-mirror/" target="_blank" rel="external">谈谈Openstack的CentOS镜像</a></p>
-<p><a href="http://docs.openstack.org/image-guide/openstack-images.html" target="_blank" rel="external">Image requirements</a></p>
-<p><strong><em>本篇文章由<a href="https://zhangchenchen.github.io/">pekingzcc</a>采用<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="external">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可,转载请注明。</em></strong></p>
-<p> <strong><em>END</em></strong></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/01/13/openstack-init-instance-password/">
-
-  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
-    <meta itemprop="name" content="pekingzcc">
-    <meta itemprop="description" content="">
-    <meta itemprop="image" content="/images/avatar.jpg">
-  </span>
-
-  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-    <meta itemprop="name" content="Solar">
-    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
-      <img style="display:none;" itemprop="url image" alt="Solar" src="">
-    </span>
-  </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/01/13/openstack-init-instance-password/" itemprop="url">
-                  openstack系列--初始化虚拟机实例密码几种方法
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-13T14:57:25+08:00">
-                2017-01-13
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/01/13/openstack-init-instance-password/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/01/13/openstack-init-instance-password/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="目录结构："><a href="#目录结构：" class="headerlink" title="目录结构："></a>目录结构：</h2><p><a href="#A">引出</a></p>
-<p><a href="#B">关于cloud init</a></p>
-<p><a href="#B">openstack 初始化虚拟机密码几种方式</a></p>
-<p><a name="A"></a></p>
-<h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><ul>
-<li>最初的问题是这样的：公司的云平台没有提供虚拟机密码重置的功能，需要加上，但我看到创建虚拟机的时候是可以设置密码的，于是想将重置密码的功能重用这部分，结果发现问题不是这么简单。</li>
-<li>关于虚拟机重置密码放在<a href="http://zhangchenchen.github.io/2017/01/19/openstack-reset-instance-password/">下一篇</a>，今天主要写写初始化密码的几种方式。</li>
-<li>其实虚拟机初始化设置密码，跟虚拟机初始化设置网络，主机名是一样的道理，都是通过cloud-init来实现。</li>
-<li>先看下cloud-init。</li>
-</ul>
-<p><a name="B"></a></p>
-<h2 id="关于cloud-init"><a href="#关于cloud-init" class="headerlink" title="关于cloud init"></a>关于cloud init</h2><ul>
-<li>Cloud-Init 是一个用来自动配置虚拟机的初始设置（如主机名，网卡和密钥）的工具（支持Linux,对于Windows系列有一个类似的工具，<a href="https://github.com/cloudbase/cloudbase-init" target="_blank" rel="external">cloudbase-init</a>）。它可以在使用模板部署虚拟机时使用，从而达到避免网络冲突的目的。在使用这个工具前，cloud-init 软件包必须在虚拟机上被安装。安装后，Cloud-Init 服务会在系统启动时搜索如何配置系统的信息。您可以使用只运行一次窗口来提供只需要配置一次的设置信息；或在新建虚拟机、编辑虚拟机和编辑模板窗口中输入虚拟机每次启动都需要的配置信息。（以上内容直接引用自red hat 官网）</li>
-<li>cloud-init 的配置数据有两种：<ol>
-<li>userdata:文件的形式，常见的如yaml文件，shell scripts，cloud config file。（cloud-init会自动识别以 “#!” 或 “#cloud-config” 开头的文件。）</li>
-<li>metedata:键值对的形式，常见的如：server name, instance id, display name and other cloud specific details.</li>
-</ol>
-</li>
-<li>cloud-init 的数据源：即cloud-init会从以下几种方式获取userdata或metedata：<ol>
-<li>EC2方式：顾名思义，就是AWS的那一套，其实本质是创建一个http server,虚拟机通过这个http server获取到instance的userdata和metadata。这个http server的IP 通常为169.254.169.254。</li>
-<li>Config Drive方式：主要是openstack提供的一种方式，本质是把data写入一个特殊的配置设备中，然后在虚拟机启动时，自动挂载并读取 metadata 信息。</li>
-<li>Alt cloud：通常用于 RHEVm 和 vSphere中获取userdata。</li>
-<li>vSphere 用于为了向VMWare的vSphere虚拟机中注入userdata。</li>
-<li>No Cloud 允许用户在没有网络的情况下提供user-data和medatata给instances</li>
-</ol>
-</li>
-</ul>
-<p><a name="C"></a></p>
-<h2 id="openstack-初始化虚拟机密码几种方式"><a href="#openstack-初始化虚拟机密码几种方式" class="headerlink" title="openstack 初始化虚拟机密码几种方式"></a>openstack 初始化虚拟机密码几种方式</h2><p>因为目前大部分私有云平台基本是KVM虚拟化，后台存储为ceph，所以只选适合这种架构的方案，早期的<a href="http://niusmallnan.com/_build/html/_templates/openstack/inject_passwd.html#inject" target="_blank" rel="external">inject-password</a>,貌似只支持QCOW2，不支持RAW镜像(没有验证，但在ceph的文档里确实把这个功能的相关配置默认为false,而且推荐使用cloud-init)以及只支持XEN的clear-password ， root-password等API不再考虑。</p>
-<ol>
-<li><p>利用user-data注入：我司的云平台就是使用这种方式，用法很简单</p>
-<p> <img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-1-13-cloud-init-test.png" alt="user-data"></p>
-<p> cloud-init数据源是采用最广泛的EC2模式，EC2的restAPI相关知识<a href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html#instancedata-add-user-data" target="_blank" rel="external">check this</a>。关于metadata  server的配置不在描述，主要是Nova，和Neutron 的相关配置（默认配置即可）。<br> 登录到对应的虚拟机验证下：</p>
-<p> <img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-01-13-metadata.png" alt="metadata"></p>
-<p> 关于metadata和userdata的服务机制,参考<a href="http://www.ibm.com/developerworks/cn/cloud/library/1509_liukg_openstackmeta/" target="_blank" rel="external">OpenStack 的 metadata 服务机制</a></p>
-</li>
-<li><p>修改cloud-init的方式：注意在执行命令nova boot的时候会生成一个adminPass的字段。当然，如果你想用自己的密码，也可以在meta中指定，然后修改下代码即可，参考<a href="https://segmentfault.com/a/1190000002878435" target="_blank" rel="external">这里</a> 。</p>
-<p>  <img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-01-14-adminPass.png" alt="adminPass"> </p>
-<p> 我们可以获取该字段，然后交给cloud-init进行密码的设置。前文所说，虚机在通过cloud-init获取元数据时可以使用api-metadata、ConfigDrive等方式，但是因为只有ConfigDrive方式才会把adminPass字段传递给虚机，所以这里我们只能用config drive的方式。关于config drive的使用方式，<a href="http://www.voidcn.com/blog/wuyongpeng0912/article/p-6099231.html" target="_blank" rel="external">check this</a> 。而且，为了能够使cloud-init获取到该字段，需要加个patch:</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line">diff --git a/cloudinit/config/cc_set_passwords.py b/cloudinit/config/cc_set_passwords.py</div><div class="line">index <span class="number">4</span>ca85e2.<span class="number">.5</span>b5cae4 <span class="number">100644</span></div><div class="line">--- a/cloudinit/config/cc_set_passwords.py</div><div class="line">+++ b/cloudinit/config/cc_set_passwords.py</div><div class="line"><span class="meta">@@ -44,6 +44,12 @@ def handle(_name, cfg, cloud, log, args):</span></div><div class="line">     <span class="keyword">else</span>:</div><div class="line">        password = util.get_cfg_option_str(cfg, <span class="string">"password"</span>, <span class="keyword">None</span>)</div><div class="line"></div><div class="line">-    <span class="comment"># use the admin_pass available in the ConfigDrive</span></div><div class="line">-    <span class="keyword">if</span> <span class="keyword">not</span> password:</div><div class="line">-        metadata = cloud.datasource.metadata</div><div class="line">-        <span class="keyword">if</span> metadata <span class="keyword">and</span> <span class="string">'admin_pass'</span> <span class="keyword">in</span> metadata:</div><div class="line">-            password = metadata[<span class="string">'admin_pass'</span>]</div><div class="line">+</div><div class="line">     expire = <span class="keyword">True</span></div><div class="line">     pw_auth = <span class="string">"no"</span></div><div class="line">     change_pwauth = <span class="keyword">False</span></div><div class="line"><span class="meta">@@ -59,6 +65,8 @@ def handle(_name, cfg, cloud, log, args):</span></div><div class="line">         (user, _user_config) = ds.extract_default(users)</div><div class="line">         <span class="keyword">if</span> user:</div><div class="line">             plist = <span class="string">"%s:%s"</span> % (user, password)</div><div class="line">-            <span class="comment">#add change root password</span></div><div class="line">-            plist = plist + <span class="string">"\nroot:%s"</span> % password</div><div class="line">         <span class="keyword">else</span>:</div><div class="line">             log.warn(<span class="string">"No default or defined user to change password for."</span>)</div></pre></td></tr></table></figure>
-<p> 同时cloud.cfg中也要添加:<br> chpasswd: { expire: False }<br> 这样保证修改的密码不是过期的，否则vm启动后输入密码，系统让你重新修改才能进入。</p>
-</li>
-</ol>
-<p>3, 利用L版的新特性set-admin-password：这种方式本身要求的条件有点高，没有去尝试，详见<a href="http://niusmallnan.com/_build/html/_templates/openstack/inject_passwd.html#id2" target="_blank" rel="external">虚拟机系统密码的修改方案</a></p>
-<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://stackoverflow.com/questions/24864186/how-to-reset-password-of-openstack-instance-using-kvm-and-libvirt" target="_blank" rel="external">How to reset password of openstack instance using KVM and libvirt?</a></p>
-<p><a href="https://github.com/jriguera/ansible-ironic-standalone/wiki/Cloud-Init-and-Config-Drive" target="_blank" rel="external">Cloud Init and Config Drive</a></p>
-<p><a href="http://blog.sina.com.cn/s/blog_959491260101m2cx.html" target="_blank" rel="external">Cloud-init初探 和 OpenStack应用 </a></p>
-<p><a href="http://www.itdadao.com/articles/c15a642783p0.html" target="_blank" rel="external">openstack 中 metadata 和 userdata 的配置和使用</a></p>
-<p><a href="http://niusmallnan.com/_build/html/_templates/openstack/inject_passwd.html#id2" target="_blank" rel="external">虚拟机系统密码的修改方案</a></p>
-<p><a href="http://kiwik.github.io/openstack/2016/01/30/%E8%AE%BE%E7%BD%AE%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%AF%86%E7%A0%81/" target="_blank" rel="external">设置虚拟机密码</a></p>
-<p><a href="http://cloudinit.readthedocs.io/en/latest/topics/examples.html" target="_blank" rel="external">Cloud config examples</a></p>
-<p><strong><em>本篇文章由<a href="https://zhangchenchen.github.io/">pekingzcc</a>采用<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="external">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可,转载请注明。</em></strong></p>
-<p> <strong><em>END</em></strong></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2144,7 +2074,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">84</span>
+                <span class="site-state-item-count">86</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>

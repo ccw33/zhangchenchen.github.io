@@ -270,6 +270,344 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/06/20/neutron-dvr/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="pekingzcc">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/avatar.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="Solar">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="Solar" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/06/20/neutron-dvr/" itemprop="url">
+                  openstack-- neutron 分布式虚拟路由（DVR）
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-06-20T14:30:32+08:00">
+                2017-06-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/06/20/neutron-dvr/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/06/20/neutron-dvr/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>公司有个测试云平台的虚拟机密码初始化出现了问题，根据之前的经验可能跟<a href="https://zhangchenchen.github.io/2017/02/17/openstack-instance-metadata-discovery/">这篇</a>问题一样,没想到花费了将近一天的时间才将问题解决，发现最终是跟neutron 分布式虚拟路由有关，这里记录一下。</p>
+<p>问题是这样的：nova boot的时候传入 user-data（user-data中含有需要修改的密码），instance起来的时候会执行cloud-init，然后会使用EC2的datasource方式（即“169.254.169.254”）去获取user-data，然而发现密码没有更改，查看日志发现,发现获取user-data时，报错如下</p>
+<blockquote>
+<p>Calling ‘<a href="http://169.254.169.254/2009-04-04/meta-data/instance-id" target="_blank" rel="external">http://169.254.169.254/2009-04-04/meta-data/instance-id</a>‘ failed [0/120s]: bad status code [500]</p>
+</blockquote>
+<p>初步断定就是instance metadata 的某个环节网络不通。</p>
+<h2 id="问题发现"><a href="#问题发现" class="headerlink" title="问题发现"></a>问题发现</h2><ul>
+<li>第一步想到的就是重启下相关服务，将neutron-metada-agent,neutron-l3-agent,nova-api重启后发现问题依旧。</li>
+<li>查看相关日志，没有找到有关报错信息，而且奇怪的是网络节点对应的neutron-ns-metadata-proxy-xxxxxxxxx.log都没有处理请求的日志，说明请求可能没有走到这里。</li>
+<li>只能按照请求的处理步骤一步步排查，首先确定虚拟机所在的网络是有路由器相连的，所以metadata请求是走的路由器的namespace，相关知识参考<a href="https://zhangchenchen.github.io/2017/02/17/openstack-instance-metadata-discovery/">openstack– openstack instance metadata 服务机制探索</a>,网络节点对应路由器的namespace中一切正常，9697 端口的重定向，以及监听9697端口的neutron-metadata-ns-proxy进程也正常。没办法，在该路由器的namespace中对应端口抓包试试，虚拟机中发送169.254.169.254，却一点反应没有，断定请求压根就没有走到该路由器的namespace。只能返回去虚拟机实例中抓包试试，使用traceroute命令发现请求是发到对应网关的，而对应网关就应该在路由器的namespace中啊，到这里基本就蒙逼了。</li>
+<li>在经过一番徒劳无功的试错后，终于找到了一点线索。我在查看neutron agent状态的时候，发现neutron-l3-agent不只是在网络节点，计算节点也存在neutron-l3-agent，立马想到neutron-l3-agent会在本地计算节点也创建虚拟路由器，所以获取metadata的请求就发送到本地计算节点的路由器 namespace，果然，本地计算节点也有一个路由器，抓包发现确实是发送到了这里，而且该节点对应网络的neutron-ns-metadata-proxy-xxxxxxxxx.log发现了 socket.error报错信息，说明neutron-ns-metadata-proxy通过 unix domian socket 转发给 neutron-metadata-agent的时候出现了问题。本能的想是不是配置错误导致的，查看l3-agent的配置文件时发现有个配置项：agent_mode = dvr ，赶紧搜了一下，终于找到了进入的正确姿势。</li>
+</ul>
+<h2 id="neutron-分布式虚拟路由（DVR）"><a href="#neutron-分布式虚拟路由（DVR）" class="headerlink" title="neutron 分布式虚拟路由（DVR）"></a>neutron 分布式虚拟路由（DVR）</h2><h3 id="整体架构"><a href="#整体架构" class="headerlink" title="整体架构"></a>整体架构</h3><p>neutron 的DVR 是属于openstack HA的一部分，主要解决虚拟路由器的HA（即neutron-l3-agent的HA）。之前写过一篇<a href="https://zhangchenchen.github.io/2017/04/14/openstack-ha/">记录openstack的HA</a>,但没有仔细研究过neutron DVR。</p>
+<p>在没有使用dvr时，我们的整体架构大致是这样的：</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/neutron-arc-1.png" alt="neutron-arc1"></p>
+<p>计算节点只需要安装L2 Agent就可以，而使用dvr模式后：</p>
+<p><img src="http://oeptotikb.bkt.clouddn.com/2017-06-20neutro-arc-2.png" alt="neutron-arc-2"></p>
+<p>计算节点除了L2 Agent外，还要安装L3 Agent以及Metadata Agent。也就是说，通过使用dvr，计算节点也有了网络节点的三层转发和NAT功能，起到了分流的作用。</p>
+<h3 id="安装配置"><a href="#安装配置" class="headerlink" title="安装配置"></a>安装配置</h3><ul>
+<li>控制节点：修改neutron.conf 如下，重启neutron-server</li>
+</ul>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[DEFAULT]</div><div class="line">router_distributed = <span class="literal">True</span></div></pre></td></tr></table></figure>
+<ul>
+<li>网络节点：修改 openswitch_agent.ini如下，重启Open vSwitch agent</li>
+</ul>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[DEFAULT]</div><div class="line">enable_distributed_routing = <span class="literal">True</span></div></pre></td></tr></table></figure>
+<p>修改l3_agent.ini如下，重启Layer-3 agent，</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[DEFAULT]</div><div class="line">agent_mode = dvr_snat</div></pre></td></tr></table></figure>
+<ul>
+<li>计算节点：安装l3-agent,metadata-agent,修改 openswitch_agent.ini如下，重启Open vSwitch agent</li>
+</ul>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[DEFAULT]</div><div class="line">enable_distributed_routing = <span class="literal">True</span></div></pre></td></tr></table></figure>
+<p>修改l3_agent.ini 如下，重启l3-agent</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">[DEFAULT]</div><div class="line">interface_driver = openvswitch</div><div class="line">external_network_bridge =</div><div class="line">agent_mode = dvr</div></pre></td></tr></table></figure>
+<p>可以通过 neutron agent-list 验证agent 是否启动。</p>
+<h3 id="网络流通方向"><a href="#网络流通方向" class="headerlink" title="网络流通方向"></a>网络流通方向</h3><p><img src="https://docs.openstack.org/newton/networking-guide/_images/deploy-ovs-ha-dvr-compconn1.png" alt="deploy-ovs-ha-dvr-compconn"></p>
+<p>照着这张图梳理一遍以下几种情况的网络走向：</p>
+<ol>
+<li><p>没有floating-ip的instance的南北向网络流通情况<br>即图中蓝色标注的线路，以图中左边计算节点的instance为例，首先通过一对veth设备与一个linux-bridge相连（该linux-bridge的存在主要是为了利用iptables实现Sec-group），又是一对veth设备，连接到OVS生成的br-int网桥，该instance在三层网络的第一跳便是到与该br-int相连的Disk router namespace的网关接口，因为没有floating-ip ，所以不会通过FIP namespace，而是通过patch设备到br-tun，再到网络节点的br-int,到达snat namespace，进行snat(源地址转换)，最后通过ovs-provider-bridge与外网联通。</p>
+</li>
+<li><p>有floating-ip的instance的南北向网络流通情况<br>刚开始与第一种情况类似，但是跳到本地router namespace后，接下来会跳到本地的RIP namespace，做snat,然后直接通过本地的ovs-provider-bridge连接到外网。 </p>
+</li>
+<li>不同子网但有虚拟路由连接的instance东西向网络<br>刚开始类似，之后在本地router namespace进行路由选择，并通过br-int,br-tun进入对应虚拟机的计算节点（该部分工作由ovs 的openflow完成，同时还完成了snat），到了 目标计算节点上，依次被 br-tun，br-int 处理，直到通过 tap 设备进入另一instance。</li>
+</ol>
+<p>关于详细描述以及实验可以参考<a href="https://docs.openstack.org/newton/networking-guide/deploy-ovs-ha-dvr.html#deploy-ovs-ha-dvr" target="_blank" rel="external">官方文档</a>,以及<a href="http://www.cnblogs.com/sammyliu/p/4713562.html" target="_blank" rel="external">这篇</a>。</p>
+<h2 id="问题解决"><a href="#问题解决" class="headerlink" title="问题解决"></a>问题解决</h2><p>回到刚开始碰到的问题，确定了问题的所在，就是在本地计算节点neutron-ns-metadata-proxy通过 unix domian socket 转发给 neutron-metadata-agent的时候出现了问题，neutron-ns-metadata-proxy是正常的，那么问题就出在neutron-metadata-agent上，果然，该agent在计算节点并没有启动，启动后正常。</p>
+<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://docs.openstack.org/ops-guide/ops-network-troubleshooting.html" target="_blank" rel="external">Network Troubleshooting</a></p>
+<p><a href="https://developer.rackspace.com/blog/neutron-networking-l3-agent/" target="_blank" rel="external">Neutron Networking: Neutron Routers and the L3 Agent</a></p>
+<p><a href="https://wiki.openstack.org/wiki/Neutron/DVR" target="_blank" rel="external">Neutron/DVR</a></p>
+<p><a href="http://www.cnblogs.com/sammyliu/p/4713562.html" target="_blank" rel="external">理解 OpenStack 高可用（HA）（3）：Neutron 分布式虚拟路由（Neutron Distributed Virtual Routing）</a></p>
+<p><a href="http://www.cnblogs.com/sammyliu/p/4636091.html" target="_blank" rel="external">Neutron 理解 (6): Neutron 是怎么实现虚拟三层网络的 [How Neutron implements virtual L3 network]</a></p>
+<p><a href="http://blog.csdn.net/quqi99/article/details/20711303" target="_blank" rel="external">Neutron DVR实现multi-host特性打通东西南北流量提前看</a></p>
+<p><a href="https://docs.openstack.org/newton/networking-guide/deploy-ovs-ha-dvr.html#deploy-ovs-ha-dvr" target="_blank" rel="external">Open vSwitch: High availability using DVR</a></p>
+<p><strong><em>本篇文章由<a href="https://zhangchenchen.github.io/">pekingzcc</a>采用<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="external">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可,转载请注明。</em></strong></p>
+<p> <strong><em>END</em></strong></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/06/14/python-hidden-feature/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="pekingzcc">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/avatar.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="Solar">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="Solar" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/06/14/python-hidden-feature/" itemprop="url">
+                  python-- python 中的一些隐藏特性
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-06-14T14:21:32+08:00">
+                2017-06-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/06/14/python-hidden-feature/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/06/14/python-hidden-feature/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>偶然间翻到Stackoverflow上的<a href="https://stackoverflow.com/questions/101268/hidden-features-of-python#111176" target="_blank" rel="external">这个问题</a>，浏览了一下，觉得有点意思，摘录了一些感觉能用到的纪录在此。</p>
+<h2 id="使用‘-’-代表函数的list-dict参数"><a href="#使用‘-’-代表函数的list-dict参数" class="headerlink" title="使用‘  * ’ 代表函数的list/dict参数"></a>使用‘ <em> *</em> ’ 代表函数的list/dict参数</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">draw_point</span><span class="params">(x, y)</span>:</span></div><div class="line">    print(x,y)</div><div class="line">point_foo = [<span class="number">3</span>, <span class="number">4</span>] <span class="comment"># or (3,4)</span></div><div class="line">point_bar = &#123;<span class="string">'y'</span>: <span class="number">3</span>, <span class="string">'x'</span>: <span class="number">2</span>&#125;</div><div class="line"></div><div class="line">draw_point(*point_foo)</div><div class="line">draw_point(**point_bar)</div></pre></td></tr></table></figure>
+<p>这个特性其实使用还算常见，不过pylint不建议这样使用，因为debug的时候会不清晰。</p>
+<h2 id="链式比较操作"><a href="#链式比较操作" class="headerlink" title="链式比较操作"></a>链式比较操作</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">&gt;&gt;&gt; x = 5</div><div class="line">&gt;&gt;&gt; 1 &lt; x &lt; 10</div><div class="line">True</div><div class="line">&gt;&gt;&gt; 10 &lt; x &lt; 20 </div><div class="line">False</div><div class="line">&gt;&gt;&gt; x &lt; 10 &lt; x*10 &lt; 100</div><div class="line">True</div><div class="line">&gt;&gt;&gt; 10 &gt; x &lt;= 9</div><div class="line">True</div><div class="line">&gt;&gt;&gt; 5 == x &gt; 4 </div><div class="line">True</div></pre></td></tr></table></figure>
+<p>比如最后一个比较，python会将这一句转化为 (5 == x and x &gt; 4) ，这是跟C或java不一样的。 </p>
+<h2 id="装饰器"><a href="#装饰器" class="headerlink" title="装饰器"></a>装饰器</h2><p>装饰器用一个函数或方法封装另一个函数以增加功能或修改参数，结果等。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">&gt;&gt;&gt; def print_args(<span class="keyword">function</span>):</div><div class="line">&gt;&gt;&gt;     def wrapper(*args, **kwargs):</div><div class="line">&gt;&gt;&gt;         <span class="built_in">print</span> <span class="string">'Arguments:'</span>, args, kwargs</div><div class="line">&gt;&gt;&gt;         <span class="built_in">return</span> <span class="keyword">function</span>(*args, **kwargs)</div><div class="line">&gt;&gt;&gt;     <span class="built_in">return</span> wrapper</div><div class="line"></div><div class="line">&gt;&gt;&gt; @print_args</div><div class="line">&gt;&gt;&gt; def write(text):</div><div class="line">&gt;&gt;&gt;     <span class="built_in">print</span> text</div><div class="line"></div><div class="line">&gt;&gt;&gt; write(<span class="string">'foo'</span>)</div><div class="line">Arguments: (<span class="string">'foo'</span>,) &#123;&#125;</div><div class="line">foo</div></pre></td></tr></table></figure>
+<h2 id="小心使用可变的默认参数"><a href="#小心使用可变的默认参数" class="headerlink" title="小心使用可变的默认参数"></a>小心使用可变的默认参数</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">&gt;&gt;&gt; def foo(x=[]):</div><div class="line">...     x.append(1)</div><div class="line">...     <span class="built_in">print</span> x</div><div class="line">... </div><div class="line">&gt;&gt;&gt; foo()</div><div class="line">[1]</div><div class="line">&gt;&gt;&gt; foo()</div><div class="line">[1, 1]</div><div class="line">&gt;&gt;&gt; foo()</div><div class="line">[1, 1, 1]</div></pre></td></tr></table></figure>
+<p>可以加一个哨兵值来做判断：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">&gt;&gt;&gt; def foo(x=None):</div><div class="line">...     <span class="keyword">if</span> x is None:</div><div class="line">...         x = []</div><div class="line">...     x.append(1)</div><div class="line">...     <span class="built_in">print</span> x</div><div class="line">&gt;&gt;&gt; foo()</div><div class="line">[1]</div><div class="line">&gt;&gt;&gt; foo()</div><div class="line">[1]</div></pre></td></tr></table></figure>
+<h2 id="利用python-正则语法树来debug正则表达式"><a href="#利用python-正则语法树来debug正则表达式" class="headerlink" title="利用python 正则语法树来debug正则表达式"></a>利用python 正则语法树来debug正则表达式</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div></pre></td><td class="code"><pre><div class="line">&gt;&gt;&gt; re.compile(<span class="string">"^\[font(?:=(?P&lt;size&gt;[-+][0-9]&#123;1,2&#125;))?\](.*?)[/font]"</span>,</div><div class="line">    re.DEBUG)</div><div class="line">at at_beginning</div><div class="line">literal 91</div><div class="line">literal 102</div><div class="line">literal 111</div><div class="line">literal 110</div><div class="line">literal 116</div><div class="line">max_repeat 0 1</div><div class="line">  subpattern None</div><div class="line">    literal 61</div><div class="line">    subpattern 1</div><div class="line">      <span class="keyword">in</span></div><div class="line">        literal 45</div><div class="line">        literal 43</div><div class="line">      max_repeat 1 2</div><div class="line">        <span class="keyword">in</span></div><div class="line">          range (48, 57)</div><div class="line">literal 93</div><div class="line">subpattern 2</div><div class="line">  min_repeat 0 65535</div><div class="line">    any None</div><div class="line"><span class="keyword">in</span></div><div class="line">  literal 47</div><div class="line">  literal 102</div><div class="line">  literal 111</div><div class="line">  literal 110</div><div class="line">  literal 116</div><div class="line"></div><div class="line">``` </div><div class="line">当然，最常用的还是使用注解的方式以增强正则的可读性。</div><div class="line"></div><div class="line">```bash</div><div class="line">&gt;&gt;&gt; re.compile(<span class="string">""</span><span class="string">"</span></div><div class="line"> ^              # start of a line</div><div class="line"> \[font         # the font tag</div><div class="line"> (?:=(?P&lt;size&gt;  # optional [font=+size]</div><div class="line"> [-+][0-9]&#123;1,2&#125; # size specification</div><div class="line"> ))?</div><div class="line"> \]             # end of tag</div><div class="line"> (.*?)          # text between the tags</div><div class="line"> \[/font\]      # end of the tag</div><div class="line"> "<span class="string">""</span>, re.DEBUG|re.VERBOSE|re.DOTALL)</div></pre></td></tr></table></figure>
+<h2 id="利用enumerate-获取list的下标"><a href="#利用enumerate-获取list的下标" class="headerlink" title="利用enumerate 获取list的下标"></a>利用enumerate 获取list的下标</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">&gt;&gt;&gt; a = [<span class="string">'a'</span>, <span class="string">'b'</span>, <span class="string">'c'</span>, <span class="string">'d'</span>, <span class="string">'e'</span>]</div><div class="line">&gt;&gt;&gt; <span class="keyword">for</span> index, item <span class="keyword">in</span> enumerate(a, start=1): <span class="built_in">print</span> index, item</div><div class="line">...</div><div class="line">1 a</div><div class="line">2 b</div><div class="line">3 c</div><div class="line">4 d</div><div class="line">5 e</div><div class="line">&gt;&gt;&gt;</div></pre></td></tr></table></figure>
+<h2 id="生成器"><a href="#生成器" class="headerlink" title="生成器"></a>生成器</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">&gt;&gt;&gt; n = ((a,b) <span class="keyword">for</span> a <span class="keyword">in</span> range(0,2) <span class="keyword">for</span> b <span class="keyword">in</span> range(4,6))</div><div class="line">&gt;&gt;&gt; <span class="keyword">for</span> i <span class="keyword">in</span> n:</div><div class="line">...   <span class="built_in">print</span> i </div><div class="line"></div><div class="line">(0, 4)</div><div class="line">(0, 5)</div><div class="line">(1, 4)</div><div class="line">(1, 5)</div></pre></td></tr></table></figure>
+<p>需要注意的是，列表生成式是实实在在生成了列表存在了内存里，可以多次迭代使用，而生成器只能迭代一次。</p>
+<h2 id="巧用list中的slice操作"><a href="#巧用list中的slice操作" class="headerlink" title="巧用list中的slice操作"></a>巧用list中的slice操作</h2><p>slice操作如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">a = [1,2,3,4,5]</div><div class="line">&gt;&gt;&gt; a[::2]  <span class="comment"># iterate over the whole list in 2-increments</span></div><div class="line">[1,3,5]</div></pre></td></tr></table></figure>
+<p>将一个list逆序，最简洁写法：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">&gt;&gt;&gt; a[::-1]</div><div class="line">[5,4,3,2,1]</div></pre></td></tr></table></figure>
+<h2 id="for…else-语法"><a href="#for…else-语法" class="headerlink" title="for…else 语法"></a>for…else 语法</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">for</span> i <span class="keyword">in</span> foo:</div><div class="line">    <span class="keyword">if</span> i == <span class="number">0</span>:</div><div class="line">        <span class="keyword">break</span></div><div class="line"><span class="keyword">else</span>:</div><div class="line">    print(<span class="string">"i was never 0"</span>)</div></pre></td></tr></table></figure>
+<p>上述代码如果break，那么else代码是不会执行的。上述代码的执行顺如跟下面的代码是一样的：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">found = <span class="keyword">False</span></div><div class="line"><span class="keyword">for</span> i <span class="keyword">in</span> foo:</div><div class="line">    <span class="keyword">if</span> i == <span class="number">0</span>:</div><div class="line">        found = <span class="keyword">True</span></div><div class="line">        <span class="keyword">break</span></div><div class="line"><span class="keyword">if</span> <span class="keyword">not</span> found: </div><div class="line">    print(<span class="string">"i was never 0"</span>)</div></pre></td></tr></table></figure></p>
+<h2 id="两个变量互换"><a href="#两个变量互换" class="headerlink" title="两个变量互换"></a>两个变量互换</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">&gt;&gt;&gt; a = 10</div><div class="line">&gt;&gt;&gt; b = 5</div><div class="line">&gt;&gt;&gt; a, b</div><div class="line">(10, 5)</div><div class="line"></div><div class="line">&gt;&gt;&gt; a, b = b, a</div><div class="line">&gt;&gt;&gt; a, b</div><div class="line">(5, 10)</div></pre></td></tr></table></figure>
+<h2 id="with-声明语句"><a href="#with-声明语句" class="headerlink" title="with 声明语句"></a>with 声明语句</h2><p>with 在Python2.5需要从<em>future</em>模块导入，2.6+已经可以直接使用。示例：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">from</span> __future__ <span class="keyword">import</span> with_statement</div><div class="line"></div><div class="line"><span class="keyword">with</span> open(<span class="string">'foo.txt'</span>, <span class="string">'w'</span>) <span class="keyword">as</span> f:</div><div class="line">    f.write(<span class="string">'hello!'</span>)</div></pre></td></tr></table></figure>
+<p>with 语句在这里的作用是在调用with时，会调用这个文件实例的 <strong>enter</strong> 方法，和 <strong>exit</strong> 方法，如果发生异常，异常的详细信息会传给 <strong>exit</strong> 方法处理并抛出，with在这里的主要用途是保证文件句柄最终关闭，其实with 可以看作是异常处理的一种抽象。<br>除了打开文件经常使用with外，线程锁以及数据库事务也经常用到。</p>
+<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://stackoverflow.com/questions/101268/hidden-features-of-python#113198" target="_blank" rel="external">Hidden features of Python </a></p>
+<p><strong><em>本篇文章由<a href="https://zhangchenchen.github.io/">pekingzcc</a>采用<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="external">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可,转载请注明。</em></strong></p>
+<p> <strong><em>END</em></strong></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
   <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/06/05/ceph-rbd-snapshot/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1697,365 +2035,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/03/07/update-your-openstack-image/">
-
-  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
-    <meta itemprop="name" content="pekingzcc">
-    <meta itemprop="description" content="">
-    <meta itemprop="image" content="/images/avatar.jpg">
-  </span>
-
-  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-    <meta itemprop="name" content="Solar">
-    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
-      <img style="display:none;" itemprop="url image" alt="Solar" src="">
-    </span>
-  </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/03/07/update-your-openstack-image/" itemprop="url">
-                  openstack-- 如何升级现有镜像
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-07T13:13:46+08:00">
-                2017-03-07
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/03/07/update-your-openstack-image/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/03/07/update-your-openstack-image/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>公司云平台有些镜像的密码注入出了点问题，问题的原因初步诊断为镜像问题，需要对这些镜像进行cloudinit/cloudbase的升级操作。对于已知密码的镜像，可以直接开启一个虚拟机，完成升级后，对该虚拟机做snapshot 操作（nova image-create）即可。对于不知道密码的镜像，经过一番搜索后，可以通过将镜像挂载到本地宿主机，然后chroot的方法进行升级,后来又从官网了解到利用libguestfish 的方法。以下为一些简单记录。</p>
-<h2 id="利用-nova-image-create-升级镜像"><a href="#利用-nova-image-create-升级镜像" class="headerlink" title="利用 nova image-create 升级镜像"></a>利用 nova image-create 升级镜像</h2><ul>
-<li>利用镜像开启一个虚拟机</li>
-<li>进入虚拟机做升级操作，并删除/var/lib/cloud 下的文件，windows需删除LocalScripts/下的文件。</li>
-<li>完成操作后，退出虚拟机并对该虚拟机做snapshot操作。</li>
-<li>镜像完成。</li>
-</ul>
-<h2 id="利用-本地挂载的方法升级镜像"><a href="#利用-本地挂载的方法升级镜像" class="headerlink" title="利用 本地挂载的方法升级镜像"></a>利用 本地挂载的方法升级镜像</h2><p>如果忘记密码的话我们可以使用该方法进行镜像的升级，不过因为glance后端存储方式的不同，挂载到本地HOST的方法也不同，下文分别以本地存储，ceph存储讲解。</p>
-<h3 id="glance-存储为本地存储"><a href="#glance-存储为本地存储" class="headerlink" title="glance 存储为本地存储"></a>glance 存储为本地存储</h3><h4 id="镜像格式为raw格式且镜像文件系统中使没有用LVM"><a href="#镜像格式为raw格式且镜像文件系统中使没有用LVM" class="headerlink" title="镜像格式为raw格式且镜像文件系统中使没有用LVM"></a>镜像格式为raw格式且镜像文件系统中使没有用LVM</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">$ fdisk -lu cirros-0.3.0-x86_64-disk.raw  <span class="comment"># 查看该镜像的分区情况以及是否使用LVM</span></div><div class="line"></div><div class="line">$ kpartx -av cirros-0.3.0-x86_64-disk.raw <span class="comment">#读取镜像的分区表，然后生成代表相应分区的设备/dev/loop0 ，/dev/loop1等等</span></div><div class="line"></div><div class="line">$ mount /dev/mapper/loop0p1 /mnt/image <span class="comment"># 将需要挂载的分区设备进行挂载，此时进入/mnt/image 应该就可以看到熟悉的系统文件目录了 </span></div><div class="line"></div><div class="line">$ <span class="built_in">cd</span> /mnt/image &amp;&amp; cp /etc/resolv.conf etc/resolv.conf <span class="comment"># 覆盖dns</span></div><div class="line"></div><div class="line">$ chroot /mnt/image bash  <span class="comment">#chroot到镜像文件中</span></div><div class="line"></div><div class="line">$ <span class="built_in">source</span> /etc/profile &amp;&amp; <span class="built_in">source</span> ~/.bashrc <span class="comment">#初始化环境变量</span></div></pre></td></tr></table></figure>
-<p>然后就可以进行升级操作了，操作完成后，需要将临时文件清除，yum clean all 等。最后退出chroot 并进行unmount 操作：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">exit</span> <span class="comment"># 退出chroot</span></div><div class="line"></div><div class="line">$ umount /mnt/image </div><div class="line"></div><div class="line">$ kpartx <span class="_">-d</span> cirros-0.3.0-x86_64-disk.raw  <span class="comment"># 删除设备映射关系</span></div></pre></td></tr></table></figure>
-<h4 id="镜像格式为raw格式且镜像文件系统中使用LVM"><a href="#镜像格式为raw格式且镜像文件系统中使用LVM" class="headerlink" title="镜像格式为raw格式且镜像文件系统中使用LVM"></a>镜像格式为raw格式且镜像文件系统中使用LVM</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">$ fdisk -lu centos7-x86_64.img  <span class="comment"># 查看该镜像的分区情况以及是否使用LVM</span></div><div class="line"></div><div class="line">$ kpartx -av centos7-x86_64.img <span class="comment"># 读取镜像的分区表，然后生成代表相应分区的设备/dev/loop0 ，/dev/loop1等等</span></div><div class="line"></div><div class="line">$ pvscan <span class="comment"># 查找lvm设备并记下vg的名字示例为centos</span></div><div class="line"></div><div class="line">$ vgchange -ay centos <span class="comment"># 激活vg中的lvm</span></div><div class="line"></div><div class="line">$ lvs <span class="comment"># 查看lvm设备列表</span></div><div class="line"></div><div class="line">$ mount /dev/centos/root /media/ <span class="comment">#挂载对应的lvm</span></div><div class="line"></div><div class="line">$ <span class="built_in">cd</span> /media/ &amp;&amp; cp /etc/resolv.conf etc/resolv.conf</div><div class="line"></div><div class="line">$ chroot /mnt/image bash  <span class="comment">#chroot到镜像文件中</span></div><div class="line"></div><div class="line">$ <span class="built_in">source</span> /etc/profile &amp;&amp; <span class="built_in">source</span> ~/.bashrc <span class="comment">#初始化环境变量</span></div></pre></td></tr></table></figure>
-<p>退出chroot 并进行unmount 操作如下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">exit</span>  <span class="comment"># 退出chroot</span></div><div class="line"></div><div class="line">$ umount /media/ </div><div class="line"></div><div class="line">$ vgchange -an centos <span class="comment"># deactive vg 中的lvm</span></div><div class="line"></div><div class="line">$ kpartx <span class="_">-d</span>  centos7-x86_64.img <span class="comment"># 删除设备映射关系</span></div></pre></td></tr></table></figure>
-<p>如下为一个完整实例（省略chroot操作）：</p>
-<p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-08-chroot-lvm.png" alt="chroot-lvm"></p>
-<h4 id="镜像格式为qcow2格式"><a href="#镜像格式为qcow2格式" class="headerlink" title="镜像格式为qcow2格式"></a>镜像格式为qcow2格式</h4><p>qcow2 格式的镜像需要使用qemu自带的一个工具qemu-nbd，该工具会生成一个nbd(network block device)，然后将镜像映射到该nbd,便可以像普通block设备一样挂载了。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">$ modinfo nbd <span class="comment"># 查看系统kernel是否支持nbd模块</span></div><div class="line"></div><div class="line">$ modprobe nbd max_part=16 <span class="comment"># 加载 nbd模块</span></div><div class="line"></div><div class="line">$ lsmod | grep nbd <span class="comment"># 查看nbd模块是否加载</span></div><div class="line"></div><div class="line">$ qemu-nbd -c /dev/nbd0 centos7.qcow2 <span class="comment"># 将qcow2镜像映射为网络块设备(nbd)</span></div><div class="line"></div><div class="line">$ ll /dev/nbd0* <span class="comment"># 查看映射情况</span></div><div class="line"></div><div class="line">$ mount /dev/nbd0p1 /media/ <span class="comment"># 挂在对应的nbd设备</span></div></pre></td></tr></table></figure>
-<p>卸载的步骤如下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">$ umount /media</div><div class="line"></div><div class="line">$ qemu-nbd <span class="_">-d</span> /dev/nbd0</div></pre></td></tr></table></figure>
-<p>如果该qcow2镜像使用LVM的话，前半段挂载nbd设备，后半段参照raw格式。</p>
-<h3 id="glance-存储为ceph存储"><a href="#glance-存储为ceph存储" class="headerlink" title="glance 存储为ceph存储"></a>glance 存储为ceph存储</h3><p>首先需要知道ceph作为glance存储后端的时候，openstack会充分利用ceph 的分层clone的特性来支持快速创建虚拟机。镜像会首先生成一个以snap结尾命名的快照，以后每次开启一个虚拟机都会clone该snapshot。该snapshot是protected，所以无法更改，而如果直接修改image的话，无法同步对应的snapshot。所以最稳妥的方法是先复制一个rbd image，然后修改这个复制的image，修改成功后覆盖或直接删除之前的image。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">$ rbd  cp <span class="variable">$POOL</span>/<span class="variable">$&#123;IMAGE_ID&#125;</span> <span class="variable">$POOL</span>/<span class="variable">$&#123;IMAGE_ID&#125;</span>_copy <span class="comment"># 复制image （允许跨pool）</span></div><div class="line"></div><div class="line">$ rbd map <span class="variable">$POOL</span>/<span class="variable">$&#123;IMAGE_ID&#125;</span>_copy <span class="comment"># 挂载rbd镜像到本地（注意kernel的支持）</span></div><div class="line"></div><div class="line">$ mount /dev/rbd0p1 /mnt <span class="comment"># 挂载对映的rbd到挂载点(rbd0p1 只是示例，依据真实情况填写)</span></div><div class="line"></div><div class="line">$ ll /mnt</div></pre></td></tr></table></figure>
-<p>之后就可以执行chroot 以及镜像的更新操作了。<br>之后的umount操作如下：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">$ umount -r <span class="_">-l</span> /mnt/ </div><div class="line"></div><div class="line">$ rbd unmap /dev/rbd0 <span class="comment">#从rbd中卸载</span></div></pre></td></tr></table></figure></p>
-<p>再然后就是更新glance了，大致步骤如下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">$ glance image-create --name NewImage <span class="comment"># 创建image，占个坑，不上传，得到new imageID</span></div><div class="line"> </div><div class="line">$ rbd mv  <span class="variable">$POOL</span>/<span class="variable">$&#123;IMAGE_ID&#125;</span>_copy <span class="variable">$POOL</span>/<span class="variable">$&#123;NEW_IMAGE_ID&#125;</span> <span class="comment"># rbd改名</span></div><div class="line"></div><div class="line">$ rbd --pool=<span class="variable">$POOL</span> --image=<span class="variable">$&#123;NEW_IMAGE_ID&#125;</span> --snap=snap snap create <span class="comment"># 创建snapshot</span></div><div class="line"></div><div class="line">$ rbd --pool=<span class="variable">$POOL</span> --image=<span class="variable">$&#123;NEW_IMAGE_ID&#125;</span> --snap=snap snap protect <span class="comment">#对snapshot做保护</span></div><div class="line"></div><div class="line">$ glance image-update --name=<span class="string">"<span class="variable">$DISPLAY_NAME</span>"</span> --disk-format=raw --container-format=bare --is-public=True <span class="variable">$&#123;NEW_IMAGE_ID&#125;</span> <span class="comment"># 更新glance 元数据</span></div><div class="line"></div><div class="line">$ glance image-update --property image_meta=<span class="string">"<span class="variable">$image_meta</span>"</span> <span class="variable">$&#123;NEW_IMAGE_ID&#125;</span></div><div class="line"></div><div class="line">$ glance image-update --property hw_qemu_guest_agent=yes <span class="variable">$&#123;NEW_IMAGE_ID&#125;</span></div><div class="line"></div><div class="line">$ glance image-update --location rbd://<span class="variable">$FSID</span>/<span class="variable">$POOL</span>/<span class="variable">$NEW_IMAGE_ID</span>/snap <span class="variable">$&#123;NEW_IMAGE_ID&#125;</span> <span class="comment">#更新镜像的地址</span></div></pre></td></tr></table></figure>
-<h2 id="使用-libguestfs-修改虚拟机镜像"><a href="#使用-libguestfs-修改虚拟机镜像" class="headerlink" title="使用 libguestfs 修改虚拟机镜像"></a>使用 libguestfs 修改虚拟机镜像</h2><h3 id="libguestfs项目介绍"><a href="#libguestfs项目介绍" class="headerlink" title="libguestfs项目介绍"></a>libguestfs项目介绍</h3><p>libguestfs 其实是一系列工具组成的，目的就是为了连接并修改本地虚拟机镜像。可以实现的功能有很多，包括：修改镜像内文件，脚本，查看镜像文件系统容量使用情况，物理机与虚拟镜像之间的文件传递，备份，克隆，甚至新建虚拟机实例，格式化磁盘,修改磁盘大小等等。参考<a href="http://libguestfs.org/" target="_blank" rel="external">libguestfs </a></p>
-<h3 id="部分示例"><a href="#部分示例" class="headerlink" title="部分示例"></a>部分示例</h3><p>安装比较简单，如果是rh/centos系列，直接yum安装：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ yum install -y libguestfs-tools</div></pre></td></tr></table></figure>
-<p>下面主要分三部分guestfish，guestmount 以及virt-* tools 讲解</p>
-<h4 id="guestfish-讲解与示例"><a href="#guestfish-讲解与示例" class="headerlink" title="guestfish 讲解与示例"></a>guestfish 讲解与示例</h4><p>通俗讲，guestfish 的作用就是修改镜像内的文件。它并不会将镜像文件系统直接挂载到本地，而是提供了一个类似shell的交互接口允许你查看，编辑，删除文件。</p>
-<p>示例：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ guestfish --rw <span class="_">-a</span> centos63.raw  <span class="comment"># 进入guestfish shell ,Mount the image in read-write mode as root</span></div></pre></td></tr></table></figure>
-<p>进入之后 ，先执行run ，会创建一个虚拟机实例。</p>
-<p><img src="http://oeptotikb.bkt.clouddn.com/2017-03-24-libguestfs.png" alt="libguestfs"></p>
-<p>如果出现错误的话，可以 export LIBGUESTFS_DEBUG=1 打开debug模式查找错误。或者利用 libguestfs-test-tool 命令测试一下。<br>接下来示例编辑网卡配置：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">&gt;&lt;fs&gt; list-filesystems  <span class="comment">#列出可挂载的文件系统</span></div><div class="line"></div><div class="line">&gt;&lt;fs&gt; mount /dev/vg_centosbase/lv_root /  <span class="comment">#挂载</span></div><div class="line"></div><div class="line">&gt;&lt;fs&gt; edit /etc/sysconfig/network-scripts/ifcfg-eth0 <span class="comment">#编辑文件</span></div><div class="line"></div><div class="line">&gt;&lt;fs&gt; <span class="built_in">exit</span> <span class="comment">#退出</span></div></pre></td></tr></table></figure>
-<h4 id="guestmount-讲解与示例"><a href="#guestmount-讲解与示例" class="headerlink" title="guestmount 讲解与示例"></a>guestmount 讲解与示例</h4><p>guestmount 可以实现直接将镜像的文件系统挂载到本地。示例如下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">$ guestmount <span class="_">-a</span> centos63_desktop.qcow2 -i --rw /mnt <span class="comment"># i 参数表示自动查找root分区并挂载</span></div><div class="line"></div><div class="line">$ rpm -qa --dbpath /mnt/var/lib/rpm  <span class="comment">#示例查看rpm包</span></div><div class="line"></div><div class="line">$ umount /mnt</div></pre></td></tr></table></figure>
-<p>若umount失败（通常报错 device is busy），可以使用lazy umount，加 l 参数，即：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ umount /mnt <span class="_">-l</span></div></pre></td></tr></table></figure>
-<h4 id="virt-tools-讲解与示例"><a href="#virt-tools-讲解与示例" class="headerlink" title="virt-* tools 讲解与示例"></a>virt-* tools 讲解与示例</h4><p>大概以下几种工具：</p>
-<ul>
-<li>virt-edit : 修改镜像内的文件。</li>
-<li>virt-df : 查看镜像磁盘占用情况。</li>
-<li>virt-resize : resize 镜像。</li>
-<li>virt-sysprep : 准备发布镜像前的一系列操作（比如删除SSH HOST，删除mac地址，删除user 信息）</li>
-<li>virt-sparsify : 镜像稀疏（消除镜像空洞）</li>
-<li>virt-p2v : 物理机转换为虚拟机（kvm）.</li>
-<li>virt-v2v : xen或vmware镜像转换为kvm镜像。</li>
-</ul>
-<p>几个示例（来自<a href="https://docs.openstack.org/image-guide/modify-images.html" target="_blank" rel="external">openstack doc</a>）:</p>
-<p>第一个示例是修改镜像文件：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">$ virsh shutdown instance-000000e1</div><div class="line"></div><div class="line">$ virt-edit <span class="_">-d</span> instance-000000e1 /etc/shadow  <span class="comment"># d means domain</span></div><div class="line"></div><div class="line">$ virsh start instance-000000e1</div></pre></td></tr></table></figure>
-<p>第二个示例是 resize image：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">$ virt-filesystems --long --parts --blkdevs -h <span class="_">-a</span> /data/images/win2012.qcow2 <span class="comment">#查看分区</span></div><div class="line"></div><div class="line">$ qemu-img create <span class="_">-f</span> qcow2 /data/images/win2012-50gb.qcow2 50G <span class="comment">#新建一块qcow2 image 空间</span></div><div class="line"></div><div class="line">$ virt-resize --expand /dev/sda2 /data/images/win2012.qcow2 /data/images/win2012-50gb.qcow2 <span class="comment"># 扩展空间</span></div></pre></td></tr></table></figure>
-<h2 id="更新"><a href="#更新" class="headerlink" title="更新"></a>更新</h2><ul>
-<li>2017-03-23 增加 libguestfs 修改虚拟机镜像的方法。</li>
-</ul>
-<ul>
-<li>2017-03-34 增加 libguestfs 部分示例</li>
-</ul>
-<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://docs.openstack.org/image-guide/modify-images.html" target="_blank" rel="external">Modify images</a></p>
-<p><a href="http://int32bit.me/2016/06/04/%E5%9C%A8%E7%BA%BF%E6%9B%B4%E6%96%B0Glance%E9%95%9C%E5%83%8F/" target="_blank" rel="external">在线升级glance镜像技巧</a></p>
-<p><a href="http://krystism.is-programmer.com/posts/47074.html" target="_blank" rel="external">挂载raw和qcow2格式的KVM硬盘镜像</a></p>
-<p><a href="https://www.sjy.im/toss/use-yum-update-centos-kernel-quickly.html" target="_blank" rel="external">使用Yum快速更新升级CentOS内核</a></p>
-<p><a href="http://smilejay.com/2012/08/mount-an-image-file/" target="_blank" rel="external">如何挂载一个镜像文件(HOW TO MOUNT AN IMAGE FILE)</a></p>
-<p><a href="http://www.vpsee.com/2010/10/mount-lvm-volumes-from-loopback-disk-images/" target="_blank" rel="external">挂载虚拟机镜像文件里的 LVM 逻辑分区</a></p>
-<p><a href="http://libguestfs.org/" target="_blank" rel="external">libguestfs </a></p>
-<p><a href="http://www.361way.com/kvm-libguestfs-tools/3175.html" target="_blank" rel="external">kvm虚拟化小结（六）libguestfs-tools</a></p>
-<p><a href="http://www.hanbaoying.com/2017/02/26/libguestfs.html" target="_blank" rel="external">libguestfs详解</a></p>
-<p><strong><em>本篇文章由<a href="https://zhangchenchen.github.io/">pekingzcc</a>采用<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="external">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可,转载请注明。</em></strong></p>
-<p> <strong><em>END</em></strong></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/03/03/something-about-ceph-rbd/">
-
-  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
-    <meta itemprop="name" content="pekingzcc">
-    <meta itemprop="description" content="">
-    <meta itemprop="image" content="/images/avatar.jpg">
-  </span>
-
-  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-    <meta itemprop="name" content="Solar">
-    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
-      <img style="display:none;" itemprop="url image" alt="Solar" src="">
-    </span>
-  </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/03/03/something-about-ceph-rbd/" itemprop="url">
-                  ceph-- 关于ceph rbd 的一些记录
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-03T09:13:46+08:00">
-                2017-03-03
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/03/03/something-about-ceph-rbd/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/03/03/something-about-ceph-rbd/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>ceph 的中文文档做的真是非常棒，比起openstack的中文文档来说，不仅全，而且更新也比较及时，openstack的文档还是直接查阅英文版的比较好。</p>
-<p>本文是在查阅ceph官网文档过程中，联系实际操作做出的一些思考与记录。</p>
-<h2 id="ceph-rbd-的简单说明"><a href="#ceph-rbd-的简单说明" class="headerlink" title="ceph rbd 的简单说明"></a>ceph rbd 的简单说明</h2><p>官网对rbd的定义是这样的：Ceph 块设备是精简配置的、大小可调且将数据条带化存储到集群内的多个 OSD。</p>
-<p>ceph rbd是基于 rados来做的，也就是说，一个 rbd image 首先会被分成多个等大的 object，这些object再 根据 crush map 存储到对应的3个（或n个，n为奇数）OSD中，理解这一点对于理解 rbd 中的 stripe-unit和 stripe-count 有帮助。<br>所以如果考虑深层的话需要结合RADOS 的多种能力，如快照、复制和一致性。</p>
-<p>对于openstack来说，通常是通过libvirt 来控制磁盘的虚拟化(比如qemu),再通过qemu来与rbd打交道，如下图：</p>
-<p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-03-openstack-ceph-rbd.png" alt="ceph-rbd-qemu"></p>
-<p>qemu会调用librbd 实现rbd的增删改查等一系列操作，当然也有配套的 qemu命令，详见<a href="http://docs.ceph.org.cn/rbd/qemu-rbd/" target="_blank" rel="external">QEMU 与块设备</a></p>
-<p>libvirt 是一套虚拟机抽象层，它隐藏了底层多种虚拟化的具体实现，提供给client一套统一的通用API和shell接口。关于如何用 virsh 新建一个挂载rbd 的vm，可以参考<a href="http://docs.ceph.org.cn/rbd/libvirt/" target="_blank" rel="external">通过 LIBVIRT 使用 CEPH RBD</a></p>
-<p>关于openstack 与ceph 的整合与配置，参考<a href="http://docs.ceph.org.cn/rbd/rbd-openstack/" target="_blank" rel="external">块设备与 OPENSTACK</a></p>
-<h2 id="rbd-常用操作以及命令"><a href="#rbd-常用操作以及命令" class="headerlink" title="rbd 常用操作以及命令"></a>rbd 常用操作以及命令</h2><p>rbd 的常用操作大致包括三个部分，一个是 常见的增删改查，一个是 针对 snapshot的操作，再加一个map/unmap操作。</p>
-<h3 id="rbd的增删改查"><a href="#rbd的增删改查" class="headerlink" title="rbd的增删改查"></a>rbd的增删改查</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">$ rbd create --size &#123;megabytes&#125; &#123;pool-name&#125;/&#123;image-name&#125; <span class="comment"># 创建 rbd</span></div><div class="line"></div><div class="line">$ rbd ls &#123;poolname&#125; <span class="comment"># 罗列 rbd</span></div><div class="line"></div><div class="line">$ rbd info &#123;pool-name&#125;/&#123;image-name&#125; <span class="comment"># 查看某一rbd具体信息</span></div><div class="line"></div><div class="line">$ rbd resize --size 2048 foo (to increase) <span class="comment"># 增加尺寸</span></div><div class="line">$ rbd resize --size 2048 foo --allow-shrink (to decrease) <span class="comment"># 减小尺寸</span></div><div class="line"></div><div class="line">$ rbd rm &#123;pool-name&#125;/&#123;image-name&#125; <span class="comment"># 删除rbd镜像</span></div></pre></td></tr></table></figure>
-<h3 id="rbd-snapshot-相关操作"><a href="#rbd-snapshot-相关操作" class="headerlink" title="rbd snapshot 相关操作"></a>rbd snapshot 相关操作</h3><p>快照是映像在某个特定时间点的一份只读副本,ceph 的快照有一个比较高级的特性就是分层clone，在openstack 中会实现非常快的创建VM，下文会详细讲解。</p>
-<h4 id="rbd-snapshot-的基本操作"><a href="#rbd-snapshot-的基本操作" class="headerlink" title="rbd snapshot 的基本操作"></a>rbd snapshot 的基本操作</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">$ rbd snap create &#123;pool-name&#125;/&#123;image-name&#125;@&#123;snap-name&#125; <span class="comment"># 创建快照</span></div><div class="line"></div><div class="line">$ rbd snap ls &#123;pool-name&#125;/&#123;image-name&#125; <span class="comment">#罗列 某个镜像的快照</span></div><div class="line"></div><div class="line">$ rbd snap rollback &#123;pool-name&#125;/&#123;image-name&#125;@&#123;snap-name&#125; <span class="comment"># 快照回滚</span></div><div class="line"></div><div class="line">$ rbd snap rm &#123;pool-name&#125;/&#123;image-name&#125;@&#123;snap-name&#125; <span class="comment"># 删除某一快照</span></div><div class="line"></div><div class="line">$ rbd snap purge &#123;pool-name&#125;/&#123;image-name&#125; <span class="comment"># 清除某一镜像的所有快照</span></div></pre></td></tr></table></figure>
-<h4 id="ceph-快照的分层-clone"><a href="#ceph-快照的分层-clone" class="headerlink" title="ceph 快照的分层 clone"></a>ceph 快照的分层 clone</h4><p>Ceph 支持为某一rbd snapshot创建很多个写时复制（ COW ）克隆。所谓写时复制，就是执行 clone命令后，并没有立即执行clone操作，而是引用原文件，当发生写入操作时才真正执行clone操作。</p>
-<p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-03-ceph-cow.png" alt="rbd-cow"></p>
-<p>注意： clone只能用于 protected 的snapshot,且仅支持克隆 format 2 的映像（即用 rbd create –image-format 2 创建的）。</p>
-<p>分层快照使得 Ceph 块设备客户端可以很快地创建映像，这样便能实现openstack 中非常快的创建VM,而且，随着 openstack 的Nova image-create与ceph的snapshot的无缝连接，镜像的制作更快捷方便了，关于这部分，可以参考<a href="http://ceph.org.cn/2016/05/02/%E5%9F%BA%E4%BA%8Eceph-rbd%E7%9A%84openstack-nova%E5%BF%AB%E7%85%A7/" target="_blank" rel="external">基于Ceph RBD的OpenStack Nova快照</a></p>
-<p>关于 rbd snapshot 的内在原理 ，参考<a href="http://www.sysnote.org/2016/02/28/ceph-rbd-snap/" target="_blank" rel="external">ceph rbd快照原理解析</a></p>
-<p>clone 的 步骤如下：</p>
-<p><img src="http://7xrnwq.com1.z0.glb.clouddn.com/2017-03-03-clone-process.png" alt="clone-process"></p>
-<p>相关命令如下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">$ rbd snap protect &#123;pool-name&#125;/&#123;image-name&#125;@&#123;snapshot-name&#125; <span class="comment"># 保护快照</span></div><div class="line"></div><div class="line">$ rbd <span class="built_in">clone</span> &#123;pool-name&#125;/&#123;parent-image&#125;@&#123;snap-name&#125; &#123;pool-name&#125;/&#123;child-image-name&#125; <span class="comment">#克隆快照</span></div><div class="line"></div><div class="line">$ rbd snap unprotect &#123;pool-name&#125;/&#123;image-name&#125;@&#123;snapshot-name&#125; <span class="comment"># 删除快照前，必须先取消保护。此外，不可以删除被克隆映像引用的快照，所以在删除快照前，必须先拍平（ flatten ）此快照的各个克隆。</span></div><div class="line"></div><div class="line">$ rbd children &#123;pool-name&#125;/&#123;image-name&#125;@&#123;snapshot-name&#125; <span class="comment"># 罗列快照的子孙</span></div><div class="line"></div><div class="line">$ rbd flatten &#123;pool-name&#125;/&#123;image-name&#125; <span class="comment"># 拍平克隆映像</span></div></pre></td></tr></table></figure>
-<h3 id="rbd-与内核相关的map-unmap"><a href="#rbd-与内核相关的map-unmap" class="headerlink" title="rbd 与内核相关的map/unmap"></a>rbd 与内核相关的map/unmap</h3><p>注意：由于Linux kernel支持rbd的版本较高，一般需要升级到较高版本（建议升级到3.11+）</p>
-<p>升级内核参考<a href="https://www.sjy.im/toss/use-yum-update-centos-kernel-quickly.html" target="_blank" rel="external">使用Yum快速更新升级CentOS内核</a></p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">$ rbd map &#123;pool-name&#125;/&#123;image-name&#125; --id &#123;user-name&#125; <span class="comment"># 映射块设备</span></div><div class="line"></div><div class="line">$ rbd showmapped <span class="comment"># 查看已映射块设备</span></div><div class="line"></div><div class="line">$ rbd unmap /dev/rbd/&#123;poolname&#125;/&#123;imagename&#125; <span class="comment"># 取消块设备映射</span></div></pre></td></tr></table></figure>
-<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://docs.ceph.org.cn/rbd/rbd/" target="_blank" rel="external">CEPH 块设备</a></p>
-<p><a href="http://ceph.org.cn/2016/05/02/%E5%9F%BA%E4%BA%8Eceph-rbd%E7%9A%84openstack-nova%E5%BF%AB%E7%85%A7/" target="_blank" rel="external">基于Ceph RBD的OpenStack Nova快照</a></p>
-<p><a href="http://www.sysnote.org/2016/02/28/ceph-rbd-snap/" target="_blank" rel="external">ceph rbd快照原理解析</a></p>
-<p><strong><em>本篇文章由<a href="https://zhangchenchen.github.io/">pekingzcc</a>采用<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="external">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可,转载请注明。</em></strong></p>
-<p> <strong><em>END</em></strong></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2103,7 +2082,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">84</span>
+                <span class="site-state-item-count">86</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
