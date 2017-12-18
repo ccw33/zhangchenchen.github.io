@@ -101,7 +101,7 @@
 
 集">
 <meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/k8s-arch.jpg">
-<meta property="og:updated_time" content="2017-12-11T02:36:45.147Z">
+<meta property="og:updated_time" content="2017-12-18T03:03:17.625Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Kuberbetes-- 私有容器云平台实践优化总结">
 <meta name="twitter:description" content="概述私有容器云平台一期的项目算是进入尾声，本篇文章算是对该项目做一个简单的总结，以及对基于k8s私有容器云落地的一些想法。
@@ -394,7 +394,7 @@
 <h2 id="优化"><a href="#优化" class="headerlink" title="优化"></a>优化</h2><p>结合具体工作谈一下具体优化的地方：</p>
 <h3 id="docker部分"><a href="#docker部分" class="headerlink" title="docker部分"></a>docker部分</h3><ul>
 <li>首先是版本问题，k8s建议是 1.12.6,同时要注意与内核版本的兼容问题。</li>
-<li>docker 镜像部分优化：docker镜像大致可以分为三层，底层的系统层，中间层是运行环境（java/python等），最上层是应用代码层。一般来说系统层肯定是会复用的，应用层肯定是不会复用的。所以系统层就需要做一下定制，安装一些常用工具即可。中间层的复用就见仁见智了，如果想节省磁盘空间，且应用的运行环境比较统一（比如都是java8），那么可以复用（将jdk直接以volume形式挂载到容器中），如果业务繁多，且技术债务比较重，还是隔离较好。（以笔者的经验，若不是推倒重来，一般还是一个容器一个环境更好。）</li>
+<li>docker 镜像部分优化：docker镜像大致可以分为三层，底层的系统层（可以使用alpine），中间层是运行环境（java/python等），最上层是应用代码层。一般来说系统层肯定是会复用的，应用层肯定是不会复用的。所以系统层就需要做一下定制，安装一些常用工具即可。中间层的复用就见仁见智了，如果想节省磁盘空间，且应用的运行环境比较统一（比如都是java8），那么可以复用（将jdk直接以volume形式挂载到容器中），如果业务繁多，且技术债务比较重，还是隔离较好。（以笔者的经验，若不是推倒重来，一般还是一个容器一个环境更好。）</li>
 <li>依赖库的安装：尽量使用yum等安装（装完后会默认删除）</li>
 </ul>
 <h3 id="kubernetes-部分"><a href="#kubernetes-部分" class="headerlink" title="kubernetes 部分"></a>kubernetes 部分</h3><h4 id="安装部署"><a href="#安装部署" class="headerlink" title="安装部署"></a>安装部署</h4><p>这部分没什么好说的，就是尽量上tls（可以使用cloudera的套件），然后master节点做HA，我们使用kubeadm进行的安装部署，然后在此基础上做的HA 。<br>最近好像使用rancher 安装更简单了，笔者抽时间会尝试一下。</p>
@@ -542,7 +542,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">87</span>
+                <span class="site-state-item-count">88</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -553,7 +553,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">34</span>
+                <span class="site-state-item-count">35</span>
                 <span class="site-state-item-name">tags</span>
               </a>
             </div>
