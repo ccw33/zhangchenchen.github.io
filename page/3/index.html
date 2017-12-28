@@ -702,6 +702,37 @@
 <li>利用cobbler check 查看配置错误，有些地方并非必须修改。</li>
 <li>server 与 next-server设置为第二块网卡的ip</li>
 </ul>
+<h3 id="Cobbler-各目录说明"><a href="#Cobbler-各目录说明" class="headerlink" title="Cobbler 各目录说明"></a>Cobbler 各目录说明</h3><p>配置文件目录：/etc/cobbler</p>
+<ul>
+<li>/etc/cobbler/settings：cobbler 主配置文件</li>
+<li>/etc/cobbler/iso/：iso 模板配置文件</li>
+<li>/etc/cobbler/pxe：pxe 模板文件</li>
+<li>/etc/cobbler/power：电源的配置文件</li>
+<li>/etc/cobbler/users.conf：Web 服务授权配置文件</li>
+<li>/etc/cobbler/users.digest：用于 web 访问的用户名密码配置文件</li>
+<li>/etc/cobbler/dhcp.template：DHCP 服务的配置模板</li>
+<li>/etc/cobbler/dnsmasq.template：DNS 服务的配置模板</li>
+<li>/etc/cobbler/tftpd.template：tftp 服务的配置模板</li>
+<li>/etc/cobbler/modules.conf：Cobbler 模块配置文件</li>
+</ul>
+<p>数据目录：/var/lib/cobbler</p>
+<ul>
+<li>/var/lib/cobbler/config/：用于存放 distros、systems、profiles 等信息配置文件</li>
+<li>/var/lib/cobbler/triggers：用于存放用户定义的 cobbler 命令</li>
+<li>/var/lib/cobbler/kickstarts/：默认存放 kickstart 文件</li>
+<li>/var/lib/cobbler/loaders：存放各种引导程序</li>
+</ul>
+<p>镜像数据目录：/var/www/cobbler</p>
+<ul>
+<li>/var/www/cobbler/ks_mirror/：导入的发行版系统的所有数据</li>
+<li>/var/www/cobbler/images/：导入发行版的 Kernel 和 initrd 镜像用于远程网络启动（ks_mirror 下对应发行版 系统的软链）</li>
+<li>/var/www/cobbler/repo_mirror/：repo 仓库存储目录</li>
+</ul>
+<p>日志目录：/var/log/cobbler/</p>
+<ul>
+<li>/var/log/cobbler/install.log：客户端系统安装日志</li>
+<li>/var/log/cobbler/cobbler.log：cobbler日志</li>
+</ul>
 <h3 id="Cobbler-使用"><a href="#Cobbler-使用" class="headerlink" title="Cobbler 使用"></a>Cobbler 使用</h3><ul>
 <li>利用lrzsz命令上传 centos7-minimal 镜像至虚拟机guest#1.</li>
 <li><p>本地挂载镜像</p>
