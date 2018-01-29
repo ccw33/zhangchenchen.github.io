@@ -68,7 +68,7 @@
 <link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="ceph," />
+  <meta name="keywords" content="Ops,Bigdata," />
 
 
 
@@ -84,22 +84,30 @@
 
 
 
-<meta name="description" content="引出初衷是自己搭建一套ceph的实验集群，按照官方的quick start,按理说应该是分分钟的事，因为GFW的原因，搞得忙活了一上午，再加上心情烦躁,中间出现了各种差错，这里记录一下。
-系统预检并安装ceph-deploy准备集群系统，网络设置，SSH无密码登录等设置略过，详细参考PREFLIGHT CHECKLIST
-这里有一个地方需要注意的是：centos7 在修改HOSTNAME 的时候命">
+<meta name="description" content="概述目标是搭建一个CDH 的测试环境，图方便在网上找了一些中文的搭建博客，结果问题百出，还是回到官网浏览，找到对应的安装文档，花了一点时间搭建，这里记录一下。系统配置如下：
+
+centos7.2 minimal,8G内存，100G磁盘(master节点)
+centos7.2 minimal,4G内存，100G磁盘(node节点)
+centos7.2 minimal,4G内存，100G磁盘(node">
 <meta property="og:type" content="article">
-<meta property="og:title" content="ceph-- 使用国内yum源搭建ceph集群">
-<meta property="og:url" content="https://zhangchenchen.github.io/2017/02/28/install-ceph-with-domestic-yum-source/index.html">
+<meta property="og:title" content="Bigdata-- Centos7 安装CDH5.14记录">
+<meta property="og:url" content="https://zhangchenchen.github.io/2018/01/26/centos7-install-cdh5.14/index.html">
 <meta property="og:site_name" content="Solar">
-<meta property="og:description" content="引出初衷是自己搭建一套ceph的实验集群，按照官方的quick start,按理说应该是分分钟的事，因为GFW的原因，搞得忙活了一上午，再加上心情烦躁,中间出现了各种差错，这里记录一下。
-系统预检并安装ceph-deploy准备集群系统，网络设置，SSH无密码登录等设置略过，详细参考PREFLIGHT CHECKLIST
-这里有一个地方需要注意的是：centos7 在修改HOSTNAME 的时候命">
-<meta property="og:updated_time" content="2017-11-16T06:37:09.153Z">
+<meta property="og:description" content="概述目标是搭建一个CDH 的测试环境，图方便在网上找了一些中文的搭建博客，结果问题百出，还是回到官网浏览，找到对应的安装文档，花了一点时间搭建，这里记录一下。系统配置如下：
+
+centos7.2 minimal,8G内存，100G磁盘(master节点)
+centos7.2 minimal,4G内存，100G磁盘(node节点)
+centos7.2 minimal,4G内存，100G磁盘(node">
+<meta property="og:image" content="http://oeptotikb.bkt.clouddn.com/20180129200028-mysql-role.jpg">
+<meta property="og:updated_time" content="2018-01-29T12:15:29.121Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="ceph-- 使用国内yum源搭建ceph集群">
-<meta name="twitter:description" content="引出初衷是自己搭建一套ceph的实验集群，按照官方的quick start,按理说应该是分分钟的事，因为GFW的原因，搞得忙活了一上午，再加上心情烦躁,中间出现了各种差错，这里记录一下。
-系统预检并安装ceph-deploy准备集群系统，网络设置，SSH无密码登录等设置略过，详细参考PREFLIGHT CHECKLIST
-这里有一个地方需要注意的是：centos7 在修改HOSTNAME 的时候命">
+<meta name="twitter:title" content="Bigdata-- Centos7 安装CDH5.14记录">
+<meta name="twitter:description" content="概述目标是搭建一个CDH 的测试环境，图方便在网上找了一些中文的搭建博客，结果问题百出，还是回到官网浏览，找到对应的安装文档，花了一点时间搭建，这里记录一下。系统配置如下：
+
+centos7.2 minimal,8G内存，100G磁盘(master节点)
+centos7.2 minimal,4G内存，100G磁盘(node节点)
+centos7.2 minimal,4G内存，100G磁盘(node">
+<meta name="twitter:image" content="http://oeptotikb.bkt.clouddn.com/20180129200028-mysql-role.jpg">
 
 
 
@@ -127,13 +135,13 @@
 
 
 
-  <link rel="canonical" href="https://zhangchenchen.github.io/2017/02/28/install-ceph-with-domestic-yum-source/"/>
+  <link rel="canonical" href="https://zhangchenchen.github.io/2018/01/26/centos7-install-cdh5.14/"/>
 
 
 
 
 
-  <title> ceph-- 使用国内yum源搭建ceph集群 | Solar </title>
+  <title> Bigdata-- Centos7 安装CDH5.14记录 | Solar </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -278,7 +286,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2017/02/28/install-ceph-with-domestic-yum-source/">
+  <link itemprop="mainEntityOfPage" href="https://zhangchenchen.github.io/2018/01/26/centos7-install-cdh5.14/">
 
   <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <meta itemprop="name" content="pekingzcc">
@@ -302,7 +310,7 @@
             
             
               
-                ceph-- 使用国内yum源搭建ceph集群
+                Bigdata-- Centos7 安装CDH5.14记录
               
             
           </h1>
@@ -317,8 +325,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-02-28T16:13:46+08:00">
-                2017-02-28
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-01-26T16:57:10+08:00">
+                2018-01-26
               </time>
             
 
@@ -336,8 +344,8 @@
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a href="/2017/02/28/install-ceph-with-domestic-yum-source/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/02/28/install-ceph-with-domestic-yum-source/" itemprop="commentCount"></span>
+                <a href="/2018/01/26/centos7-install-cdh5.14/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2018/01/26/centos7-install-cdh5.14/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -368,36 +376,65 @@
       
 
       
-        <h2 id="引出"><a href="#引出" class="headerlink" title="引出"></a>引出</h2><p>初衷是自己搭建一套ceph的实验集群，按照官方的quick start,按理说应该是分分钟的事，因为GFW的原因，搞得忙活了一上午，再加上心情烦躁,中间出现了各种差错，这里记录一下。</p>
-<h2 id="系统预检并安装ceph-deploy"><a href="#系统预检并安装ceph-deploy" class="headerlink" title="系统预检并安装ceph-deploy"></a>系统预检并安装ceph-deploy</h2><p>准备集群系统，网络设置，SSH无密码登录等设置略过，详细参考<a href="http://docs.ceph.com/docs/master/start/quick-start-preflight/" target="_blank" rel="external">PREFLIGHT CHECKLIST</a></p>
-<p>这里有一个地方需要注意的是：centos7 在修改HOSTNAME 的时候命令如下，无需重启：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ sudo hostnamectl --static <span class="built_in">set</span>-hostname &lt;host-name&gt;</div></pre></td></tr></table></figure>
-<p>预检完成后，ceph-deploy 的安装以及 ceph在各节点的安装如果出现错误的话很大可能上是yum 源的问题，所以重点说下如何配置yum国内源。</p>
-<h3 id="更换国内-YUM-源"><a href="#更换国内-YUM-源" class="headerlink" title="更换国内 YUM 源"></a>更换国内 YUM 源</h3><ul>
-<li>更换base源为国内163源:</li>
-</ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.163.com/.help/CentOS7-Base-163.repo</div></pre></td></tr></table></figure>
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>目标是搭建一个CDH 的测试环境，图方便在网上找了一些中文的搭建博客，结果问题百出，还是回到官网浏览，找到对应的安装文档，花了一点时间搭建，这里记录一下。<br>系统配置如下：</p>
 <ul>
-<li>更换epel源为中科大的源(注：随着版本更迭，以下链接可能会失效，如果出现404错误，那就需要更改链接)：</li>
+<li>centos7.2 minimal,8G内存，100G磁盘(master节点)</li>
+<li>centos7.2 minimal,4G内存，100G磁盘(node节点)</li>
+<li>centos7.2 minimal,4G内存，100G磁盘(node节点)</li>
+<li>centos7.2 minimal,4G内存，100G磁盘(node节点)<br>搭建的cdh为最新的CDH5.14，感觉master内存还是太少，有点吃力。</li>
 </ul>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">$ rpm -Uvh  http://mirrors.ustc.edu.cn/centos/7/extras/x86_64/Packages/epel-release-7-9.noarch.rpm</div><div class="line"></div><div class="line">$ rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7</div></pre></td></tr></table></figure>
+<h2 id="搭建步骤"><a href="#搭建步骤" class="headerlink" title="搭建步骤"></a>搭建步骤</h2><p>CDH的搭建有多种方法，一般来说，都是先搭建Cloudera Manager,然后利用Cloudera Manager搭建CDH，如果是测试环境，可以直接利用Cloudera Manager自动化安装，这种方式使用内嵌的PostgreSQL作为metadata等数据的存储，不适于生产环境。生产环境中一般会使用Mysql或其他独立搭建的数据库（当然要做HA），所以我们会先搭建一个Mysql数据库备用。</p>
+<h3 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h3><p>在所有节点上都要执行的工作，包括host设置，设置yum repo，无密钥登录，ntp设置，安装jdk,关闭防火墙等等。</p>
 <ul>
-<li>更换ceph源为国内163源</li>
+<li>修改 hostname，执行命令 hostname NAME,并修改 /etc/hostname文件。</li>
+<li><p>修改/etc/hosts文件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">10.10.10.77    cdh1</div><div class="line">10.10.10.78    cdh2</div><div class="line">10.10.10.79    cdh3</div><div class="line">10.10.10.82    cdh4</div></pre></td></tr></table></figure>
+</li>
+<li><p>关闭防火墙.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">$ systemctl stop firewalld</div><div class="line">$ systemctl <span class="built_in">disable</span> firewalld</div><div class="line">``` </div><div class="line">- 所有节点设置无密钥登录,命令大致如下，将最终的authorized_keys再覆盖回所有节点：</div><div class="line">```bash</div><div class="line">$ ssh-keygen -t rsa</div><div class="line">$ cat id_rsa.pub &gt;&gt; authorized_keys</div><div class="line">$ chmod 600 authorized_keys</div><div class="line">$ scp authorized_keys root@cdh2:~/.ssh/</div></pre></td></tr></table></figure>
+</li>
+<li><p>设置 yum repo.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">$ curl -o /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo  <span class="comment"># 阿里yum源</span></div><div class="line">$ curl -o /etc/yum.repos.d/cloudera-manager.repo https://archive.cloudera.com/cm5/redhat/7/x86_64/cm/cloudera-manager.repo  <span class="comment"># cloudera yum源</span></div></pre></td></tr></table></figure>
+</li>
+<li><p>ntp设置，安装ntp，编辑crontab定时同步。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">$ yum install ntpd</div><div class="line">$ ntpdate time1.aliyun.com</div><div class="line">$ crontab e</div><div class="line">30 02 * * *  ntpdate time1.aliyun.com</div></pre></td></tr></table></figure>
+</li>
+<li><p>安装jdk.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">yum install oracle-j2sdk1.7 -y</div></pre></td></tr></table></figure>
+</li>
+<li><p>关闭SElinux,修改/etc/selinux/config为disabled，重启生效。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># This file controls the state of SELinux on the system.</span></div><div class="line"><span class="comment"># SELINUX= can take one of these three values:</span></div><div class="line"><span class="comment">#       enforcing - SELinux security policy is enforced.</span></div><div class="line"><span class="comment">#       permissive - SELinux prints warnings instead of enforcing.</span></div><div class="line"><span class="comment">#       disabled - SELinux is fully disabled.</span></div><div class="line">SELINUX=disabled</div><div class="line"><span class="comment"># SELINUXTYPE= type of policy in use. Possible values are:</span></div><div class="line"><span class="comment">#       targeted - Only targeted network daemons are protected.</span></div><div class="line"><span class="comment">#       strict - Full SELinux protection.</span></div><div class="line">SELINUXTYPE=targeted</div></pre></td></tr></table></figure>
+</li>
 </ul>
-<p>建议不用改变ceph.repo,直接设置环境变量即可，如果更改ceph.repo，那么执行ceph-deploy的时候还是需要在命令行中指定国内源url，否则又会使用官方源。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">export</span> CEPH_DEPLOY_REPO_URL=http://mirrors.163.com/ceph/rpm-jewel/el7</div><div class="line"></div><div class="line">$ <span class="built_in">export</span> CEPH_DEPLOY_GPG_URL=http://mirrors.163.com/ceph/keys/release.asc</div><div class="line"></div><div class="line">$ yum clean all</div><div class="line"></div><div class="line">$ yum makecache</div><div class="line"></div><div class="line">$ yum update -y</div></pre></td></tr></table></figure>
-<h2 id="安装并配置ceph-cluster"><a href="#安装并配置ceph-cluster" class="headerlink" title="安装并配置ceph cluster"></a>安装并配置ceph cluster</h2><p>接下来的事情就跟官网的步骤差不多了，大致如下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># Create monitor node</span></div><div class="line">ceph-deploy new node1 node2 node3</div><div class="line"></div><div class="line"><span class="comment"># Software Installation</span></div><div class="line">ceph-deploy install deploy node1 node2 node3</div><div class="line"></div><div class="line"><span class="comment"># Gather keys</span></div><div class="line">ceph-deploy mon create-initial</div><div class="line"></div><div class="line"><span class="comment"># Ceph deploy parepare and activate</span></div><div class="line">ceph-deploy osd prepare node1:/dev/sdb node2:/dev/sdb node3:/dev/sdb</div><div class="line">ceph-deploy osd activate node1:/var/lib/ceph/osd/ceph-0 node2:/var/lib/ceph/osd/ceph-1 node3:/var/lib/ceph/osd/ceph-2</div><div class="line"></div><div class="line"><span class="comment"># Make 3 copies by default</span></div><div class="line"><span class="built_in">echo</span> <span class="string">"osd pool default size = 3"</span> | tee <span class="_">-a</span> <span class="variable">$HOME</span>/ceph.conf</div><div class="line"></div><div class="line"><span class="comment"># Copy admin keys and configuration files</span></div><div class="line">ceph-deploy --overwrite-conf admin deploy node1 node2 node3</div></pre></td></tr></table></figure>
-<h2 id="一个尚未解决的顽疾"><a href="#一个尚未解决的顽疾" class="headerlink" title="一个尚未解决的顽疾"></a>一个尚未解决的顽疾</h2><p>在公司使用国内源安装ceph的时候，出现了一个这样的错误：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">http://mirrors.163.com/ceph/rpm-jewel/el7/x86_64/ceph-mds-10.2.5-0.el7.x86_64.rpm: [Errno -1] Package does not match intended download. Suggestion: run yum --enablerepo=ceph clean metadata</div></pre></td></tr></table></figure>
-<p>Package does not match intended 这个错误在我安装其他软件的时候也出现过，用尽了各种办法也没有解决该问题，但我在家里的时候却没有出现过该问题。所以推测是公司网络用了类似缓存的机制。</p>
-<h2 id="更新-2017-3-18"><a href="#更新-2017-3-18" class="headerlink" title="更新-2017-3-18"></a>更新-2017-3-18</h2><p>找到了解决上述问题的方法，就是先直接wget下来rpm包，然后用yum localinstall 或者rpm -ivh 安装,如果出现两个包互相依赖的情况，就两个包同时安装。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">wget http://mirrors.163.com/ceph/rpm-jewel/el7/x86_64/ceph-mds-10.2.5-0.el7.x86_64.rpm</div><div class="line"></div><div class="line">yum localinstall ceph-mds-10.2.5-0.el7.x86_64.rpm</div></pre></td></tr></table></figure>
-<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="http://docs.ceph.com/docs/master/start/quick-start-preflight/" target="_blank" rel="external">PREFLIGHT CHECKLIST</a></p>
-<p><a href="http://docs.ceph.com/docs/master/start/quick-ceph-deploy/" target="_blank" rel="external">STORAGE CLUSTER QUICK START</a></p>
-<p><a href="http://ceph.org.cn/2016/09/02/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8%E5%9B%BD%E5%86%85%E6%BA%90%E9%83%A8%E7%BD%B2ceph%EF%BC%9F/" target="_blank" rel="external">如何使用国内源部署Ceph？</a></p>
-<p><a href="http://www.centoscn.com/CentOS/config/2014/1031/4039.html" target="_blank" rel="external">CentOS7修改主机名</a></p>
-<p><a href="http://itgeeker.net/centos-7-epel-china-mirror-repository/" target="_blank" rel="external">CentOS 7 x86_64适用的EPEL安装源 国内镜像列表</a></p>
+<h3 id="master节点安装与配置Mysql"><a href="#master节点安装与配置Mysql" class="headerlink" title="master节点安装与配置Mysql"></a>master节点安装与配置Mysql</h3><ul>
+<li><p>安装mysql.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">$ wget http://repo.mysql.com/mysql-community-release-el7-5.noarch.rpm</div><div class="line">$ sudo rpm -ivh mysql-community-release-el7-5.noarch.rpm</div><div class="line">$ yum update</div><div class="line">$ sudo yum install mysql-server</div><div class="line">$ sudo systemctl start mysqld</div></pre></td></tr></table></figure>
+</li>
+<li><p>删除/var/lib/mysql/ib_logfile0 和 /var/lib/mysql/ib_logfile1文件，并配置/etc/my.conf如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div></pre></td><td class="code"><pre><div class="line">[mysqld]</div><div class="line">transaction-isolation = READ-COMMITTED</div><div class="line"><span class="comment"># Disabling symbolic-links is recommended to prevent assorted security risks;</span></div><div class="line"><span class="comment"># to do so, uncomment this line:</span></div><div class="line"><span class="comment"># symbolic-links = 0</span></div><div class="line"></div><div class="line">key_buffer_size = 32M</div><div class="line">max_allowed_packet = 32M</div><div class="line">thread_stack = 256K</div><div class="line">thread_cache_size = 64</div><div class="line">query_cache_limit = 8M</div><div class="line">query_cache_size = 64M</div><div class="line">query_cache_type = 1</div><div class="line"></div><div class="line">max_connections = 550</div><div class="line"><span class="comment">#expire_logs_days = 10</span></div><div class="line"><span class="comment">#max_binlog_size = 100M</span></div><div class="line"></div><div class="line"><span class="comment">#log_bin should be on a disk with enough free space. Replace '/var/lib/mysql/mysql_binary_log' with an appropriate path for your system</span></div><div class="line"><span class="comment">#and chown the specified folder to the mysql user.</span></div><div class="line">log_bin=/var/lib/mysql/mysql_binary_log</div><div class="line"></div><div class="line"><span class="comment"># For MySQL version 5.1.8 or later. For older versions, reference MySQL documentation for configuration help.</span></div><div class="line">binlog_format = mixed</div><div class="line"></div><div class="line">read_buffer_size = 2M</div><div class="line">read_rnd_buffer_size = 16M</div><div class="line">sort_buffer_size = 8M</div><div class="line">join_buffer_size = 8M</div><div class="line"></div><div class="line"><span class="comment"># InnoDB settings</span></div><div class="line">innodb_file_per_table = 1</div><div class="line">innodb_flush_log_at_trx_commit  = 2</div><div class="line">innodb_log_buffer_size = 64M</div><div class="line">innodb_buffer_pool_size = 4G</div><div class="line">innodb_thread_concurrency = 8</div><div class="line">innodb_flush_method = O_DIRECT</div><div class="line">innodb_log_file_size = 512M</div><div class="line"></div><div class="line">[mysqld_safe]</div><div class="line"><span class="built_in">log</span>-error=/var/<span class="built_in">log</span>/mysqld.log</div><div class="line">pid-file=/var/run/mysqld/mysqld.pid</div><div class="line"></div><div class="line">sql_mode=STRICT_ALL_TABLES</div></pre></td></tr></table></figure>
+</li>
+<li><p>安装 MySQL JDBC Driver从<a href="http://www.mysql.com/downloads/connector/j/5.1.html" target="_blank" rel="external">该页面</a>下载对应tar包，解压。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">$ tar zxvf mysql-connector-java-5.1.31.tar.gz</div><div class="line">$ mkdir -p /usr/share/java/</div><div class="line">$ cp mysql-connector-java-5.1.31/mysql-connector-java-5.1.31-bin.jar /usr/share/java/mysql-connector-java.jar</div></pre></td></tr></table></figure>
+</li>
+<li><p>创建对应的数据库。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">mysql&gt; create database database DEFAULT CHARACTER SET utf8;</div><div class="line">Query OK, 1 row affected (0.00 sec)</div><div class="line"></div><div class="line">mysql&gt; grant all on database.* TO <span class="string">'user'</span>@<span class="string">'%'</span> IDENTIFIED BY <span class="string">'password'</span>;</div><div class="line">Query OK, 0 rows affected (0.00 sec)</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>数据库的名字，用户名等可以参考除了以下列出的，还需创建oozie的数据库以及用户名密码.<br><img src="http://oeptotikb.bkt.clouddn.com/20180129200028-mysql-role.jpg" alt="mysql"></p>
+<h3 id="Cloudera-Manager-安装"><a href="#Cloudera-Manager-安装" class="headerlink" title="Cloudera Manager 安装"></a>Cloudera Manager 安装</h3><ul>
+<li><p>在master节点安装Cloudera Manager Server并启动。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">$ yum install cloudera-manager-daemons cloudera-manager-server</div><div class="line">$ systemctl start cloudera-scm-server</div></pre></td></tr></table></figure>
+</li>
+<li><p>在master和node节点安装Cloudera Manager Agent。修改 /etc/cloudera-scm-agent/config.ini 中的server_host为master的IP。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">$ yum install cloudera-manager-agent cloudera-manager-daemons</div><div class="line">$ systemctl start cloudera-scm-agent</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<h3 id="CDH-安装"><a href="#CDH-安装" class="headerlink" title="CDH 安装"></a>CDH 安装</h3><p>进入 Cloudera Manager的console，<a href="http://Server" target="_blank" rel="external">http://Server</a> host:7180,登录后便可以进入CDH的安装部署了。</p>
+<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://www.cloudera.com/documentation/enterprise/latest/topics/cm_ig_install_path_b.html#id_z2h_pnm_25" target="_blank" rel="external">Installation Path B - Installation Using Cloudera Manager Parcels or Packages</a></p>
+<p><a href="https://www.cloudera.com/documentation/enterprise/latest/topics/hue_dbs_mysql.html#concept_tq4_tbt_zw" target="_blank" rel="external">Connect Hue to MySQL or MariaDB</a></p>
+<p><a href="https://www.cloudera.com/documentation/enterprise/latest/topics/cm_ig_troubleshooting.html#cmig_topic_19" target="_blank" rel="external">Troubleshooting Installation and Upgrade Problems</a></p>
+<p><a href="https://www.cmgine.com/archives/19107.html" target="_blank" rel="external">Centos 7安装CDH 5.13.0总结</a></p>
+<p><a href="https://www.jianshu.com/p/57179e03795f" target="_blank" rel="external">最靠谱的CDH5安装指南</a></p>
 <p><strong><em>本篇文章由<a href="https://zhangchenchen.github.io/">pekingzcc</a>采用<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="external">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可,转载请注明。</em></strong></p>
 <p> <strong><em>END</em></strong></p>
 
@@ -423,7 +460,9 @@
       
         <div class="post-tags">
           
-            <a href="/tags/ceph/" rel="tag"># ceph</a>
+            <a href="/tags/Ops/" rel="tag"># Ops</a>
+          
+            <a href="/tags/Bigdata/" rel="tag"># Bigdata</a>
           
         </div>
       
@@ -432,8 +471,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2017/02/22/how-to-debug-openstack-rest-api/" rel="next" title="openstack-- 如何调试openstack rest API">
-                <i class="fa fa-chevron-left"></i> openstack-- 如何调试openstack rest API
+              <a href="/2018/01/20/create-rpm-for-python-flask-application/" rel="next" title="Ops-- 将Flask APP 打包为rpm包">
+                <i class="fa fa-chevron-left"></i> Ops-- 将Flask APP 打包为rpm包
               </a>
             
           </div>
@@ -441,10 +480,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2017/03/03/something-about-ceph-rbd/" rel="prev" title="ceph-- 关于ceph rbd 的一些记录">
-                ceph-- 关于ceph rbd 的一些记录 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -584,7 +619,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#引出"><span class="nav-number">1.</span> <span class="nav-text">引出</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#系统预检并安装ceph-deploy"><span class="nav-number">2.</span> <span class="nav-text">系统预检并安装ceph-deploy</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#更换国内-YUM-源"><span class="nav-number">2.1.</span> <span class="nav-text">更换国内 YUM 源</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安装并配置ceph-cluster"><span class="nav-number">3.</span> <span class="nav-text">安装并配置ceph cluster</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一个尚未解决的顽疾"><span class="nav-number">4.</span> <span class="nav-text">一个尚未解决的顽疾</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#更新-2017-3-18"><span class="nav-number">5.</span> <span class="nav-text">更新-2017-3-18</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文章"><span class="nav-number">6.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#搭建步骤"><span class="nav-number">2.</span> <span class="nav-text">搭建步骤</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#准备工作"><span class="nav-number">2.1.</span> <span class="nav-text">准备工作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#master节点安装与配置Mysql"><span class="nav-number">2.2.</span> <span class="nav-text">master节点安装与配置Mysql</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Cloudera-Manager-安装"><span class="nav-number">2.3.</span> <span class="nav-text">Cloudera Manager 安装</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CDH-安装"><span class="nav-number">2.4.</span> <span class="nav-text">CDH 安装</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文章"><span class="nav-number">3.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
             
 
           </div>
@@ -725,9 +760,9 @@
 
     <script type="text/javascript">
       var disqus_shortname = 'pekingzcc';
-      var disqus_identifier = '2017/02/28/install-ceph-with-domestic-yum-source/';
+      var disqus_identifier = '2018/01/26/centos7-install-cdh5.14/';
 
-      var disqus_title = "ceph-- 使用国内yum源搭建ceph集群";
+      var disqus_title = "Bigdata-- Centos7 安装CDH5.14记录";
 
 
       function run_disqus_script(disqus_script) {
